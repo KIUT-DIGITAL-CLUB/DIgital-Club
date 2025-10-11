@@ -2,7 +2,7 @@
 
 /* Dark Mode Color Scheme */
 :root {
-    --admin-bg-primary: #0a0a0a;
+    --admin-bg-primary: #0a0a0a00;
     --admin-bg-secondary: #1a1a2e;
     --admin-bg-tertiary: #16213e;
     --admin-bg-quaternary: #0f1419;
@@ -55,7 +55,7 @@
 .admin-sidebar-header {
     padding: 1.5rem;
     border-bottom: 1px solid var(--admin-border);
-    background: var(--admin-gradient-primary);
+    
     color: var(--admin-bg-primary);
 }
 
@@ -880,7 +880,7 @@
 
 .admin-sidebar,
 .admin-sidebar * {
-    background-color: var(--admin-bg-secondary) !important;
+    /* background-color: var(--admin-bg-secondary) !important; */
     color: var(--admin-text-primary) !important;
 }
 
