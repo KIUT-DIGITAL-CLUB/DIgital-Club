@@ -109,6 +109,31 @@
                 <span>User Management</span>
             </a>
             
+            <a href="{{ url_for('admin.members') }}" class="admin-nav-item {% if request.endpoint in ['admin.members', 'admin.member_detail'] %}active{% endif %}">
+                <i class="fas fa-id-card"></i>
+                <span>Members</span>
+            </a>
+            
+            <a href="{{ url_for('admin.scan_id') }}" class="admin-nav-item {% if request.endpoint == 'admin.scan_id' %}active{% endif %}">
+                <i class="fas fa-qrcode"></i>
+                <span>Scan Member ID</span>
+            </a>
+            
+            <a href="{{ url_for('admin.payments') }}" class="admin-nav-item {% if request.endpoint in ['admin.payments', 'admin.add_payment', 'admin.edit_payment'] %}active{% endif %}">
+                <i class="fas fa-dollar-sign"></i>
+                <span>Payments</span>
+            </a>
+            
+            <a href="{{ url_for('admin.rewards_history') }}" class="admin-nav-item {% if request.endpoint in ['admin.rewards_history', 'admin.add_points'] %}active{% endif %}">
+                <i class="fas fa-coins"></i>
+                <span>Reward Points</span>
+            </a>
+            
+            <a href="{{ url_for('admin.trophies') }}" class="admin-nav-item {% if request.endpoint in ['admin.trophies', 'admin.add_trophy', 'admin.edit_trophy'] %}active{% endif %}">
+                <i class="fas fa-trophy"></i>
+                <span>Trophies</span>
+            </a>
+            
             <a href="{{ url_for('admin.leaders') }}" class="admin-nav-item {% if request.endpoint in ['admin.leaders', 'admin.add_leader', 'admin.edit_leader'] %}active{% endif %}">
                 <i class="fas fa-crown"></i>
                 <span>Leader Management</span>
@@ -152,6 +177,11 @@
             <a href="{{ url_for('admin.newsletter') }}" class="admin-nav-item {% if request.endpoint == 'admin.newsletter' %}active{% endif %}">
                 <i class="fas fa-envelope"></i>
                 <span>Newsletter</span>
+            </a>
+            
+            <a href="{{ url_for('admin.settings') }}" class="admin-nav-item {% if request.endpoint == 'admin.settings' %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
             </a>
         </nav>
     </div>

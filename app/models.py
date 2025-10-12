@@ -49,6 +49,11 @@ class Member(db.Model):
     # Relationship to projects
     projects = db.relationship('Project', backref='member', lazy='dynamic')
     
+    # Relationships for rewards and payments
+    reward_transactions = db.relationship('RewardTransaction', backref='member', lazy='dynamic', foreign_keys='RewardTransaction.member_id')
+    member_trophies = db.relationship('MemberTrophy', backref='member', lazy='dynamic')
+    membership_payments = db.relationship('MembershipPayment', backref='member', lazy='dynamic')
+    
     def get_projects(self):
         if self.projects_json:
             try:
@@ -106,6 +111,54 @@ class Member(db.Model):
         
         return False
     
+    def get_total_points(self):
+        """Calculate total reward points from all transactions"""
+        total = db.session.query(db.func.sum(RewardTransaction.points)).filter(
+            RewardTransaction.member_id == self.id
+        ).scalar()
+        return total or 0
+    
+    def get_current_trophies(self):
+        """Get all earned trophies"""
+        return [mt.trophy for mt in self.member_trophies.order_by(MemberTrophy.earned_at.desc()).all()]
+    
+    def has_valid_membership(self):
+        """Check if any active payment covers today"""
+        today = datetime.utcnow().date()
+        valid_payment = MembershipPayment.query.filter(
+            MembershipPayment.member_id == self.id,
+            MembershipPayment.start_date <= today,
+            MembershipPayment.end_date >= today
+        ).first()
+        return valid_payment is not None
+    
+    def get_membership_status(self):
+        """Return membership status: 'valid', 'expired', or 'none'"""
+        if not self.membership_payments.first():
+            return 'none'
+        
+        if self.has_valid_membership():
+            return 'valid'
+        
+        return 'expired'
+    
+    def get_latest_payment(self):
+        """Get the most recent payment"""
+        return self.membership_payments.order_by(MembershipPayment.end_date.desc()).first()
+    
+    def get_days_since_expiration(self):
+        """Get number of days since membership expired (0 if valid or no payments)"""
+        latest_payment = self.get_latest_payment()
+        if not latest_payment:
+            return 0
+        
+        if self.has_valid_membership():
+            return 0
+        
+        today = datetime.utcnow().date()
+        days_expired = (today - latest_payment.end_date).days
+        return max(0, days_expired)
+    
     def __repr__(self):
         return f'<Member {self.full_name}>'
 
@@ -147,6 +200,8 @@ class Event(db.Model):
     category = db.Column(db.String(50), default='workshop')  # hackathon, workshop, tech_talk, social_event
     image = db.Column(db.String(200))  # Event banner image
     max_attendees = db.Column(db.Integer)  # Optional capacity limit
+    allows_check_in = db.Column(db.Boolean, default=True)  # Enable attendance tracking
+    check_in_points = db.Column(db.Integer, default=0)  # Points awarded for attending
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def is_upcoming(self):
@@ -295,10 +350,16 @@ class RSVP(db.Model):
     approved_at = db.Column(db.DateTime)
     approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     
+    # Check-in fields
+    checked_in = db.Column(db.Boolean, default=False)
+    checked_in_at = db.Column(db.DateTime)
+    checked_in_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
     # Relationships
     event = db.relationship('Event', backref='rsvps')
     member = db.relationship('Member', backref='rsvps')
-    approver = db.relationship('User', backref='approved_rsvps')
+    approver = db.relationship('User', foreign_keys=[approved_by], backref='approved_rsvps')
+    checker = db.relationship('User', foreign_keys=[checked_in_by], backref='checked_in_rsvps')
     
     def generate_acceptance_code(self):
         """Generate a unique acceptance code"""
@@ -313,3 +374,131 @@ class RSVP(db.Model):
     
     def __repr__(self):
         return f'<RSVP {self.full_name} - {self.event.title if self.event else "Unknown Event"}>'
+
+
+class RewardTransaction(db.Model):
+    """Track reward points awarded or deducted from members"""
+    id = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    points = db.Column(db.Integer, nullable=False)  # Positive for awards, negative for deductions
+    transaction_type = db.Column(db.String(50), nullable=False)  # 'manual', 'event_checkin', 'achievement', etc.
+    reason = db.Column(db.Text, nullable=False)  # Description of why points were awarded/deducted
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=True)  # If related to an event
+    admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Admin who made the transaction
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    admin = db.relationship('User', backref='reward_transactions')
+    event = db.relationship('Event', backref='reward_transactions')
+    
+    def __repr__(self):
+        return f'<RewardTransaction {self.member_id}: {self.points} points>'
+
+
+class Trophy(db.Model):
+    """Define achievement levels and trophies"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    points_required = db.Column(db.Integer, nullable=False)
+    icon = db.Column(db.String(100))  # Font Awesome icon class or emoji
+    display_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    member_trophies = db.relationship('MemberTrophy', backref='trophy', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<Trophy {self.name}: {self.points_required} points>'
+
+
+class MemberTrophy(db.Model):
+    """Track which members have earned which trophies"""
+    id = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    trophy_id = db.Column(db.Integer, db.ForeignKey('trophy.id'), nullable=False)
+    earned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Unique constraint: member can only earn each trophy once
+    __table_args__ = (db.UniqueConstraint('member_id', 'trophy_id', name='_member_trophy_uc'),)
+    
+    def __repr__(self):
+        return f'<MemberTrophy {self.member_id} - {self.trophy_id}>'
+
+
+class MembershipPayment(db.Model):
+    """Track membership fee payments"""
+    id = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    payment_date = db.Column(db.Date, nullable=False)  # When payment was made
+    start_date = db.Column(db.Date, nullable=False)  # Membership period start
+    end_date = db.Column(db.Date, nullable=False)  # Membership period end
+    payment_method = db.Column(db.String(50))  # cash, bank_transfer, mobile_money, etc.
+    notes = db.Column(db.Text)  # Additional notes about the payment
+    recorded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Admin who recorded payment
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    recorder = db.relationship('User', backref='recorded_payments')
+    
+    def is_active(self):
+        """Check if payment period is currently active"""
+        today = datetime.utcnow().date()
+        return self.start_date <= today <= self.end_date
+    
+    def is_expired(self):
+        """Check if payment period has expired"""
+        today = datetime.utcnow().date()
+        return today > self.end_date
+    
+    def days_remaining(self):
+        """Get number of days remaining (negative if expired)"""
+        today = datetime.utcnow().date()
+        return (self.end_date - today).days
+    
+    def __repr__(self):
+        return f'<MembershipPayment {self.member_id}: ${self.amount} ({self.start_date} to {self.end_date})>'
+
+
+class SystemSettings(db.Model):
+    """Store system-wide settings"""
+    id = db.Column(db.Integer, primary_key=True)
+    setting_key = db.Column(db.String(100), unique=True, nullable=False)
+    setting_value = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)  # What this setting controls
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    # Relationships
+    updater = db.relationship('User', backref='system_settings_updates')
+    
+    @staticmethod
+    def get_setting(key, default=None):
+        """Get a setting value by key"""
+        setting = SystemSettings.query.filter_by(setting_key=key).first()
+        return setting.setting_value if setting else default
+    
+    @staticmethod
+    def set_setting(key, value, description=None, user_id=None):
+        """Set or update a setting value"""
+        setting = SystemSettings.query.filter_by(setting_key=key).first()
+        if setting:
+            setting.setting_value = value
+            setting.updated_by = user_id
+            if description:
+                setting.description = description
+        else:
+            setting = SystemSettings(
+                setting_key=key,
+                setting_value=value,
+                description=description,
+                updated_by=user_id
+            )
+            db.session.add(setting)
+        return setting
+    
+    def __repr__(self):
+        return f'<SystemSettings {self.setting_key}: {self.setting_value}>'

@@ -1,0 +1,72 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Edit Trophy{% endblock %}
+{% block page_title %}Edit Trophy{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator">/</span>
+<a href="{{ url_for('admin.trophies') }}">Trophies</a>
+<span class="breadcrumb-separator">/</span>
+<span>Edit</span>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="fas fa-trophy"></i> Edit Trophy</h5>
+            </div>
+            <div class="admin-card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Trophy Name *</label>
+                        <input type="text" name="name" class="form-control" value="{{ trophy.name }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3">{{ trophy.description }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Points Required *</label>
+                            <input type="number" name="points_required" class="form-control" 
+                                   value="{{ trophy.points_required }}" min="1" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Display Order</label>
+                            <input type="number" name="display_order" class="form-control" 
+                                   value="{{ trophy.display_order }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Font Awesome Icon Class</label>
+                        <input type="text" name="icon" class="form-control" value="{{ trophy.icon }}">
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input" id="isActive"
+                               {% if trophy.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="isActive">
+                            Trophy is active
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin.trophies') }}" class="admin-btn admin-btn-outline">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="fas fa-check"></i> Update Trophy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

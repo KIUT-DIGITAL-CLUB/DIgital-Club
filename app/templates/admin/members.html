@@ -1,0 +1,165 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Member Management{% endblock %}
+{% block page_title %}Member Management{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Members</span>{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Member Management</h2>
+        <p class="text-muted mb-0">View and manage all club members with payment tracking</p>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.scan_id') }}" class="admin-btn admin-btn-primary">
+            <i class="fas fa-qrcode"></i> Scan Member ID
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="admin-stat-card">
+            <h5>{{ total_members }}</h5>
+            <p>Total Members</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card success">
+            <h5>{{ valid_count }}</h5>
+            <p>Valid Memberships</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card warning">
+            <h5>{{ expired_count }}</h5>
+            <p>Expired Memberships</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card">
+            <h5>{{ none_count }}</h5>
+            <p>No Payment History</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Name, ID, or Email" value="{{ search_query }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Payment Status</label>
+                <select name="status" class="form-control">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="valid" {% if current_status == 'valid' %}selected{% endif %}>Valid</option>
+                    <option value="expired" {% if current_status == 'expired' %}selected{% endif %}>Expired</option>
+                    <option value="none" {% if current_status == 'none' %}selected{% endif %}>No Payments</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="admin-btn admin-btn-primary me-2">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{{ url_for('admin.members') }}" class="admin-btn admin-btn-outline">
+                    <i class="fas fa-redo"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Members Table -->
+{% if members %}
+<div class="admin-table-container">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Member ID</th>
+                    <th>Course & Year</th>
+                    <th>Points</th>
+                    <th>Membership Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                {% set status = member.get_membership_status() %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if member.profile_image %}
+                            <img src="{{ url_for('static', filename='uploads/profiles/' + member.profile_image) }}" 
+                                 alt="{{ member.full_name }}" 
+                                 class="rounded-circle me-3"
+                                 style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                            <div class="admin-activity-icon primary me-3">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0">{{ member.full_name }}</h6>
+                                <small class="text-muted">{{ member.user.email }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><strong>{{ member.member_id_number }}</strong></td>
+                    <td>
+                        {{ member.course or 'N/A' }}<br>
+                        <small class="text-muted">{{ member.year or 'N/A' }}</small>
+                    </td>
+                    <td><span class="admin-badge admin-badge-info">{{ member.get_total_points() }} pts</span></td>
+                    <td>
+                        {% if status == 'valid' %}
+                        <span class="admin-badge admin-badge-success">
+                            <i class="fas fa-check-circle"></i> Valid
+                        </span>
+                        {% elif status == 'expired' %}
+                        <span class="admin-badge admin-badge-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Expired
+                        </span>
+                        {% else %}
+                        <span class="admin-badge admin-badge-secondary">
+                            <i class="fas fa-minus-circle"></i> No Payment
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{{ url_for('admin.member_detail', member_id=member.id) }}" 
+                               class="admin-btn admin-btn-sm admin-btn-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{{ url_for('admin.add_payment', member_id=member.id) }}" 
+                               class="admin-btn admin-btn-sm admin-btn-success">
+                                <i class="fas fa-dollar-sign"></i> Add Payment
+                            </a>
+                            <a href="{{ url_for('admin.add_points', member_id=member.id) }}" 
+                               class="admin-btn admin-btn-sm admin-btn-info">
+                                <i class="fas fa-plus"></i> Add Points
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="admin-empty-state">
+    <i class="fas fa-users"></i>
+    <h5>No members found</h5>
+    <p>Try adjusting your filters or search criteria.</p>
+</div>
+{% endif %}
+{% endblock %}
+

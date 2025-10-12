@@ -1,0 +1,233 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Event Check-in{% endblock %}
+{% block page_title %}Event Check-in{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator">/</span> 
+<a href="{{ url_for('admin.events') }}">Events</a>
+<span class="breadcrumb-separator">/</span>
+<span>Check-in</span>
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h3>{{ event.title }}</h3>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-calendar"></i> {{ event.event_date.strftime('%Y-%m-%d %H:%M') }}<br>
+                    <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                </p>
+                {% if event.check_in_points > 0 %}
+                <div class="mt-2">
+                    <span class="admin-badge admin-badge-success">
+                        +{{ event.check_in_points }} points for check-in
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h4 class="mb-0">{{ total_rsvps }}</h4>
+                        <small class="text-muted">Total RSVPs</small>
+                    </div>
+                    <div class="col-4">
+                        <h4 class="mb-0 text-success">{{ checked_in }}</h4>
+                        <small class="text-muted">Checked In</small>
+                    </div>
+                    <div class="col-4">
+                        <h4 class="mb-0 text-warning">{{ not_checked_in }}</h4>
+                        <small class="text-muted">Pending</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Search -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <div class="input-group input-group-lg">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="text" 
+                   id="searchInput" 
+                   class="form-control" 
+                   placeholder="Search by name, email, or member ID...">
+        </div>
+    </div>
+</div>
+
+<!-- RSVP List -->
+{% if rsvps %}
+<div class="admin-card">
+    <div class="admin-card-header d-flex justify-content-between align-items-center">
+        <h5><i class="fas fa-users"></i> Attendee List</h5>
+        <div>
+            <label class="me-2">
+                <input type="checkbox" id="showCheckedIn" checked> Show Checked In
+            </label>
+            <label>
+                <input type="checkbox" id="showPending" checked> Show Pending
+            </label>
+        </div>
+    </div>
+    <div class="admin-card-body">
+        <div id="rsvpList">
+            {% for rsvp in rsvps %}
+            <div class="rsvp-item p-3 mb-2 border rounded {% if rsvp.checked_in %}checked-in{% else %}pending{% endif %}" 
+                 data-name="{{ rsvp.full_name|lower }}"
+                 data-email="{{ rsvp.email|lower }}"
+                 data-member-id="{{ rsvp.member.member_id_number|lower if rsvp.member else '' }}">
+                <div class="row align-items-center">
+                    <div class="col-md-5">
+                        <h6 class="mb-1">
+                            {{ rsvp.full_name }}
+                            {% if rsvp.member %}
+                            <span class="admin-badge admin-badge-info">Member</span>
+                            {% endif %}
+                        </h6>
+                        <small class="text-muted">
+                            {{ rsvp.email }}
+                            {% if rsvp.member %}
+                            <br>ID: {{ rsvp.member.member_id_number }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="col-md-3">
+                        {% if rsvp.checked_in %}
+                        <span class="admin-badge admin-badge-success">
+                            <i class="fas fa-check-circle"></i> Checked In
+                        </span><br>
+                        <small class="text-muted">{{ rsvp.checked_in_at.strftime('%H:%M') }}</small>
+                        {% else %}
+                        <span class="admin-badge admin-badge-warning">
+                            <i class="fas fa-clock"></i> Not Checked In
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 text-end">
+                        {% if rsvp.checked_in %}
+                        <button class="admin-btn admin-btn-sm admin-btn-outline" 
+                                onclick="undoCheckin({{ rsvp.id }})">
+                            <i class="fas fa-undo"></i> Undo
+                        </button>
+                        {% else %}
+                        <button class="admin-btn admin-btn-sm admin-btn-success" 
+                                onclick="checkinRsvp({{ rsvp.id }})">
+                            <i class="fas fa-check"></i> Check In
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="admin-empty-state">
+    <i class="fas fa-users-slash"></i>
+    <h5>No approved RSVPs</h5>
+    <p>No attendees have been approved for this event yet.</p>
+    <a href="{{ url_for('admin.rsvps') }}?event_id={{ event.id }}" class="admin-btn admin-btn-primary">
+        <i class="fas fa-clipboard-list"></i> Manage RSVPs
+    </a>
+</div>
+{% endif %}
+
+<style>
+.rsvp-item.checked-in {
+    background-color: #f0f9ff;
+    border-color: #22c55e !important;
+}
+</style>
+
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const search = e.target.value.toLowerCase();
+    const items = document.querySelectorAll('.rsvp-item');
+    
+    items.forEach(item => {
+        const name = item.getAttribute('data-name');
+        const email = item.getAttribute('data-email');
+        const memberId = item.getAttribute('data-member-id');
+        
+        if (name.includes(search) || email.includes(search) || memberId.includes(search)) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// Filter functionality
+document.getElementById('showCheckedIn').addEventListener('change', updateFilters);
+document.getElementById('showPending').addEventListener('change', updateFilters);
+
+function updateFilters() {
+    const showCheckedIn = document.getElementById('showCheckedIn').checked;
+    const showPending = document.getElementById('showPending').checked;
+    
+    document.querySelectorAll('.rsvp-item').forEach(item => {
+        if (item.classList.contains('checked-in') && !showCheckedIn) {
+            item.style.display = 'none';
+        } else if (item.classList.contains('pending') && !showPending) {
+            item.style.display = 'none';
+        } else {
+            item.style.display = '';
+        }
+    });
+}
+
+// Check-in function
+function checkinRsvp(rsvpId) {
+    if (!confirm('Check in this attendee?')) return;
+    
+    fetch(`/admin/rsvps/checkin/${rsvpId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error checking in attendee: ' + error);
+    });
+}
+
+// Undo check-in
+function undoCheckin(rsvpId) {
+    if (!confirm('Undo check-in for this attendee?')) return;
+    
+    fetch(`/admin/rsvps/checkin/${rsvpId}/undo`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error undoing check-in: ' + error);
+    });
+}
+</script>
+{% endblock %}
+

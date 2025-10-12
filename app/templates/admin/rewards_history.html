@@ -1,0 +1,101 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Rewards History{% endblock %}
+{% block page_title %}Rewards History{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Rewards History</span>{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Reward Transactions</h2>
+        <p class="text-muted mb-0">View all point transactions</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label">Member</label>
+                <select name="member_id" class="form-control">
+                    <option value="">All Members</option>
+                    {% for member in members %}
+                    <option value="{{ member.id }}" {% if member.id == current_member_id %}selected{% endif %}>
+                        {{ member.full_name }} ({{ member.member_id_number }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Transaction Type</label>
+                <select name="type" class="form-control">
+                    <option value="">All Types</option>
+                    <option value="manual" {% if current_type == 'manual' %}selected{% endif %}>Manual</option>
+                    <option value="event_checkin" {% if current_type == 'event_checkin' %}selected{% endif %}>Event Check-in</option>
+                    <option value="achievement" {% if current_type == 'achievement' %}selected{% endif %}>Achievement</option>
+                    <option value="hackathon_win" {% if current_type == 'hackathon_win' %}selected{% endif %}>Hackathon Win</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="admin-btn admin-btn-primary me-2">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{{ url_for('admin.rewards_history') }}" class="admin-btn admin-btn-outline">
+                    <i class="fas fa-redo"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+{% if transactions %}
+<div class="admin-table-container">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Member</th>
+                    <th>Points</th>
+                    <th>Type</th>
+                    <th>Reason</th>
+                    <th>Admin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trans in transactions %}
+                <tr>
+                    <td>{{ trans.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.member_detail', member_id=trans.member.id) }}">
+                            {{ trans.member.full_name }}
+                        </a><br>
+                        <small class="text-muted">{{ trans.member.member_id_number }}</small>
+                    </td>
+                    <td>
+                        {% if trans.points > 0 %}
+                        <strong class="text-success">+{{ trans.points }}</strong>
+                        {% else %}
+                        <strong class="text-danger">{{ trans.points }}</strong>
+                        {% endif %}
+                    </td>
+                    <td><span class="admin-badge admin-badge-info">{{ trans.transaction_type }}</span></td>
+                    <td>{{ trans.reason }}</td>
+                    <td>{{ trans.admin.email if trans.admin else 'System' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="admin-empty-state">
+    <i class="fas fa-coins"></i>
+    <h5>No transactions found</h5>
+    <p>No reward transactions match your filter criteria.</p>
+</div>
+{% endif %}
+{% endblock %}
+

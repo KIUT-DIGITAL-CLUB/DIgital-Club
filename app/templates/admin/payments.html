@@ -1,0 +1,140 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Payment Records{% endblock %}
+{% block page_title %}Payment Records{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Payments</span>{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Membership Payments</h2>
+        <p class="text-muted mb-0">Track all membership fee payments</p>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="admin-stat-card">
+            <h5>{{ total_payments }}</h5>
+            <p>Total Payments</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="admin-stat-card success">
+            <h5>{{ active_payments }}</h5>
+            <p>Active Memberships</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="admin-stat-card info">
+            <h5>${{ "%.2f"|format(total_revenue) }}</h5>
+            <p>Total Revenue</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Member</label>
+                <select name="member_id" class="form-control">
+                    <option value="">All Members</option>
+                    {% for member in members %}
+                    <option value="{{ member.id }}" {% if member.id == current_member_id %}selected{% endif %}>
+                        {{ member.full_name }} ({{ member.member_id_number }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-control">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All</option>
+                    <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="expired" {% if current_status == 'expired' %}selected{% endif %}>Expired</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="admin-btn admin-btn-primary me-2">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{{ url_for('admin.payments') }}" class="admin-btn admin-btn-outline">
+                    <i class="fas fa-redo"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Payments Table -->
+{% if payments %}
+<div class="admin-table-container">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Amount</th>
+                    <th>Payment Date</th>
+                    <th>Membership Period</th>
+                    <th>Status</th>
+                    <th>Method</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('admin.member_detail', member_id=payment.member.id) }}">
+                            {{ payment.member.full_name }}
+                        </a><br>
+                        <small class="text-muted">{{ payment.member.member_id_number }}</small>
+                    </td>
+                    <td><strong>${{ "%.2f"|format(payment.amount) }}</strong></td>
+                    <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {{ payment.start_date.strftime('%Y-%m-%d') }} to<br>
+                        {{ payment.end_date.strftime('%Y-%m-%d') }}
+                    </td>
+                    <td>
+                        {% if payment.is_active() %}
+                        <span class="admin-badge admin-badge-success">Active</span>
+                        {% elif payment.is_expired() %}
+                        <span class="admin-badge admin-badge-secondary">Expired</span>
+                        {% else %}
+                        <span class="admin-badge admin-badge-info">Future</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ payment.payment_method }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{{ url_for('admin.edit_payment', payment_id=payment.id) }}" 
+                               class="admin-btn admin-btn-sm admin-btn-outline">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('admin.delete_payment', payment_id=payment.id) }}" 
+                               class="admin-btn admin-btn-sm admin-btn-danger"
+                               onclick="return confirm('Delete this payment record?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="admin-empty-state">
+    <i class="fas fa-dollar-sign"></i>
+    <h5>No payment records found</h5>
+    <p>No membership payments match your filter criteria.</p>
+</div>
+{% endif %}
+{% endblock %}
+

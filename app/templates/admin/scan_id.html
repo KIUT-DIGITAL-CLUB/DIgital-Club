@@ -1,0 +1,343 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Scan Member ID{% endblock %}
+{% block page_title %}Scan Member ID{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Scan ID</span>{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="fas fa-keyboard"></i> Manual Entry</h5>
+            </div>
+            <div class="admin-card-body">
+                <p class="text-muted">Enter member ID number manually</p>
+                <form id="manualEntryForm">
+                    <div class="mb-3">
+                        <label class="form-label">Member ID Number</label>
+                        <input type="text" 
+                               id="memberIdInput" 
+                               class="form-control form-control-lg" 
+                               placeholder="e.g., DC-2025-0001"
+                               autofocus>
+                        <small class="text-muted">Format: DC-YYYY-XXXX</small>
+                    </div>
+                    <button type="submit" class="admin-btn admin-btn-primary btn-lg w-100">
+                        <i class="fas fa-search"></i> Lookup Member
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="fas fa-qrcode"></i> QR Code Scanner</h5>
+            </div>
+            <div class="admin-card-body">
+                <p class="text-muted">Scan member's digital ID QR code using your camera</p>
+                <div id="qr-reader" style="width: 100%; border-radius: 8px; overflow: hidden;"></div>
+                <button id="startScanBtn" class="admin-btn admin-btn-success btn-lg w-100 mt-3">
+                    <i class="fas fa-camera"></i> Start Camera
+                </button>
+                <button id="stopScanBtn" class="admin-btn admin-btn-danger btn-lg w-100 mt-3" style="display: none;">
+                    <i class="fas fa-stop"></i> Stop Camera
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Member Information Display -->
+<div id="memberInfo" style="display: none;">
+    <div class="admin-card">
+        <div class="admin-card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-user"></i> Member Information</h5>
+            <button class="admin-btn admin-btn-sm admin-btn-outline" onclick="clearMemberInfo()">
+                <i class="fas fa-times"></i> Clear
+            </button>
+        </div>
+        <div class="admin-card-body">
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <img id="memberPhoto" src="" alt="Member" class="rounded-circle mb-3" 
+                         style="width: 150px; height: 150px; object-fit: cover;">
+                    <h4 id="memberName"></h4>
+                    <p id="memberIdNum" class="text-muted"></p>
+                </div>
+                <div class="col-md-5">
+                    <h6>Contact Information</h6>
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Email:</strong></td>
+                            <td id="memberEmail"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phone:</strong></td>
+                            <td id="memberPhone"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Course:</strong></td>
+                            <td id="memberCourse"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Year:</strong></td>
+                            <td id="memberYear"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Status:</strong></td>
+                            <td id="memberStatus"></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-4">
+                    <h6>Rewards & Membership</h6>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Total Points:</span>
+                            <strong id="memberPoints" class="text-primary" style="font-size: 1.5rem;"></strong>
+                        </div>
+                        <div id="membershipStatusDiv" class="mb-2"></div>
+                        <div id="trophiesDiv" class="mb-3"></div>
+                    </div>
+                    <div id="paymentInfo"></div>
+                </div>
+            </div>
+            
+            <!-- Recent Attendance -->
+            <div class="mt-4" id="recentAttendance">
+                <h6><i class="fas fa-calendar-check"></i> Recent Event Attendance</h6>
+                <div id="attendanceList"></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4 d-flex gap-2">
+                <a id="viewDetailsBtn" href="#" class="admin-btn admin-btn-primary">
+                    <i class="fas fa-eye"></i> View Full Profile
+                </a>
+                <a id="addPointsBtn" href="#" class="admin-btn admin-btn-success">
+                    <i class="fas fa-plus"></i> Award Points
+                </a>
+                <a id="addPaymentBtn" href="#" class="admin-btn admin-btn-info">
+                    <i class="fas fa-dollar-sign"></i> Record Payment
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error/Loading Messages -->
+<div id="errorMessage" class="alert alert-danger" style="display: none;" role="alert"></div>
+<div id="loadingMessage" class="alert alert-info" style="display: none;" role="alert">
+    <i class="fas fa-spinner fa-spin"></i> Looking up member...
+</div>
+
+<style>
+#qr-reader {
+    border: 2px solid #dee2e6;
+}
+
+#qr-reader video {
+    width: 100%;
+    border-radius: 6px;
+}
+</style>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+let html5QrcodeScanner = null;
+let currentMemberId = null;
+
+// Manual entry form
+document.getElementById('manualEntryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const memberIdNumber = document.getElementById('memberIdInput').value.trim();
+    if (memberIdNumber) {
+        lookupMember(memberIdNumber);
+    }
+});
+
+// QR Scanner
+document.getElementById('startScanBtn').addEventListener('click', function() {
+    startQRScanner();
+});
+
+document.getElementById('stopScanBtn').addEventListener('click', function() {
+    stopQRScanner();
+});
+
+function startQRScanner() {
+    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    
+    html5QrcodeScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess
+    ).then(() => {
+        document.getElementById('startScanBtn').style.display = 'none';
+        document.getElementById('stopScanBtn').style.display = 'block';
+    }).catch(err => {
+        alert('Failed to start camera: ' + err);
+    });
+}
+
+function stopQRScanner() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+            document.getElementById('startScanBtn').style.display = 'block';
+            document.getElementById('stopScanBtn').style.display = 'none';
+        });
+    }
+}
+
+function onScanSuccess(decodedText, decodedResult) {
+    // Extract member ID from URL or direct scan
+    let memberId = decodedText;
+    
+    // If it's a URL, extract the member ID
+    if (decodedText.includes('/verify-id/')) {
+        memberId = decodedText.split('/verify-id/')[1];
+    }
+    
+    // Stop scanner and lookup
+    stopQRScanner();
+    lookupMember(memberId);
+}
+
+function lookupMember(memberIdNumber) {
+    // Show loading
+    document.getElementById('loadingMessage').style.display = 'block';
+    document.getElementById('errorMessage').style.display = 'none';
+    document.getElementById('memberInfo').style.display = 'none';
+    
+    // Make AJAX request
+    fetch('{{ url_for("admin.member_lookup") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ member_id_number: memberIdNumber })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loadingMessage').style.display = 'none';
+        
+        if (data.success) {
+            displayMemberInfo(data.member);
+        } else {
+            showError(data.error || 'Member not found');
+        }
+    })
+    .catch(error => {
+        document.getElementById('loadingMessage').style.display = 'none';
+        showError('Error looking up member: ' + error);
+    });
+}
+
+function displayMemberInfo(member) {
+    currentMemberId = member.id;
+    
+    // Set member photo
+    const photoUrl = member.profile_image 
+        ? '{{ url_for("static", filename="uploads/profiles/") }}' + member.profile_image
+        : '{{ url_for("static", filename="images/default-avatar.png") }}';
+    document.getElementById('memberPhoto').src = photoUrl;
+    
+    // Set basic info
+    document.getElementById('memberName').textContent = member.full_name;
+    document.getElementById('memberIdNum').textContent = member.member_id_number;
+    document.getElementById('memberEmail').textContent = member.email;
+    document.getElementById('memberPhone').textContent = member.phone || 'N/A';
+    document.getElementById('memberCourse').textContent = member.course || 'N/A';
+    document.getElementById('memberYear').textContent = member.year || 'N/A';
+    document.getElementById('memberStatus').textContent = member.status || 'student';
+    
+    // Set points
+    document.getElementById('memberPoints').textContent = member.total_points;
+    
+    // Set membership status
+    const statusDiv = document.getElementById('membershipStatusDiv');
+    let statusBadge = '';
+    if (member.membership_status === 'valid') {
+        statusBadge = '<span class="admin-badge admin-badge-success"><i class="fas fa-check-circle"></i> Membership Valid</span>';
+    } else if (member.membership_status === 'expired') {
+        statusBadge = '<span class="admin-badge admin-badge-warning"><i class="fas fa-exclamation-triangle"></i> Membership Expired</span>';
+    } else {
+        statusBadge = '<span class="admin-badge admin-badge-secondary"><i class="fas fa-minus-circle"></i> No Payment</span>';
+    }
+    statusDiv.innerHTML = statusBadge;
+    
+    // Set trophies
+    const trophiesDiv = document.getElementById('trophiesDiv');
+    if (member.trophies && member.trophies.length > 0) {
+        let trophiesHtml = '<div><strong>Trophies:</strong></div><div class="d-flex flex-wrap gap-2 mt-2">';
+        member.trophies.forEach(trophy => {
+            // Check if icon is a Font Awesome class or emoji
+            const iconDisplay = trophy.icon.startsWith('fa') 
+                ? `<i class="${trophy.icon}"></i>` 
+                : trophy.icon;
+            trophiesHtml += `<span class="admin-badge admin-badge-warning" title="${trophy.name}" style="font-size: 1.2rem;">${iconDisplay}</span>`;
+        });
+        trophiesHtml += '</div>';
+        trophiesDiv.innerHTML = trophiesHtml;
+    } else {
+        trophiesDiv.innerHTML = '<small class="text-muted">No trophies earned yet</small>';
+    }
+    
+    // Set payment info
+    const paymentInfo = document.getElementById('paymentInfo');
+    if (member.latest_payment) {
+        const daysRemaining = member.latest_payment.days_remaining;
+        const daysText = daysRemaining > 0 
+            ? `${daysRemaining} days remaining`
+            : `Expired ${Math.abs(daysRemaining)} days ago`;
+        paymentInfo.innerHTML = `
+            <small class="text-muted">
+                <strong>Latest Payment:</strong> $${member.latest_payment.amount}<br>
+                <strong>Valid Until:</strong> ${member.latest_payment.end_date}<br>
+                <strong>Status:</strong> ${daysText}
+            </small>
+        `;
+    } else {
+        paymentInfo.innerHTML = '<small class="text-muted">No payment records</small>';
+    }
+    
+    // Set recent attendance
+    const attendanceList = document.getElementById('attendanceList');
+    if (member.recent_attendance && member.recent_attendance.length > 0) {
+        let attendanceHtml = '<ul class="list-unstyled mt-2">';
+        member.recent_attendance.forEach(att => {
+            attendanceHtml += `<li class="mb-1"><i class="fas fa-check text-success"></i> ${att.event} (${att.date})</li>`;
+        });
+        attendanceHtml += '</ul>';
+        attendanceList.innerHTML = attendanceHtml;
+    } else {
+        attendanceList.innerHTML = '<p class="text-muted">No recent attendance</p>';
+    }
+    
+    // Set action button URLs using proper string interpolation
+    document.getElementById('viewDetailsBtn').href = `/admin/members/${member.id}`;
+    document.getElementById('addPointsBtn').href = `/admin/rewards/add-points/${member.id}`;
+    document.getElementById('addPaymentBtn').href = `/admin/payments/add/${member.id}`;
+    
+    // Show member info
+    document.getElementById('memberInfo').style.display = 'block';
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById('errorMessage');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+
+function clearMemberInfo() {
+    document.getElementById('memberInfo').style.display = 'none';
+    document.getElementById('errorMessage').style.display = 'none';
+    document.getElementById('memberIdInput').value = '';
+    currentMemberId = null;
+}
+</script>
+{% endblock %}
+

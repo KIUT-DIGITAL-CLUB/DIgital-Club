@@ -94,6 +94,51 @@
                     </div>
                     {% endif %}
                     
+                    {% if member.trophies or member.get_total_points() > 0 %}
+                    <div style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                        <!-- Points Display -->
+                        <div style="text-align: center; margin-bottom: 0.8rem;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); margin-bottom: 0.2rem;">
+                                {{ member.get_total_points() }}
+                            </div>
+                            <div style="font-size: 0.9rem; color: white; font-weight: 600; letter-spacing: 1px;">
+                                POINTS
+                            </div>
+                        </div>
+                        
+                        {% if member.trophies %}
+                        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 0.8rem;">
+                            <div style="text-align: center; color: white; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.6rem; letter-spacing: 1px;">
+                                🏆 TROPHIES EARNED
+                            </div>
+                            <div style="display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap;">
+                                {% for trophy in member.trophies[:3] %}
+                                <div style="text-align: center; min-width: 70px;">
+                                    <div style="font-size: 2rem; margin-bottom: 0.3rem; filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));">
+                                        {% if trophy.icon.startswith('fa') %}
+                                        <i class="{{ trophy.icon }}"></i>
+                                        {% else %}
+                                        {{ trophy.icon }}
+                                        {% endif %}
+                                    </div>
+                                    <div style="color: white; font-size: 0.7rem; font-weight: 600; line-height: 1.2;">
+                                        {{ trophy.name }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                {% if member.trophies|length > 3 %}
+                                <div style="text-align: center; min-width: 70px; display: flex; align-items: center; justify-content: center;">
+                                    <div style="background: rgba(255, 215, 0, 0.2); border: 2px dashed rgba(255, 215, 0, 0.5); border-radius: 8px; padding: 0.8rem 0.6rem; color: #FFD700; font-weight: 700; font-size: 0.9rem;">
+                                        +{{ member.trophies|length - 3 }}<br>more
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
                     <div style="display: flex; gap: 0.5rem; justify-content: center;">
                         {% if member.github %}
                         <a href="{{ member.github }}" target="_blank" class="social-link" style="width: 35px; height: 35px;">

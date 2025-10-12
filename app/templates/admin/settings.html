@@ -1,0 +1,91 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}System Settings{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Settings</span>{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="fas fa-cog"></i> Membership & Rewards Settings</h5>
+            </div>
+            <div class="admin-card-body">
+                <form method="POST">
+                    <h6 class="mb-3"><i class="fas fa-dollar-sign"></i> Membership Settings</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Default Membership Fee</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" 
+                                       name="membership_fee" 
+                                       step="0.01"
+                                       class="form-control" 
+                                       value="{{ membership_fee }}"
+                                       required>
+                            </div>
+                            <small class="text-muted">Standard annual membership fee</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Default Membership Duration</label>
+                            <div class="input-group">
+                                <input type="number" 
+                                       name="membership_duration_months" 
+                                       class="form-control" 
+                                       value="{{ membership_duration }}"
+                                       required>
+                                <span class="input-group-text">months</span>
+                            </div>
+                            <small class="text-muted">How long a membership lasts</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h6 class="mb-3"><i class="fas fa-trophy"></i> Rewards Settings</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Default Event Check-in Points</label>
+                        <input type="number" 
+                               name="default_event_points" 
+                               class="form-control" 
+                               value="{{ default_event_points }}"
+                               required>
+                        <small class="text-muted">Points awarded when members check into events</small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-info-circle"></i> Note:</strong>
+                        These settings apply system-wide. You can override them for individual cases 
+                        (e.g., different points for specific events).
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Trophy Management Link -->
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h5><i class="fas fa-trophy"></i> Trophy Management</h5>
+            </div>
+            <div class="admin-card-body">
+                <p>Manage achievement trophies and their point requirements.</p>
+                <a href="{{ url_for('admin.trophies') }}" class="admin-btn admin-btn-outline">
+                    <i class="fas fa-trophy"></i> Manage Trophies
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

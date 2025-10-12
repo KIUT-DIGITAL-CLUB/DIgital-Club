@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.routes import member_bp
-from app.models import Member, Project, User
+from app.models import Member, Project, User, RewardTransaction, Trophy, MembershipPayment, RSVP
 from app import db
 from app.id_generator import generate_digital_id, delete_digital_id
 import os
@@ -310,3 +310,74 @@ def regenerate_id():
         flash(f'Error regenerating digital ID: {str(e)}', 'error')
     
     return redirect(url_for('member.digital_id'))
+
+
+@member_bp.route('/rewards')
+@login_required
+def rewards():
+    """View member's rewards, points, and trophies"""
+    if not current_user.member:
+        flash('Please complete your profile first.', 'warning')
+        return redirect(url_for('member.edit_profile'))
+    
+    member = current_user.member
+    
+    # Get total points
+    total_points = member.get_total_points()
+    
+    # Get earned trophies
+    trophies = member.get_current_trophies()
+    
+    # Get all trophies for progress tracking
+    all_trophies = Trophy.query.filter_by(is_active=True).order_by(Trophy.points_required.asc()).all()
+    
+    # Calculate progress to next trophy
+    next_trophy = None
+    points_to_next = 0
+    for trophy in all_trophies:
+        if total_points < trophy.points_required:
+            next_trophy = trophy
+            points_to_next = trophy.points_required - total_points
+            break
+    
+    # Get recent transactions
+    recent_transactions = member.reward_transactions.order_by(RewardTransaction.created_at.desc()).limit(20).all()
+    
+    # Get attendance history
+    attendance = RSVP.query.filter_by(member_id=member.id, checked_in=True).order_by(RSVP.checked_in_at.desc()).all()
+    
+    return render_template('member/rewards.html',
+                         member=member,
+                         total_points=total_points,
+                         trophies=trophies,
+                         all_trophies=all_trophies,
+                         next_trophy=next_trophy,
+                         points_to_next=points_to_next,
+                         recent_transactions=recent_transactions,
+                         attendance=attendance)
+
+
+@member_bp.route('/membership')
+@login_required
+def membership():
+    """View member's membership payment status and history"""
+    if not current_user.member:
+        flash('Please complete your profile first.', 'warning')
+        return redirect(url_for('member.edit_profile'))
+    
+    member = current_user.member
+    
+    # Get membership status
+    membership_status = member.get_membership_status()
+    latest_payment = member.get_latest_payment()
+    days_expired = member.get_days_since_expiration()
+    
+    # Get all payment history
+    payments = member.membership_payments.order_by(MembershipPayment.payment_date.desc()).all()
+    
+    return render_template('member/membership.html',
+                         member=member,
+                         membership_status=membership_status,
+                         latest_payment=latest_payment,
+                         days_expired=days_expired,
+                         payments=payments)

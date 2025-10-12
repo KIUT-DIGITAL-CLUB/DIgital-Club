@@ -1,0 +1,116 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Award Points{% endblock %}
+{% block page_title %}Award Points{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator">/</span> 
+<a href="{{ url_for('admin.members') }}">Members</a>
+<span class="breadcrumb-separator">/</span>
+<a href="{{ url_for('admin.member_detail', member_id=member.id) }}">{{ member.full_name }}</a>
+<span class="breadcrumb-separator">/</span>
+<span>Award Points</span>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="fas fa-plus-circle"></i> Award/Deduct Points for {{ member.full_name }}</h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="alert alert-info mb-4">
+                    <strong>Current Points:</strong> {{ member.get_total_points() }}
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Points Amount *</label>
+                        <input type="number" 
+                               name="points" 
+                               class="form-control form-control-lg" 
+                               placeholder="Enter points (positive to award, negative to deduct)"
+                               required>
+                        <small class="text-muted">Use positive numbers to award points, negative numbers to deduct</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Transaction Type *</label>
+                        <select name="transaction_type" class="form-control" required>
+                            <option value="manual">Manual Award/Deduction</option>
+                            <option value="event_attendance">Event Attendance</option>
+                            <option value="project_completion">Project Completion</option>
+                            <option value="hackathon_win">Hackathon Win</option>
+                            <option value="volunteer_work">Volunteer Work</option>
+                            <option value="achievement">Special Achievement</option>
+                            <option value="bonus">Bonus Points</option>
+                            <option value="penalty">Penalty</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Reason *</label>
+                        <textarea name="reason" 
+                                  class="form-control" 
+                                  rows="4" 
+                                  placeholder="Explain why these points are being awarded or deducted" 
+                                  required></textarea>
+                        <small class="text-muted">Provide a clear description that will be visible to the member</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin.member_detail', member_id=member.id) }}" class="admin-btn admin-btn-outline">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="fas fa-check"></i> Confirm Transaction
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h6><i class="fas fa-bolt"></i> Quick Award Presets</h6>
+            </div>
+            <div class="admin-card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="setPoints(50, 'Attended workshop')">
+                            +50 Workshop Attendance
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="setPoints(100, 'Attended hackathon')">
+                            +100 Hackathon Attendance
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-success w-100" onclick="setPoints(250, 'Won hackathon')">
+                            +250 Hackathon Winner
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-success w-100" onclick="setPoints(150, 'Completed project')">
+                            +150 Project Completion
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setPoints(points, reason) {
+    document.querySelector('input[name="points"]').value = points;
+    document.querySelector('textarea[name="reason"]').value = reason;
+    if (points >= 100) {
+        document.querySelector('select[name="transaction_type"]').value = 'achievement';
+    }
+}
+</script>
+{% endblock %}
+

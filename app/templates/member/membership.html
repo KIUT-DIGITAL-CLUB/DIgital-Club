@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}My Membership - Digital Club{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4"><i class="fas fa-id-card"></i> My Membership Status</h2>
+
+    <!-- Membership Status Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    {% if membership_status == 'valid' %}
+                    <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
+                    <h4 class="text-success mt-2">Active</h4>
+                    {% elif membership_status == 'expired' %}
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 5rem;"></i>
+                    <h4 class="text-warning mt-2">Expired</h4>
+                    {% else %}
+                    <i class="fas fa-minus-circle text-secondary" style="font-size: 5rem;"></i>
+                    <h4 class="text-secondary mt-2">No Payment</h4>
+                    {% endif %}
+                </div>
+                <div class="col-md-9">
+                    <h3>Membership Status: 
+                        {% if membership_status == 'valid' %}
+                        <span class="badge bg-success">Valid</span>
+                        {% elif membership_status == 'expired' %}
+                        <span class="badge bg-warning">Expired</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </h3>
+                    
+                    {% if latest_payment %}
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Last Payment:</strong> ${{ "%.2f"|format(latest_payment.amount) }}<br>
+                                    <strong>Payment Date:</strong> {{ latest_payment.payment_date.strftime('%Y-%m-%d') }}<br>
+                                    <strong>Valid From:</strong> {{ latest_payment.start_date.strftime('%Y-%m-%d') }}<br>
+                                    <strong>Valid Until:</strong> {{ latest_payment.end_date.strftime('%Y-%m-%d') }}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                {% if membership_status == 'valid' %}
+                                <div class="alert alert-success mb-0">
+                                    <strong><i class="fas fa-check"></i> Your membership is active!</strong><br>
+                                    {{ latest_payment.days_remaining() }} days remaining
+                                </div>
+                                {% elif membership_status == 'expired' %}
+                                <div class="alert alert-warning mb-0">
+                                    <strong><i class="fas fa-exclamation-triangle"></i> Membership expired!</strong><br>
+                                    Expired {{ days_expired }} days ago<br>
+                                    <small>Please contact an admin to renew your membership.</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mt-3">
+                        <strong><i class="fas fa-info-circle"></i> No payment records found</strong><br>
+                        You don't have any membership payments recorded yet. 
+                        Please contact an admin to register your membership payment.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-history"></i> Payment History</h5>
+        </div>
+        <div class="card-body">
+            {% if payments %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Payment Date</th>
+                            <th>Amount</th>
+                            <th>Membership Period</th>
+                            <th>Status</th>
+                            <th>Method</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+                            <td><strong>${{ "%.2f"|format(payment.amount) }}</strong></td>
+                            <td>
+                                {{ payment.start_date.strftime('%Y-%m-%d') }} to 
+                                {{ payment.end_date.strftime('%Y-%m-%d') }}
+                            </td>
+                            <td>
+                                {% if payment.is_active() %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif payment.is_expired() %}
+                                <span class="badge bg-secondary">Expired</span>
+                                {% else %}
+                                <span class="badge bg-info">Future</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ payment.payment_method }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <strong>Total Paid:</strong> ${{ "%.2f"|format(payments|sum(attribute='amount')) }}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No payment history available.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-question-circle"></i> Need Help?</h5>
+        </div>
+        <div class="card-body">
+            <p>If you have questions about your membership status or need to make a payment:</p>
+            <ul>
+                <li>Contact any Digital Club admin or executive member</li>
+                <li>Visit our club office during office hours</li>
+                <li>Send an email to the club's official email address</li>
+            </ul>
+            <a href="{{ url_for('main.contact') }}" class="btn btn-primary">
+                <i class="fas fa-envelope"></i> Contact Us
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

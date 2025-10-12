@@ -495,6 +495,19 @@
     color: var(--admin-bg-primary);
 }
 
+.admin-btn-info {
+    background: var(--admin-info);
+    color: var(--admin-bg-primary);
+    box-shadow: 0 4px 15px rgba(0, 170, 255, 0.3);
+}
+
+.admin-btn-info:hover {
+    background: #0099dd;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 170, 255, 0.4);
+    color: var(--admin-bg-primary);
+}
+
 .admin-btn-warning {
     background: var(--admin-warning);
     color: var(--admin-bg-primary);
@@ -1376,6 +1389,16 @@
 
 .admin-btn-success:hover {
     background-color: #059669;
+    color: white;
+}
+
+.admin-btn-info {
+    background-color: var(--admin-info);
+    color: white;
+}
+
+.admin-btn-info:hover {
+    background-color: #0099dd;
     color: white;
 }
 

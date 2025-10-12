@@ -58,11 +58,15 @@ def alumni():
         if year_filter:
             query = query.filter(Member.year.ilike(f'%{year_filter}%'))
         
-        alumni = query.paginate(page=page, per_page=12, error_out=False)
+        alumni = query.all()
         
         # Get unique courses and years for filter dropdowns
         courses = db.session.query(Member.course).filter(Member.status == 'alumni').distinct().all()
         years = db.session.query(Member.year).filter(Member.status == 'alumni').distinct().all()
+        
+        # Add trophy data to each alumni member
+        for alumnus in alumni:
+            alumnus.trophies = alumnus.get_current_trophies()
         
         # Calculate statistics
         alumni_count = Member.query.filter(Member.status == 'alumni').count()
@@ -116,6 +120,10 @@ def members():
         courses = db.session.query(Member.course).distinct().all()
         years = db.session.query(Member.year).distinct().all()
         
+        # Add trophy data to each member
+        for member in members.items:
+            member.trophies = member.get_current_trophies()
+        
         return render_template('members.html', 
                              members=members,
                              courses=[c[0] for c in courses if c[0]],
@@ -148,23 +156,32 @@ def students():
         if year_filter:
             query = query.filter(Member.year.ilike(f'%{year_filter}%'))
         
-        students = query.paginate(page=page, per_page=12, error_out=False)
+        students = query.all()
         
         # Get unique courses and years for filter dropdowns
         courses = db.session.query(Member.course).filter(Member.status == 'student').distinct().all()
         years = db.session.query(Member.year).filter(Member.status == 'student').distinct().all()
         
+        # Add trophy data and statistics
+        for student in students:
+            student.trophies = student.get_current_trophies()
+        
+        # Calculate current year for statistics
+        current_year = datetime.now().year
+        
         return render_template('students.html', 
                              students=students,
                              courses=[c[0] for c in courses if c[0]],
-                             years=[y[0] for y in years if y[0]])
+                             years=[y[0] for y in years if y[0]],
+                             current_year=current_year)
     except Exception as e:
         # Return empty results if database is not ready
         from flask import make_response
         return make_response(render_template('students.html', 
                                            students=None,
                                            courses=[],
-                                           years=[]), 200)
+                                           years=[],
+                                           current_year=datetime.now().year), 200)
 
 @main_bp.route('/news')
 def news():

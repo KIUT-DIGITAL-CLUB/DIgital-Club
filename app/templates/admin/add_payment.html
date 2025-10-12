@@ -1,0 +1,157 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Record Payment{% endblock %}
+{% block page_title %}Record Payment{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator">/</span> 
+<a href="{{ url_for('admin.members') }}">Members</a>
+<span class="breadcrumb-separator">/</span>
+<a href="{{ url_for('admin.member_detail', member_id=member.id) }}">{{ member.full_name }}</a>
+<span class="breadcrumb-separator">/</span>
+<span>Record Payment</span>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="fas fa-dollar-sign"></i> Record Membership Payment for {{ member.full_name }}</h5>
+            </div>
+            <div class="admin-card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Amount *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" 
+                                       name="amount" 
+                                       step="0.01"
+                                       class="form-control" 
+                                       value="{{ default_fee }}"
+                                       required>
+                            </div>
+                            <small class="text-muted">Default: ${{ default_fee }}</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Payment Date *</label>
+                            <input type="date" 
+                                   name="payment_date" 
+                                   class="form-control" 
+                                   value="{{ today.strftime('%Y-%m-%d') }}"
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Membership Start Date *</label>
+                            <input type="date" 
+                                   name="start_date" 
+                                   id="startDate"
+                                   class="form-control" 
+                                   value="{{ today.strftime('%Y-%m-%d') }}"
+                                   required>
+                            <small class="text-muted">When membership period begins</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Membership End Date *</label>
+                            <input type="date" 
+                                   name="end_date" 
+                                   id="endDate"
+                                   class="form-control" 
+                                   value="{{ suggested_end.strftime('%Y-%m-%d') }}"
+                                   required>
+                            <small class="text-muted">When membership expires</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method" class="form-control">
+                            <option value="cash">Cash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="mobile_money">Mobile Money</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea name="notes" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="Additional notes about this payment"></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-info-circle"></i> Note:</strong> 
+                        Recording this payment will update the member's membership status. 
+                        They will have an active membership for the specified period.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin.member_detail', member_id=member.id) }}" class="admin-btn admin-btn-outline">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="admin-btn admin-btn-success">
+                            <i class="fas fa-check"></i> Record Payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Duration Presets -->
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h6><i class="fas fa-bolt"></i> Quick Duration Presets</h6>
+            </div>
+            <div class="admin-card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="setDuration(3)">
+                            3 Months
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="setDuration(6)">
+                            6 Months
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <button class="btn btn-outline-success w-100" onclick="setDuration(12)">
+                            12 Months
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setDuration(months) {
+    const startDate = document.getElementById('startDate').value;
+    if (startDate) {
+        const start = new Date(startDate);
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + months);
+        document.getElementById('endDate').value = end.toISOString().split('T')[0];
+    } else {
+        alert('Please select a start date first');
+    }
+}
+
+// Auto-calculate end date when start date changes
+document.getElementById('startDate').addEventListener('change', function() {
+    // Default to 12 months
+    setDuration(12);
+});
+</script>
+{% endblock %}
+
