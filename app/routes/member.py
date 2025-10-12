@@ -242,9 +242,10 @@ def digital_id():
     return render_template('member/digital_id.html', member=member)
 
 @member_bp.route('/download-id')
+@member_bp.route('/download-id/<side>')
 @login_required
-def download_id():
-    """Download member's digital ID card as an image"""
+def download_id(side='front'):
+    """Download member's digital ID card as an image (front or back)"""
     if not current_user.member:
         flash('Please complete your profile first.', 'warning')
         return redirect(url_for('member.edit_profile'))
@@ -260,17 +261,28 @@ def download_id():
             flash(f'Error generating digital ID: {str(e)}', 'error')
             return redirect(url_for('member.dashboard'))
     
+    # Determine which side to download
+    if side == 'back':
+        filename = member.digital_id_path.replace('_front.png', '_back.png')
+        if not filename.endswith('_back.png'):
+            # Handle old format
+            filename = member.digital_id_path.replace('.png', '_back.png')
+        download_name = f'DigitalClub_ID_{member.member_id_number}_back.png'
+    else:
+        filename = member.digital_id_path
+        download_name = f'DigitalClub_ID_{member.member_id_number}_front.png'
+    
     # Send file for download
-    id_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'digital_ids', member.digital_id_path)
+    id_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'digital_ids', filename)
     
     if not os.path.exists(id_path):
-        flash('Digital ID file not found. Please regenerate.', 'error')
+        flash(f'ID card {side} file not found. Please regenerate.', 'error')
         return redirect(url_for('member.digital_id'))
     
     return send_file(
         id_path,
         as_attachment=True,
-        download_name=f'DigitalClub_ID_{member.member_id_number}.png',
+        download_name=download_name,
         mimetype='image/png'
     )
 

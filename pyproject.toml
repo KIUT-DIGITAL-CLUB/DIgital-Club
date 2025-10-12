@@ -15,4 +15,5 @@ dependencies = [
     "werkzeug>=3.0.0",
     "requests>=2.32.5",
     "qrcode[pil]>=7.4.2",
+    "cairosvg>=2.8.2",
 ]
