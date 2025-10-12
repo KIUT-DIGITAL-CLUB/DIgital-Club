@@ -131,8 +131,37 @@ def delete_news(news_id):
 @login_required
 @admin_required
 def events():
-    events = Event.query.order_by(Event.event_date.desc()).all()
-    return render_template('admin/events.html', events=events)
+    # Get filter parameters
+    status_filter = request.args.get('status', 'all')
+    category_filter = request.args.get('category', '')
+    
+    query = Event.query
+    
+    # Apply category filter
+    if category_filter:
+        query = query.filter_by(category=category_filter)
+    
+    # Get all events and group them
+    all_events = query.order_by(Event.event_date.desc()).all()
+    
+    now = datetime.utcnow()
+    upcoming_events = [e for e in all_events if e.event_date > now]
+    past_events = [e for e in all_events if e.event_date <= now]
+    
+    # Filter based on status
+    if status_filter == 'upcoming':
+        events = upcoming_events
+    elif status_filter == 'past':
+        events = past_events
+    else:
+        events = all_events
+    
+    return render_template('admin/events.html', 
+                         events=events,
+                         upcoming_count=len(upcoming_events),
+                         past_count=len(past_events),
+                         current_status=status_filter,
+                         current_category=category_filter)
 
 @admin_bp.route('/events/add', methods=['GET', 'POST'])
 @login_required
@@ -143,12 +172,35 @@ def add_event():
         description = request.form.get('description')
         event_date = datetime.strptime(request.form.get('event_date'), '%Y-%m-%dT%H:%M')
         location = request.form.get('location')
+        category = request.form.get('category', 'workshop')
+        max_attendees = request.form.get('max_attendees', type=int)
+        
+        # Handle image upload
+        image = None
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename:
+                # Create uploads directory if it doesn't exist
+                upload_folder = os.path.join(current_app.static_folder, 'uploads', 'events')
+                os.makedirs(upload_folder, exist_ok=True)
+                
+                # Secure the filename and save
+                filename = secure_filename(file.filename)
+                # Add timestamp to make filename unique
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                filename = timestamp + filename
+                filepath = os.path.join(upload_folder, filename)
+                file.save(filepath)
+                image = f'uploads/events/{filename}'
         
         event = Event(
             title=title,
             description=description,
             event_date=event_date,
-            location=location
+            location=location,
+            category=category,
+            image=image,
+            max_attendees=max_attendees
         )
         db.session.add(event)
         db.session.commit()
@@ -332,6 +384,47 @@ def edit_event(event_id):
         event.description = request.form.get('description')
         event.event_date = datetime.strptime(request.form.get('event_date'), '%Y-%m-%dT%H:%M')
         event.location = request.form.get('location')
+        event.category = request.form.get('category', 'workshop')
+        event.max_attendees = request.form.get('max_attendees', type=int)
+        
+        # Handle image removal
+        if 'remove_image' in request.form:
+            if event.image:
+                # Delete old image file
+                old_image_path = os.path.join(current_app.static_folder, event.image)
+                if os.path.exists(old_image_path):
+                    try:
+                        os.remove(old_image_path)
+                    except:
+                        pass  # If deletion fails, continue anyway
+                event.image = None
+        
+        # Handle new image upload
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename:
+                # Delete old image if exists
+                if event.image:
+                    old_image_path = os.path.join(current_app.static_folder, event.image)
+                    if os.path.exists(old_image_path):
+                        try:
+                            os.remove(old_image_path)
+                        except:
+                            pass
+                
+                # Create uploads directory if it doesn't exist
+                upload_folder = os.path.join(current_app.static_folder, 'uploads', 'events')
+                os.makedirs(upload_folder, exist_ok=True)
+                
+                # Secure the filename and save
+                filename = secure_filename(file.filename)
+                # Add timestamp to make filename unique
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                filename = timestamp + filename
+                filepath = os.path.join(upload_folder, filename)
+                file.save(filepath)
+                event.image = f'uploads/events/{filename}'
+        
         db.session.commit()
         
         flash('Event updated successfully.', 'success')

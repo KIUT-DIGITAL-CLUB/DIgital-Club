@@ -15,6 +15,41 @@
     </a>
 </div>
 
+<!-- Filter Tabs -->
+<div class="mb-4">
+    <div class="d-flex gap-2 mb-3">
+        <a href="{{ url_for('admin.events', status='all') }}" 
+           class="admin-btn admin-btn-sm {% if current_status == 'all' %}admin-btn-primary{% else %}admin-btn-outline{% endif %}">
+            <i class="fas fa-calendar"></i> All Events ({{ upcoming_count + past_count }})
+        </a>
+        <a href="{{ url_for('admin.events', status='upcoming') }}" 
+           class="admin-btn admin-btn-sm {% if current_status == 'upcoming' %}admin-btn-primary{% else %}admin-btn-outline{% endif %}">
+            <i class="fas fa-calendar-plus"></i> Upcoming ({{ upcoming_count }})
+        </a>
+        <a href="{{ url_for('admin.events', status='past') }}" 
+           class="admin-btn admin-btn-sm {% if current_status == 'past' %}admin-btn-primary{% else %}admin-btn-outline{% endif %}">
+            <i class="fas fa-calendar-check"></i> Past ({{ past_count }})
+        </a>
+    </div>
+    
+    <!-- Category Filter -->
+    <form method="GET" class="d-flex gap-2" style="max-width: 400px;">
+        <input type="hidden" name="status" value="{{ current_status }}">
+        <select name="category" class="admin-form-control" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            <option value="hackathon" {% if current_category == 'hackathon' %}selected{% endif %}>Hackathon</option>
+            <option value="workshop" {% if current_category == 'workshop' %}selected{% endif %}>Workshop</option>
+            <option value="tech_talk" {% if current_category == 'tech_talk' %}selected{% endif %}>Tech Talk</option>
+            <option value="social_event" {% if current_category == 'social_event' %}selected{% endif %}>Social Event</option>
+        </select>
+        {% if current_category %}
+        <a href="{{ url_for('admin.events', status=current_status) }}" class="admin-btn admin-btn-outline admin-btn-sm">
+            <i class="fas fa-times"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
 {% if events %}
 <div class="admin-table-container">
     <div class="admin-card-header">
@@ -25,19 +60,47 @@
             <thead>
                 <tr>
                     <th>Event Details</th>
+                    <th>Category</th>
                     <th>Date & Time</th>
                     <th>Location</th>
+                    <th>RSVPs</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for event in events %}
+                {% set rsvp_stats = event.get_rsvp_stats() %}
                 <tr>
                     <td>
-                        <div>
-                            <h6 class="mb-1">{{ event.title }}</h6>
-                            <p class="text-muted mb-0 small">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if event.image %}
+                            <img src="{{ url_for('static', filename=event.image) }}" 
+                                 alt="{{ event.title }}" 
+                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-1">{{ event.title }}</h6>
+                                <p class="text-muted mb-0 small">{{ event.description[:100] if event.description else '' }}{% if event.description and event.description|length > 100 %}...{% endif %}</p>
+                                {% if event.is_upcoming() %}
+                                    <span class="admin-badge admin-badge-success">Upcoming</span>
+                                {% else %}
+                                    <span class="admin-badge admin-badge-secondary">Past</span>
+                                {% endif %}
+                            </div>
                         </div>
+                    </td>
+                    <td>
+                        {% if event.category == 'hackathon' %}
+                            <span class="admin-badge" style="background-color: rgba(255, 0, 255, 0.2); color: #ff00ff;">Hackathon</span>
+                        {% elif event.category == 'workshop' %}
+                            <span class="admin-badge" style="background-color: rgba(0, 255, 255, 0.2); color: #00ffff;">Workshop</span>
+                        {% elif event.category == 'tech_talk' %}
+                            <span class="admin-badge" style="background-color: rgba(255, 255, 0, 0.2); color: #ffff00;">Tech Talk</span>
+                        {% elif event.category == 'social_event' %}
+                            <span class="admin-badge" style="background-color: rgba(0, 255, 0, 0.2); color: #00ff00;">Social Event</span>
+                        {% else %}
+                            <span class="admin-badge admin-badge-secondary">{{ event.category|title }}</span>
+                        {% endif %}
                     </td>
                     <td>
                         <div>
@@ -48,9 +111,22 @@
                     </td>
                     <td>
                         <span class="admin-badge admin-badge-secondary">{{ event.location or 'TBA' }}</span>
+                        {% if event.max_attendees %}
+                        <br><small class="text-muted">Max: {{ event.max_attendees }}</small>
+                        {% endif %}
                     </td>
                     <td>
-                        <div class="btn-group">
+                        <div class="small">
+                            <div><span class="admin-badge admin-badge-warning">Pending: {{ rsvp_stats.pending }}</span></div>
+                            <div><span class="admin-badge admin-badge-success">Approved: {{ rsvp_stats.approved }}</span></div>
+                            <div><span class="admin-badge admin-badge-danger">Rejected: {{ rsvp_stats.rejected }}</span></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="{{ url_for('admin.rsvps', event_id=event.id) }}" class="admin-btn admin-btn-sm admin-btn-outline">
+                                <i class="fas fa-users"></i> View RSVPs
+                            </a>
                             <a href="{{ url_for('admin.edit_event', event_id=event.id) }}" class="admin-btn admin-btn-sm admin-btn-outline">
                                 <i class="fas fa-edit"></i> Edit
                             </a>

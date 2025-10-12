@@ -18,11 +18,22 @@
                 </div>
             </div>
             
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <div class="admin-form-group">
                     <label for="title" class="admin-form-label">Event Title</label>
                     <input type="text" class="admin-form-control" id="title" name="title" required 
                            placeholder="Enter the event title">
+                </div>
+                
+                <div class="admin-form-group">
+                    <label for="category" class="admin-form-label">Event Category</label>
+                    <select class="admin-form-control" id="category" name="category" required>
+                        <option value="workshop">Workshop</option>
+                        <option value="hackathon">Hackathon</option>
+                        <option value="tech_talk">Tech Talk</option>
+                        <option value="social_event">Social Event</option>
+                    </select>
+                    <small class="text-muted">Select the type of event</small>
                 </div>
                 
                 <div class="admin-form-group">
@@ -40,6 +51,19 @@
                     <label for="location" class="admin-form-label">Location</label>
                     <input type="text" class="admin-form-control" id="location" name="location" 
                            placeholder="e.g., Computer Lab 1, Main Auditorium, Online">
+                </div>
+                
+                <div class="admin-form-group">
+                    <label for="image" class="admin-form-label">Event Banner Image (Optional)</label>
+                    <input type="file" class="admin-form-control" id="image" name="image" accept="image/*">
+                    <small class="text-muted">Upload an image for the event banner (JPG, PNG, WebP)</small>
+                </div>
+                
+                <div class="admin-form-group">
+                    <label for="max_attendees" class="admin-form-label">Maximum Attendees (Optional)</label>
+                    <input type="number" class="admin-form-control" id="max_attendees" name="max_attendees" min="1"
+                           placeholder="Leave empty for unlimited capacity">
+                    <small class="text-muted">Set a capacity limit for the event</small>
                 </div>
                 
                 <div class="d-flex gap-3">

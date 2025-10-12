@@ -98,7 +98,33 @@ class Event(db.Model):
     description = db.Column(db.Text)
     event_date = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.String(200))
+    category = db.Column(db.String(50), default='workshop')  # hackathon, workshop, tech_talk, social_event
+    image = db.Column(db.String(200))  # Event banner image
+    max_attendees = db.Column(db.Integer)  # Optional capacity limit
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def is_upcoming(self):
+        """Check if event is in the future"""
+        return self.event_date > datetime.utcnow()
+    
+    def is_ongoing(self):
+        """Check if event is currently happening (within 24 hours of start time)"""
+        now = datetime.utcnow()
+        time_diff = (self.event_date - now).total_seconds() / 3600  # Hours
+        return -24 <= time_diff <= 0
+    
+    def get_rsvp_stats(self):
+        """Get RSVP statistics"""
+        total = len(self.rsvps)
+        pending = sum(1 for r in self.rsvps if r.status == 'pending')
+        approved = sum(1 for r in self.rsvps if r.status == 'approved')
+        rejected = sum(1 for r in self.rsvps if r.status == 'rejected')
+        return {
+            'total': total,
+            'pending': pending,
+            'approved': approved,
+            'rejected': rejected
+        }
     
     def __repr__(self):
         return f'<Event {self.title}>'

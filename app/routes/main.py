@@ -190,10 +190,61 @@ def news_detail(news_id):
 @main_bp.route('/events')
 def events():
     try:
-        events = Event.query.order_by(Event.event_date.asc()).all()
-    except:
-        events = []
-    return render_template('events.html', events=events)
+        # Get filter parameters
+        category_filter = request.args.get('category', '')
+        
+        query = Event.query
+        
+        # Apply category filter
+        if category_filter:
+            query = query.filter_by(category=category_filter)
+        
+        # Get all events
+        all_events = query.order_by(Event.event_date.desc()).all()
+        
+        # Separate upcoming and past events
+        now = datetime.utcnow()
+        upcoming_events = [e for e in all_events if e.event_date > now]
+        past_events = [e for e in all_events if e.event_date <= now]
+        
+        # Sort upcoming events ascending (soonest first)
+        upcoming_events.sort(key=lambda x: x.event_date)
+        # Sort past events descending (most recent first)
+        past_events.sort(key=lambda x: x.event_date, reverse=True)
+        
+        # Get category counts for the category cards
+        category_counts = {
+            'workshop': Event.query.filter_by(category='workshop').count(),
+            'hackathon': Event.query.filter_by(category='hackathon').count(),
+            'tech_talk': Event.query.filter_by(category='tech_talk').count(),
+            'social_event': Event.query.filter_by(category='social_event').count()
+        }
+        
+        # Get events for calendar (all events with dates)
+        calendar_events = []
+        for event in all_events:
+            calendar_events.append({
+                'id': event.id,
+                'title': event.title,
+                'date': event.event_date.strftime('%Y-%m-%d'),
+                'time': event.event_date.strftime('%H:%M'),
+                'category': event.category,
+                'location': event.location
+            })
+        
+    except Exception as e:
+        print(f"Error loading events: {e}")
+        upcoming_events = []
+        past_events = []
+        category_counts = {'workshop': 0, 'hackathon': 0, 'tech_talk': 0, 'social_event': 0}
+        calendar_events = []
+    
+    return render_template('events.html', 
+                         upcoming_events=upcoming_events,
+                         past_events=past_events,
+                         category_counts=category_counts,
+                         calendar_events=calendar_events,
+                         current_category=category_filter)
 
 @main_bp.route('/projects')
 def projects():

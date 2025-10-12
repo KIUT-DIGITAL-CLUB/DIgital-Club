@@ -251,10 +251,14 @@
         </div>
         
         <!-- Countdown Timer for Next Major Event -->
+        {% if upcoming_events and upcoming_events|length > 0 %}
         <div class="countdown-timer" data-aos="fade-up" data-aos-delay="200">
-            <h3 style="margin-bottom: 1rem;">Next Major Event</h3>
-            <h4 style="margin-bottom: 0.5rem;">Tanzania Tech Summit 2024</h4>
-            <p style="opacity: 0.9; margin-bottom: 1rem;">March 15-17, 2024 • Dar es Salaam</p>
+            <h3 style="margin-bottom: 1rem;">Next Event</h3>
+            <h4 style="margin-bottom: 0.5rem;">{{ upcoming_events[0].title }}</h4>
+            <p style="opacity: 0.9; margin-bottom: 1rem;">
+                {{ upcoming_events[0].event_date.strftime('%B %d, %Y at %I:%M %p') }}
+                {% if upcoming_events[0].location %} • {{ upcoming_events[0].location }}{% endif %}
+            </p>
             <div class="countdown-grid" id="countdown-timer">
                 <div class="countdown-item">
                     <span class="countdown-number" id="days">00</span>
@@ -274,26 +278,40 @@
                 </div>
             </div>
         </div>
+        {% endif %}
         
         <!-- Upcoming Events Content -->
         <div class="events-content active" id="upcoming-events">
-            {% if events %}
+            {% if upcoming_events %}
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
-                {% for event in events %}
+                {% for event in upcoming_events %}
                 <div class="card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                    {% if event.image %}
+                    <div style="margin-bottom: 1rem;">
+                        <img src="{{ url_for('static', filename=event.image) }}" alt="{{ event.title }}" 
+                             style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px;">
+                    </div>
+                    {% endif %}
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div>
-                            <span class="event-category category-{{ event.category or 'workshop' }}">
-                                {{ (event.category or 'workshop').title() }}
-                            </span>
-                            <span class="event-status status-upcoming">Upcoming</span>
+                        <div style="width: 100%;">
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <span class="event-category category-{{ event.category or 'workshop' }}">
+                                    {% if event.category == 'tech_talk' %}Tech Talk{% elif event.category == 'social_event' %}Social Event{% else %}{{ event.category|title }}{% endif %}
+                                </span>
+                                <span class="event-status status-upcoming">Upcoming</span>
+                            </div>
                             <h3 style="color: var(--text-primary); margin: 0.5rem 0;">{{ event.title }}</h3>
                             <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 0.5rem;">
                                 <i class="fas fa-calendar-alt"></i> {{ event.event_date.strftime('%B %d, %Y at %I:%M %p') }}
                             </p>
                             {% if event.location %}
-                            <p style="color: var(--text-secondary); margin-bottom: 0;">
+                            <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
                                 <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                            </p>
+                            {% endif %}
+                            {% if event.max_attendees %}
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0;">
+                                <i class="fas fa-users"></i> Max Attendees: {{ event.max_attendees }}
                             </p>
                             {% endif %}
                         </div>
@@ -301,7 +319,7 @@
                     
                     {% if event.description %}
                     <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
-                        {{ event.description }}
+                        {{ event.description[:200] }}{% if event.description|length > 200 %}...{% endif %}
                     </p>
                     {% endif %}
                     
@@ -309,7 +327,7 @@
                         <a href="{{ url_for('main.event_rsvp', event_id=event.id) }}" class="btn-primary" style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center;">
                             <i class="fas fa-calendar-plus"></i> RSVP
                         </a>
-                        <button class="btn-secondary" style="flex: 1;">
+                        <button class="btn-secondary" style="flex: 1;" onclick="shareEvent('{{ event.title }}', '{{ url_for('main.events', _external=True) }}')">
                             <i class="fas fa-share"></i> Share
                         </button>
                     </div>
@@ -348,80 +366,58 @@
             <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-primary);" data-aos="fade-up">
                 Past Events Archive
             </h2>
+            {% if past_events %}
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
-                <!-- Sample Past Events -->
-                <div class="card" data-aos="fade-up" data-aos-delay="100">
+                {% for event in past_events %}
+                <div class="card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                    {% if event.image %}
+                    <div style="margin-bottom: 1rem;">
+                        <img src="{{ url_for('static', filename=event.image) }}" alt="{{ event.title }}" 
+                             style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; opacity: 0.8;">
+                    </div>
+                    {% endif %}
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                         <div>
-                            <span class="event-category category-hackathon">Hackathon</span>
-                            <span class="event-status status-completed">Completed</span>
-                            <h3 style="color: var(--text-primary); margin: 0.5rem 0;">AI Innovation Challenge</h3>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <span class="event-category category-{{ event.category or 'workshop' }}">
+                                    {% if event.category == 'tech_talk' %}Tech Talk{% elif event.category == 'social_event' %}Social Event{% else %}{{ event.category|title }}{% endif %}
+                                </span>
+                                <span class="event-status status-completed">Completed</span>
+                            </div>
+                            <h3 style="color: var(--text-primary); margin: 0.5rem 0;">{{ event.title }}</h3>
                             <p style="color: var(--text-muted); font-size: 0.9rem;">
-                                <i class="fas fa-calendar-alt"></i> February 20, 2024
+                                <i class="fas fa-calendar-alt"></i> {{ event.event_date.strftime('%B %d, %Y') }}
                             </p>
+                            {% if event.location %}
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0;">
+                                <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                            </p>
+                            {% endif %}
                         </div>
                     </div>
+                    {% if event.description %}
                     <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
-                        24-hour hackathon focused on AI solutions for healthcare. 15 teams participated with innovative projects.
+                        {{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}
                     </p>
+                    {% endif %}
                     <div style="display: flex; gap: 1rem;">
-                        <button class="btn-secondary" style="flex: 1;">
+                        <a href="{{ url_for('main.gallery') }}" class="btn-secondary" style="flex: 1; text-decoration: none; text-align: center;">
                             <i class="fas fa-images"></i> Gallery
-                        </button>
-                        <button class="btn-secondary" style="flex: 1;">
-                            <i class="fas fa-trophy"></i> Winners
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="card" data-aos="fade-up" data-aos-delay="200">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div>
-                            <span class="event-category category-workshop">Workshop</span>
-                            <span class="event-status status-completed">Completed</span>
-                            <h3 style="color: var(--text-primary); margin: 0.5rem 0;">React Masterclass</h3>
-                            <p style="color: var(--text-muted); font-size: 0.9rem;">
-                                <i class="fas fa-calendar-alt"></i> February 15, 2024
-                            </p>
-                        </div>
-                    </div>
-                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
-                        Hands-on workshop covering React hooks, state management, and modern development practices.
-                    </p>
-                    <div style="display: flex; gap: 1rem;">
-                        <button class="btn-secondary" style="flex: 1;">
-                            <i class="fas fa-download"></i> Materials
-                        </button>
-                        <button class="btn-secondary" style="flex: 1;">
-                            <i class="fas fa-video"></i> Recording
+                        </a>
+                        <button class="btn-secondary" style="flex: 1;" onclick="shareEvent('{{ event.title }}', '{{ url_for('main.events', _external=True) }}')">
+                            <i class="fas fa-share"></i> Share
                         </button>
                     </div>
                 </div>
-                
-                <div class="card" data-aos="fade-up" data-aos-delay="300">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div>
-                            <span class="event-category category-talk">Tech Talk</span>
-                            <span class="event-status status-completed">Completed</span>
-                            <h3 style="color: var(--text-primary); margin: 0.5rem 0;">Future of Web Development</h3>
-                            <p style="color: var(--text-muted); font-size: 0.9rem;">
-                                <i class="fas fa-calendar-alt"></i> February 10, 2024
-                            </p>
-                        </div>
-                    </div>
-                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
-                        Guest speaker from Google discussed emerging trends in web development and career opportunities.
-                    </p>
-                    <div style="display: flex; gap: 1rem;">
-                        <button class="btn-secondary" style="flex: 1;">
-                            <i class="fas fa-video"></i> Recording
-                        </button>
-                        <button class="btn-secondary" style="flex: 1;">
-                            <i class="fas fa-file-pdf"></i> Slides
-                        </button>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem;">
+                <i class="fas fa-calendar-check" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">No Past Events</h3>
+                <p style="color: var(--text-muted);">Past events will appear here once they're completed.</p>
+            </div>
+            {% endif %}
         </div>
         
         <!-- Categories Content -->
@@ -438,12 +434,12 @@
                             Hands-on learning sessions covering various technologies and programming languages.
                         </p>
                         <div style="background: rgba(0, 255, 255, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">25+</div>
-                            <div style="color: var(--text-secondary);">Workshops This Year</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ category_counts.workshop }}</div>
+                            <div style="color: var(--text-secondary);">Total Workshops</div>
                         </div>
-                        <button class="btn-primary">
+                        <a href="{{ url_for('main.events', category='workshop') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             <i class="fas fa-calendar"></i> View Workshops
-                        </button>
+                        </a>
                     </div>
                 </div>
                 
@@ -455,12 +451,12 @@
                             Intensive coding competitions where teams build innovative solutions in limited time.
                         </p>
                         <div style="background: rgba(255, 0, 255, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--secondary-color);">8+</div>
-                            <div style="color: var(--text-secondary);">Hackathons This Year</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--secondary-color);">{{ category_counts.hackathon }}</div>
+                            <div style="color: var(--text-secondary);">Total Hackathons</div>
                         </div>
-                        <button class="btn-primary">
+                        <a href="{{ url_for('main.events', category='hackathon') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             <i class="fas fa-calendar"></i> View Hackathons
-                        </button>
+                        </a>
                     </div>
                 </div>
                 
@@ -472,12 +468,12 @@
                             Inspiring presentations by industry experts and successful alumni sharing their experiences.
                         </p>
                         <div style="background: rgba(255, 255, 0, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-color);">15+</div>
-                            <div style="color: var(--text-secondary);">Tech Talks This Year</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-color);">{{ category_counts.tech_talk }}</div>
+                            <div style="color: var(--text-secondary);">Total Tech Talks</div>
                         </div>
-                        <button class="btn-primary">
+                        <a href="{{ url_for('main.events', category='tech_talk') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             <i class="fas fa-calendar"></i> View Tech Talks
-                        </button>
+                        </a>
                     </div>
                 </div>
                 
@@ -489,12 +485,12 @@
                             Networking events, game nights, and social gatherings to build community connections.
                         </p>
                         <div style="background: rgba(0, 255, 0, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: #00ff00;">12+</div>
-                            <div style="color: var(--text-secondary);">Social Events This Year</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #00ff00;">{{ category_counts.social_event }}</div>
+                            <div style="color: var(--text-secondary);">Total Social Events</div>
                         </div>
-                        <button class="btn-primary">
+                        <a href="{{ url_for('main.events', category='social_event') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             <i class="fas fa-calendar"></i> View Social Events
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -511,6 +507,9 @@
         once: true,
         offset: 100
     });
+
+    // Calendar events data from backend
+    const calendarEventsData = {{ calendar_events|tojson|safe }};
 
     // Events Navigation Tabs
     const navTabs = document.querySelectorAll('.nav-tab');
@@ -530,9 +529,30 @@
         });
     });
 
+    // Share Event Function
+    function shareEvent(title, url) {
+        if (navigator.share) {
+            navigator.share({
+                title: title,
+                text: 'Check out this event from Digital Club!',
+                url: url
+            }).catch((error) => console.log('Error sharing:', error));
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('Event link copied to clipboard!');
+        }
+    }
+
     // Countdown Timer
     function updateCountdown() {
-        const eventDate = new Date('2024-03-15T09:00:00').getTime();
+        {% if upcoming_events and upcoming_events|length > 0 %}
+        const eventDate = new Date('{{ upcoming_events[0].event_date.strftime('%Y-%m-%dT%H:%M:%S') }}').getTime();
         const now = new Date().getTime();
         const distance = eventDate - now;
 
@@ -549,6 +569,9 @@
         } else {
             document.getElementById('countdown-timer').innerHTML = '<h3>Event Started!</h3>';
         }
+        {% else %}
+        document.getElementById('countdown-timer').innerHTML = '<h3>No Upcoming Events</h3><p>Check back soon!</p>';
+        {% endif %}
     }
 
     // Update countdown every second
@@ -593,6 +616,13 @@
             calendarGrid.appendChild(emptyDay);
         }
         
+        // Get events for this month
+        const monthStr = (month + 1).toString().padStart(2, '0');
+        const yearStr = year.toString();
+        const eventsThisMonth = calendarEventsData.filter(event => {
+            return event.date.startsWith(`${yearStr}-${monthStr}`);
+        });
+        
         // Add days of the month
         for (let day = 1; day <= daysInMonth; day++) {
             const dayElement = document.createElement('div');
@@ -605,10 +635,20 @@
                 dayElement.classList.add('today');
             }
             
-            // Mark days with events (sample data)
-            const eventDays = [5, 12, 15, 20, 25, 28];
-            if (eventDays.includes(day)) {
+            // Check if this day has events
+            const dayStr = day.toString().padStart(2, '0');
+            const dateStr = `${yearStr}-${monthStr}-${dayStr}`;
+            const dayEvents = eventsThisMonth.filter(event => event.date === dateStr);
+            
+            if (dayEvents.length > 0) {
                 dayElement.classList.add('has-event');
+                dayElement.title = dayEvents.map(e => `${e.time} - ${e.title}`).join('\n');
+                dayElement.style.cursor = 'pointer';
+                
+                // Add click handler to show events for this day
+                dayElement.addEventListener('click', () => {
+                    showDayEvents(dayEvents);
+                });
             }
             
             calendarGrid.appendChild(dayElement);
@@ -622,6 +662,18 @@
             emptyDay.textContent = i;
             calendarGrid.appendChild(emptyDay);
         }
+    }
+
+    function showDayEvents(events) {
+        let message = 'Events on this day:\n\n';
+        events.forEach(event => {
+            message += `${event.time} - ${event.title}\n`;
+            if (event.location) {
+                message += `Location: ${event.location}\n`;
+            }
+            message += '\n';
+        });
+        alert(message);
     }
 
     // Calendar navigation
