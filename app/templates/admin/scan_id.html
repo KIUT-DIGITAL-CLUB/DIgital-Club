@@ -276,9 +276,9 @@ function displayMemberInfo(member) {
         member.trophies.forEach(trophy => {
             // Check if icon is a Font Awesome class or emoji
             const iconDisplay = trophy.icon.startsWith('fa') 
-                ? `<i class="Tsh {trophy.icon}"></i>` 
+                ? `<i class="${trophy.icon}"></i>` 
                 : trophy.icon;
-            trophiesHtml += `<span class="admin-badge admin-badge-warning" title="Tsh {trophy.name}" style="font-size: 1.2rem;">Tsh {iconDisplay}</span>`;
+            trophiesHtml += `<span class="admin-badge admin-badge-warning" title="${trophy.name}" style="font-size: 1.2rem;">${iconDisplay}</span>`;
         });
         trophiesHtml += '</div>';
         trophiesDiv.innerHTML = trophiesHtml;
@@ -291,13 +291,13 @@ function displayMemberInfo(member) {
     if (member.latest_payment) {
         const daysRemaining = member.latest_payment.days_remaining;
         const daysText = daysRemaining > 0 
-            ? `Tsh {daysRemaining} days remaining`
-            : `Expired Tsh {Math.abs(daysRemaining)} days ago`;
+            ? `${daysRemaining} days remaining`
+            : `Expired ${Math.abs(daysRemaining)} days ago`;
         paymentInfo.innerHTML = `
             <small class="text-muted">
-                <strong>Latest Payment:</strong> Tsh Tsh {member.latest_payment.amount}<br>
-                <strong>Valid Until:</strong> Tsh {member.latest_payment.end_date}<br>
-                <strong>Status:</strong> Tsh {daysText}
+                <strong>Latest Payment:</strong> Tsh ${member.latest_payment.amount}<br>
+                <strong>Valid Until:</strong> ${member.latest_payment.end_date}<br>
+                <strong>Status:</strong> ${daysText}
             </small>
         `;
     } else {
@@ -309,7 +309,7 @@ function displayMemberInfo(member) {
     if (member.recent_attendance && member.recent_attendance.length > 0) {
         let attendanceHtml = '<ul class="list-unstyled mt-2">';
         member.recent_attendance.forEach(att => {
-            attendanceHtml += `<li class="mb-1"><i class="fas fa-check text-success"></i> Tsh {att.event} (Tsh {att.date})</li>`;
+            attendanceHtml += `<li class="mb-1"><i class="fas fa-check text-success"></i> ${att.event} (${att.date})</li>`;
         });
         attendanceHtml += '</ul>';
         attendanceList.innerHTML = attendanceHtml;
@@ -318,9 +318,9 @@ function displayMemberInfo(member) {
     }
     
     // Set action button URLs using proper string interpolation
-    document.getElementById('viewDetailsBtn').href = `/admin/members/Tsh {member.id}`;
-    document.getElementById('addPointsBtn').href = `/admin/rewards/add-points/Tsh {member.id}`;
-    document.getElementById('addPaymentBtn').href = `/admin/payments/add/Tsh {member.id}`;
+    document.getElementById('viewDetailsBtn').href = `/admin/members/${member.id}`;
+    document.getElementById('addPointsBtn').href = `/admin/rewards/add-points/${member.id}`;
+    document.getElementById('addPaymentBtn').href = `/admin/payments/add/${member.id}`;
     
     // Show member info
     document.getElementById('memberInfo').style.display = 'block';

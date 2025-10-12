@@ -99,91 +99,154 @@
         </div>
         
         <nav class="admin-sidebar-nav">
+            <!-- Dashboard -->
             <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
             
-            <a href="{{ url_for('admin.users') }}" class="admin-nav-item {% if request.endpoint == 'admin.users' %}active{% endif %}">
-                <i class="fas fa-users"></i>
-                <span>User Management</span>
-            </a>
+            <!-- Members & Users -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="members-users">
+                    <i class="fas fa-users"></i>
+                    <span>Members & Users</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-members-users">
+                    <a href="{{ url_for('admin.users') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.users' %}active{% endif %}">
+                        <i class="fas fa-users-cog"></i>
+                        <span>User Management</span>
+                    </a>
+                    <a href="{{ url_for('admin.members') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.members', 'admin.member_detail'] %}active{% endif %}">
+                        <i class="fas fa-id-card"></i>
+                        <span>Members</span>
+                    </a>
+                    <a href="{{ url_for('admin.scan_id') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.scan_id' %}active{% endif %}">
+                        <i class="fas fa-qrcode"></i>
+                        <span>Scan Member ID</span>
+                    </a>
+                </div>
+            </div>
             
-            <a href="{{ url_for('admin.members') }}" class="admin-nav-item {% if request.endpoint in ['admin.members', 'admin.member_detail'] %}active{% endif %}">
-                <i class="fas fa-id-card"></i>
-                <span>Members</span>
-            </a>
+            <!-- Financial -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="financial">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Financial</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-financial">
+                    <a href="{{ url_for('admin.payments') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.payments', 'admin.add_payment', 'admin.edit_payment'] %}active{% endif %}">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>Payments</span>
+                    </a>
+                    <a href="{{ url_for('admin.financial') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.financial', 'admin.create_financial_period', 'admin.financial_period_detail', 'admin.add_transaction', 'admin.edit_transaction', 'admin.financial_categories', 'admin.add_financial_category', 'admin.edit_financial_category', 'admin.financial_reports', 'admin.export_financial_period'] %}active{% endif %}">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Financial Management</span>
+                    </a>
+                </div>
+            </div>
             
-            <a href="{{ url_for('admin.scan_id') }}" class="admin-nav-item {% if request.endpoint == 'admin.scan_id' %}active{% endif %}">
-                <i class="fas fa-qrcode"></i>
-                <span>Scan Member ID</span>
-            </a>
+            <!-- Rewards & Recognition -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="rewards">
+                    <i class="fas fa-award"></i>
+                    <span>Rewards & Recognition</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-rewards">
+                    <a href="{{ url_for('admin.rewards_history') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.rewards_history', 'admin.add_points'] %}active{% endif %}">
+                        <i class="fas fa-coins"></i>
+                        <span>Reward Points</span>
+                    </a>
+                    <a href="{{ url_for('admin.trophies') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.trophies', 'admin.add_trophy', 'admin.edit_trophy'] %}active{% endif %}">
+                        <i class="fas fa-trophy"></i>
+                        <span>Trophies</span>
+                    </a>
+                </div>
+            </div>
             
-            <a href="{{ url_for('admin.payments') }}" class="admin-nav-item {% if request.endpoint in ['admin.payments', 'admin.add_payment', 'admin.edit_payment'] %}active{% endif %}">
-                <i class="fas fa-dollar-sign"></i>
-                <span>Payments</span>
-            </a>
+            <!-- Content Management -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="content">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Content Management</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-content">
+                    <a href="{{ url_for('admin.news') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.news', 'admin.add_news', 'admin.edit_news'] %}active{% endif %}">
+                        <i class="fas fa-newspaper"></i>
+                        <span>News Management</span>
+                    </a>
+                    <a href="{{ url_for('admin.blogs') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.blogs', 'admin.add_blog', 'admin.edit_blog'] %}active{% endif %}">
+                        <i class="fas fa-blog"></i>
+                        <span>Blog Management</span>
+                    </a>
+                    <a href="{{ url_for('admin.leaders') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.leaders', 'admin.add_leader', 'admin.edit_leader'] %}active{% endif %}">
+                        <i class="fas fa-crown"></i>
+                        <span>Leader Management</span>
+                    </a>
+                    <a href="{{ url_for('admin.gallery') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.gallery', 'admin.add_gallery_item', 'admin.edit_gallery_item'] %}active{% endif %}">
+                        <i class="fas fa-images"></i>
+                        <span>Gallery Management</span>
+                    </a>
+                </div>
+            </div>
             
-            <a href="{{ url_for('admin.financial') }}" class="admin-nav-item {% if request.endpoint in ['admin.financial', 'admin.create_financial_period', 'admin.financial_period_detail', 'admin.add_transaction', 'admin.edit_transaction', 'admin.financial_categories', 'admin.add_financial_category', 'admin.edit_financial_category', 'admin.financial_reports', 'admin.export_financial_period'] %}active{% endif %}">
-                <i class="fas fa-chart-line"></i>
-                <span>Financial Management</span>
-            </a>
+            <!-- Events -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="events">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Events</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-events">
+                    <a href="{{ url_for('admin.events') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.events', 'admin.add_event', 'admin.edit_event'] %}active{% endif %}">
+                        <i class="fas fa-calendar"></i>
+                        <span>Events Management</span>
+                    </a>
+                    <a href="{{ url_for('admin.rsvps') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.rsvps', 'admin.approve_rsvp', 'admin.reject_rsvp', 'admin.bulk_approve_rsvps', 'admin.bulk_reject_rsvps'] %}active{% endif %}">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>RSVP Management</span>
+                    </a>
+                </div>
+            </div>
             
-            <a href="{{ url_for('admin.rewards_history') }}" class="admin-nav-item {% if request.endpoint in ['admin.rewards_history', 'admin.add_points'] %}active{% endif %}">
-                <i class="fas fa-coins"></i>
-                <span>Reward Points</span>
-            </a>
+            <!-- Projects & Technology -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="projects">
+                    <i class="fas fa-laptop-code"></i>
+                    <span>Projects & Technology</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-projects">
+                    <a href="{{ url_for('admin.projects') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.projects', 'admin.add_project', 'admin.edit_project'] %}active{% endif %}">
+                        <i class="fas fa-project-diagram"></i>
+                        <span>Projects Management</span>
+                    </a>
+                    <a href="{{ url_for('admin.technologies') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.technologies', 'admin.add_technology', 'admin.edit_technology'] %}active{% endif %}">
+                        <i class="fas fa-code"></i>
+                        <span>Technology Management</span>
+                    </a>
+                </div>
+            </div>
             
-            <a href="{{ url_for('admin.trophies') }}" class="admin-nav-item {% if request.endpoint in ['admin.trophies', 'admin.add_trophy', 'admin.edit_trophy'] %}active{% endif %}">
-                <i class="fas fa-trophy"></i>
-                <span>Trophies</span>
-            </a>
+            <!-- Communication -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="communication">
+                    <i class="fas fa-comments"></i>
+                    <span>Communication</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-communication">
+                    <a href="{{ url_for('admin.newsletter') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.newsletter' %}active{% endif %}">
+                        <i class="fas fa-envelope"></i>
+                        <span>Newsletter</span>
+                    </a>
+                </div>
+            </div>
             
-            <a href="{{ url_for('admin.leaders') }}" class="admin-nav-item {% if request.endpoint in ['admin.leaders', 'admin.add_leader', 'admin.edit_leader'] %}active{% endif %}">
-                <i class="fas fa-crown"></i>
-                <span>Leader Management</span>
-            </a>
-            
-            <a href="{{ url_for('admin.news') }}" class="admin-nav-item {% if request.endpoint in ['admin.news', 'admin.add_news', 'admin.edit_news'] %}active{% endif %}">
-                <i class="fas fa-newspaper"></i>
-                <span>News Management</span>
-            </a>
-            
-            <a href="{{ url_for('admin.blogs') }}" class="admin-nav-item {% if request.endpoint in ['admin.blogs', 'admin.add_blog', 'admin.edit_blog'] %}active{% endif %}">
-                <i class="fas fa-blog"></i>
-                <span>Blog Management</span>
-            </a>
-            
-            <a href="{{ url_for('admin.events') }}" class="admin-nav-item {% if request.endpoint in ['admin.events', 'admin.add_event', 'admin.edit_event'] %}active{% endif %}">
-                <i class="fas fa-calendar"></i>
-                <span>Events Management</span>
-            </a>
-            
-            <a href="{{ url_for('admin.rsvps') }}" class="admin-nav-item {% if request.endpoint in ['admin.rsvps', 'admin.approve_rsvp', 'admin.reject_rsvp', 'admin.bulk_approve_rsvps', 'admin.bulk_reject_rsvps'] %}active{% endif %}">
-                <i class="fas fa-calendar-check"></i>
-                <span>RSVP Management</span>
-            </a>
-            
-            <a href="{{ url_for('admin.projects') }}" class="admin-nav-item {% if request.endpoint in ['admin.projects', 'admin.add_project', 'admin.edit_project'] %}active{% endif %}">
-                <i class="fas fa-project-diagram"></i>
-                <span>Projects Management</span>
-            </a>
-            
-            <a href="{{ url_for('admin.technologies') }}" class="admin-nav-item {% if request.endpoint in ['admin.technologies', 'admin.add_technology', 'admin.edit_technology'] %}active{% endif %}">
-                <i class="fas fa-code"></i>
-                <span>Technology Management</span>
-            </a>
-            
-            <a href="{{ url_for('admin.gallery') }}" class="admin-nav-item {% if request.endpoint in ['admin.gallery', 'admin.add_gallery_item', 'admin.edit_gallery_item'] %}active{% endif %}">
-                <i class="fas fa-images"></i>
-                <span>Gallery Management</span>
-            </a>
-            
-            <a href="{{ url_for('admin.newsletter') }}" class="admin-nav-item {% if request.endpoint == 'admin.newsletter' %}active{% endif %}">
-                <i class="fas fa-envelope"></i>
-                <span>Newsletter</span>
-            </a>
-            
+            <!-- Settings -->
             <a href="{{ url_for('admin.settings') }}" class="admin-nav-item {% if request.endpoint == 'admin.settings' %}active{% endif %}">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
@@ -281,6 +344,71 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
+    // Dropdown functionality
+    const dropdownToggles = document.querySelectorAll('.admin-nav-dropdown-toggle');
+    
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const dropdown = this.closest('.admin-nav-dropdown');
+            const dropdownId = this.getAttribute('data-dropdown');
+            const isCurrentlyOpen = dropdown.classList.contains('open');
+            
+            // Close all dropdowns
+            document.querySelectorAll('.admin-nav-dropdown').forEach(d => {
+                d.classList.remove('open');
+                const t = d.querySelector('.admin-nav-dropdown-toggle');
+                if (t) {
+                    const id = t.getAttribute('data-dropdown');
+                    localStorage.setItem('adminDropdown-' + id, 'false');
+                }
+            });
+            
+            // If the clicked dropdown was closed, open it
+            if (!isCurrentlyOpen) {
+                dropdown.classList.add('open');
+                localStorage.setItem('adminDropdown-' + dropdownId, 'true');
+            }
+        });
+    });
+    
+    // Restore dropdown states from localStorage
+    function restoreDropdownStates() {
+        dropdownToggles.forEach(toggle => {
+            const dropdown = toggle.closest('.admin-nav-dropdown');
+            const dropdownId = toggle.getAttribute('data-dropdown');
+            const savedState = localStorage.getItem('adminDropdown-' + dropdownId);
+            
+            if (savedState === 'true') {
+                dropdown.classList.add('open');
+            }
+        });
+    }
+    
+    // Auto-expand dropdown if child item is active
+    function autoExpandActiveDropdowns() {
+        const activeSubitems = document.querySelectorAll('.admin-nav-subitem.active');
+        
+        activeSubitems.forEach(subitem => {
+            const dropdown = subitem.closest('.admin-nav-dropdown');
+            if (dropdown) {
+                dropdown.classList.add('open');
+                
+                // Save the auto-expanded state
+                const toggle = dropdown.querySelector('.admin-nav-dropdown-toggle');
+                if (toggle) {
+                    const dropdownId = toggle.getAttribute('data-dropdown');
+                    localStorage.setItem('adminDropdown-' + dropdownId, 'true');
+                }
+            }
+        });
+    }
+    
+    // Initialize dropdown states
+    restoreDropdownStates();
+    autoExpandActiveDropdowns();
 });
 </script>
 {% endblock %}
