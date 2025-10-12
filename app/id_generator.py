@@ -394,14 +394,31 @@ def generate_digital_id_front(member, base_url=None):
                         width=2
                     )
                 
-                # Add corner accent decorations
+                # Add corner accent decorations with proper orientation
                 accent_size = 20
-                for corner in [(photo_x-5, photo_y-5), (photo_x+photo_size-15, photo_y-5),
-                              (photo_x-5, photo_y+photo_size-15), (photo_x+photo_size-15, photo_y+photo_size-15)]:
-                    draw.rectangle([corner[0], corner[1], corner[0]+accent_size, corner[1]+3], 
-                                 fill=(*TEXT_GOLD, 200))
-                    draw.rectangle([corner[0], corner[1], corner[0]+3, corner[1]+accent_size], 
-                                 fill=(*TEXT_GOLD, 200))
+                # Top-left corner
+                draw.rectangle([photo_x-5, photo_y-5, photo_x-5+accent_size, photo_y-5+3], 
+                             fill=(*TEXT_GOLD, 200))
+                draw.rectangle([photo_x-5, photo_y-5, photo_x-5+3, photo_y-5+accent_size], 
+                             fill=(*TEXT_GOLD, 200))
+                
+                # Top-right corner
+                draw.rectangle([photo_x+photo_size+5-accent_size, photo_y-5, photo_x+photo_size+5, photo_y-5+3], 
+                             fill=(*TEXT_GOLD, 200))
+                draw.rectangle([photo_x+photo_size+2, photo_y-5, photo_x+photo_size+5, photo_y-5+accent_size], 
+                             fill=(*TEXT_GOLD, 200))
+                
+                # Bottom-left corner
+                draw.rectangle([photo_x-5, photo_y+photo_size+2, photo_x-5+accent_size, photo_y+photo_size+5], 
+                             fill=(*TEXT_GOLD, 200))
+                draw.rectangle([photo_x-5, photo_y+photo_size+5-accent_size, photo_x-5+3, photo_y+photo_size+5], 
+                             fill=(*TEXT_GOLD, 200))
+                
+                # Bottom-right corner
+                draw.rectangle([photo_x+photo_size+5-accent_size, photo_y+photo_size+2, photo_x+photo_size+5, photo_y+photo_size+5], 
+                             fill=(*TEXT_GOLD, 200))
+                draw.rectangle([photo_x+photo_size+2, photo_y+photo_size+5-accent_size, photo_x+photo_size+5, photo_y+photo_size+5], 
+                             fill=(*TEXT_GOLD, 200))
             else:
                 # Premium placeholder
                 create_glass_effect(draw, photo_x, photo_y, photo_size, photo_size, 25)
@@ -614,20 +631,40 @@ def generate_digital_id_front(member, base_url=None):
             width=2
         )
     
-    # Corner accents for QR
+    # Corner accents for QR with proper orientation
     accent_len = 25
-    accent_positions = [
-        (qr_x - frame_padding - 6, qr_y - frame_padding - 6),  # Top-left
-        (qr_x + qr_size + frame_padding - 19, qr_y - frame_padding - 6),  # Top-right
-        (qr_x - frame_padding - 6, qr_y + qr_size + frame_padding - 19),  # Bottom-left
-        (qr_x + qr_size + frame_padding - 19, qr_y + qr_size + frame_padding - 19)  # Bottom-right
-    ]
     
-    for pos in accent_positions:
-        draw.rectangle([pos[0], pos[1], pos[0] + accent_len, pos[1] + 3], 
-                      fill=(*TEXT_GOLD, 255))
-        draw.rectangle([pos[0], pos[1], pos[0] + 3, pos[1] + accent_len], 
-                      fill=(*TEXT_GOLD, 255))
+    # Top-left corner
+    draw.rectangle([qr_x - frame_padding - 6, qr_y - frame_padding - 6, 
+                   qr_x - frame_padding - 6 + accent_len, qr_y - frame_padding - 6 + 3], 
+                  fill=(*TEXT_GOLD, 255))
+    draw.rectangle([qr_x - frame_padding - 6, qr_y - frame_padding - 6, 
+                   qr_x - frame_padding - 6 + 3, qr_y - frame_padding - 6 + accent_len], 
+                  fill=(*TEXT_GOLD, 255))
+    
+    # Top-right corner
+    draw.rectangle([qr_x + qr_size + frame_padding + 6 - accent_len, qr_y - frame_padding - 6, 
+                   qr_x + qr_size + frame_padding + 6, qr_y - frame_padding - 6 + 3], 
+                  fill=(*TEXT_GOLD, 255))
+    draw.rectangle([qr_x + qr_size + frame_padding + 3, qr_y - frame_padding - 6, 
+                   qr_x + qr_size + frame_padding + 6, qr_y - frame_padding - 6 + accent_len], 
+                  fill=(*TEXT_GOLD, 255))
+    
+    # Bottom-left corner
+    draw.rectangle([qr_x - frame_padding - 6, qr_y + qr_size + frame_padding + 3, 
+                   qr_x - frame_padding - 6 + accent_len, qr_y + qr_size + frame_padding + 6], 
+                  fill=(*TEXT_GOLD, 255))
+    draw.rectangle([qr_x - frame_padding - 6, qr_y + qr_size + frame_padding + 6 - accent_len, 
+                   qr_x - frame_padding - 6 + 3, qr_y + qr_size + frame_padding + 6], 
+                  fill=(*TEXT_GOLD, 255))
+    
+    # Bottom-right corner
+    draw.rectangle([qr_x + qr_size + frame_padding + 6 - accent_len, qr_y + qr_size + frame_padding + 3, 
+                   qr_x + qr_size + frame_padding + 6, qr_y + qr_size + frame_padding + 6], 
+                  fill=(*TEXT_GOLD, 255))
+    draw.rectangle([qr_x + qr_size + frame_padding + 3, qr_y + qr_size + frame_padding + 6 - accent_len, 
+                   qr_x + qr_size + frame_padding + 6, qr_y + qr_size + frame_padding + 6], 
+                  fill=(*TEXT_GOLD, 255))
     
     # QR label with glow
     label_text = "SCAN TO VERIFY"

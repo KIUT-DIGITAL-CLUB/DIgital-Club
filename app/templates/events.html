@@ -590,7 +590,7 @@
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         
-        document.getElementById('calendar-title').textContent = `Tsh {monthNames[month]} Tsh {year}`;
+        document.getElementById('calendar-title').textContent = `${monthNames[month]} ${year}`;
         
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
