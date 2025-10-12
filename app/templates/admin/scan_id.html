@@ -136,12 +136,50 @@
 
 <style>
 #qr-reader {
-    border: 2px solid #dee2e6;
+    border: 2px solid #00ffff;
+    background: #000000;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
 #qr-reader video {
-    width: 100%;
+    width: 100% !important;
+    height: auto !important;
     border-radius: 6px;
+    display: block !important;
+    background: #000000;
+}
+
+#qr-reader canvas {
+    display: none !important;
+}
+
+#qr-reader__dashboard {
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: #ffffff !important;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+#qr-reader__dashboard_section {
+    color: #ffffff !important;
+}
+
+#qr-reader__dashboard_section_csr {
+    color: #00ffff !important;
+}
+
+/* Ensure camera feed is visible over dark mode */
+#qr-reader * {
+    background-color: transparent !important;
+}
+
+#qr-reader video,
+#qr-reader canvas {
+    background-color: #000000 !important;
 }
 </style>
 
@@ -171,16 +209,35 @@ document.getElementById('stopScanBtn').addEventListener('click', function() {
 function startQRScanner() {
     html5QrcodeScanner = new Html5Qrcode("qr-reader");
     
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+        disableFlip: false,
+        videoConstraints: {
+            facingMode: "environment",
+            advanced: [{ zoom: 1.0 }]
+        }
+    };
+    
     html5QrcodeScanner.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        onScanSuccess
+        config,
+        onScanSuccess,
+        onScanFailure
     ).then(() => {
         document.getElementById('startScanBtn').style.display = 'none';
         document.getElementById('stopScanBtn').style.display = 'block';
+        console.log('Camera started successfully');
     }).catch(err => {
+        console.error('Camera error:', err);
         alert('Failed to start camera: ' + err);
     });
+}
+
+function onScanFailure(error) {
+    // Silent fail - this fires constantly while scanning
+    // console.warn(`QR scan error: ${error}`);
 }
 
 function stopQRScanner() {
