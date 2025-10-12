@@ -1,6 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for, jsonify
 from app.routes import main_bp
-from app.models import News, Event, Project, Gallery, Topic, Member, Leader, Newsletter, Blog, RSVP, User, Technology
+from app.models import News, Event, Project, Gallery, Topic, Member, Leader, Newsletter, Blog, RSVP, User, Technology, RewardTransaction
 from app import db
 from datetime import datetime
 
@@ -483,3 +483,76 @@ def event_rsvp_status(event_id):
         return redirect(url_for('main.events'))
     
     return render_template('rsvp_status.html', rsvp=rsvp, event=event)
+
+@main_bp.route('/members/<int:member_id>/profile')
+def member_public_profile(member_id):
+    """Public profile page for members"""
+    try:
+        print(f"Looking for member with ID: {member_id}")  # Debug logging
+        
+        # Simple query first - just get the member
+        member = Member.query.filter_by(id=member_id).first()
+        if not member:
+            print(f"Member with ID {member_id} does not exist")  # Debug logging
+            flash('Member profile not found.', 'error')
+            return redirect(url_for('main.members'))
+        
+        print(f"Member exists: {member.full_name}")  # Debug logging
+        
+        # Check if user is approved
+        if not member.user or not member.user.is_approved:
+            print(f"Member {member.full_name} is not approved")  # Debug logging
+            flash('Member profile not approved.', 'error')
+            return redirect(url_for('main.members'))
+        
+        print(f"Member {member.full_name} is approved")  # Debug logging
+        
+        # Get public projects - handle potential errors
+        try:
+            public_projects = member.projects.filter_by(is_public=True).order_by(Project.created_at.desc()).all()
+            print(f"Found {len(public_projects)} public projects")
+        except Exception as e:
+            print(f"Error loading projects: {e}")
+            public_projects = []
+        
+        # Get trophies - handle potential errors
+        try:
+            trophies = member.get_current_trophies()
+            print(f"Found {len(trophies)} trophies")
+        except Exception as e:
+            print(f"Error loading trophies: {e}")
+            trophies = []
+        
+        # Get reward transactions - handle potential errors
+        try:
+            reward_transactions = member.reward_transactions.order_by(RewardTransaction.created_at.desc()).all()
+            print(f"Found {len(reward_transactions)} reward transactions")
+        except Exception as e:
+            print(f"Error loading reward transactions: {e}")
+            reward_transactions = []
+        
+        print(f"Successfully loaded member profile for {member.full_name}")  # Debug logging
+        
+        return render_template('member_public_profile.html', 
+                             member=member,
+                             public_projects=public_projects,
+                             trophies=trophies,
+                             reward_transactions=reward_transactions)
+    except Exception as e:
+        print(f"Error loading member profile: {e}")  # Debug logging
+        import traceback
+        traceback.print_exc()  # Print full traceback
+        flash('Error loading member profile. Please try again.', 'error')
+        return redirect(url_for('main.members'))
+
+@main_bp.route('/test-member/<int:member_id>')
+def test_member(member_id):
+    """Simple test route to check if member exists"""
+    try:
+        member = Member.query.filter_by(id=member_id).first()
+        if member:
+            return f"Member found: {member.full_name} (Approved: {member.user.is_approved if member.user else 'No user'})"
+        else:
+            return f"Member with ID {member_id} not found"
+    except Exception as e:
+        return f"Error: {e}"

@@ -341,18 +341,6 @@
                         <span>{{ member.year }}</span>
                     </div>
                     {% endif %}
-                    {% if member.phone %}
-                    <div class="info-item">
-                        <i class="fas fa-phone"></i>
-                        <span>{{ member.phone }}</span>
-                    </div>
-                    {% endif %}
-                    {% if member.user.email %}
-                    <div class="info-item">
-                        <i class="fas fa-envelope"></i>
-                        <span>{{ member.user.email }}</span>
-                    </div>
-                    {% endif %}
                 </div>
                 
                 {% if member.bio %}
@@ -372,9 +360,11 @@
                 </div>
                 {% endif %}
                 
+                <!-- Always show achievements section if member has trophies or points -->
                 {% if member.trophies or member.get_total_points() > 0 %}
                 <div class="alumni-achievements" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 165, 0, 0.15) 100%); border: 2px solid rgba(255, 215, 0, 0.4); border-radius: 15px; padding: 1.2rem; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);">
-                    <!-- Points Display -->
+                    <!-- Points Display - Only show if member has points -->
+                    {% if member.get_total_points() > 0 %}
                     <div style="text-align: center; margin-bottom: 1rem;">
                         <div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #FFD700, #FF8C00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: 0 0 20px rgba(255, 215, 0, 0.6); margin-bottom: 0.3rem;">
                             {{ member.get_total_points() }}
@@ -383,9 +373,11 @@
                             Total Points
                         </div>
                     </div>
+                    {% endif %}
                     
+                    <!-- Trophies Display - Always show if member has trophies -->
                     {% if member.trophies %}
-                    <div style="border-top: 2px solid rgba(255, 255, 255, 0.2); padding-top: 1rem;">
+                    <div class="trophies-section" style="{% if member.get_total_points() > 0 %}border-top: 2px solid rgba(255, 255, 255, 0.2); padding-top: 1rem;{% endif %}">
                         <div style="text-align: center; color: white; font-weight: 700; font-size: 1rem; margin-bottom: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase;">
                             🏆 Legacy Achievements
                         </div>
@@ -420,17 +412,14 @@
                 </div>
                 {% endif %}
                 
-                <div class="social-links">
-                    {% if member.github %}
-                    <a href="{{ member.github }}" target="_blank" class="social-link" title="GitHub">
-                        <i class="fab fa-github"></i>
+                <!-- View More Button -->
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="{{ url_for('main.member_public_profile', member_id=member.id) }}" 
+                       class="btn-primary" 
+                       style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border-radius: 25px; text-decoration: none; transition: all 0.3s ease;">
+                        <i class="fas fa-eye"></i>
+                        View More
                     </a>
-                    {% endif %}
-                    {% if member.linkedin %}
-                    <a href="{{ member.linkedin }}" target="_blank" class="social-link" title="LinkedIn">
-                        <i class="fab fa-linkedin"></i>
-                    </a>
-                    {% endif %}
                 </div>
             </div>
             {% endfor %}

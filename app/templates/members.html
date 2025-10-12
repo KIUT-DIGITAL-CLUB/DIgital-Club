@@ -78,12 +78,6 @@
                         {% endif %}
                     </div>
                     
-                    {% if member.bio %}
-                    <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem; font-size: 0.9rem;">
-                        {{ member.bio[:100] }}{% if member.bio|length > 100 %}...{% endif %}
-                    </p>
-                    {% endif %}
-                    
                     {% if member.areas_of_interest %}
                     <div style="margin-bottom: 1rem;">
                         {% for area in member.get_areas_list()[:3] %}
@@ -91,12 +85,19 @@
                             {{ area }}
                         </span>
                         {% endfor %}
+                        {% if member.get_areas_list()|length > 3 %}
+                        <span style="background: rgba(255, 255, 0, 0.1); color: var(--accent-color); padding: 0.2rem 0.6rem; border-radius: 10px; font-size: 0.7rem; margin-right: 0.3rem; margin-bottom: 0.3rem; display: inline-block;">
+                            +{{ member.get_areas_list()|length - 3 }} more
+                        </span>
+                        {% endif %}
                     </div>
                     {% endif %}
                     
+                    <!-- Always show achievements section if member has trophies or points -->
                     {% if member.trophies or member.get_total_points() > 0 %}
                     <div style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
                         <!-- Points Display -->
+                        {% if member.get_total_points() > 0 %}
                         <div style="text-align: center; margin-bottom: 0.8rem;">
                             <div style="font-size: 2rem; font-weight: 700; color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); margin-bottom: 0.2rem;">
                                 {{ member.get_total_points() }}
@@ -105,9 +106,11 @@
                                 POINTS
                             </div>
                         </div>
+                        {% endif %}
                         
+                        <!-- Trophies Display - Always show if member has trophies -->
                         {% if member.trophies %}
-                        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 0.8rem;">
+                        <div style="{% if member.get_total_points() > 0 %}border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 0.8rem;{% endif %}">
                             <div style="text-align: center; color: white; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.6rem; letter-spacing: 1px;">
                                 🏆 TROPHIES EARNED
                             </div>
@@ -139,17 +142,14 @@
                     </div>
                     {% endif %}
                     
-                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                        {% if member.github %}
-                        <a href="{{ member.github }}" target="_blank" class="social-link" style="width: 35px; height: 35px;">
-                            <i class="fab fa-github"></i>
+                    <!-- View More Button -->
+                    <div style="margin-top: 1rem;">
+                        <a href="{{ url_for('main.member_public_profile', member_id=member.id) }}" 
+                           class="btn-primary" 
+                           style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border-radius: 25px; text-decoration: none; transition: all 0.3s ease;">
+                            <i class="fas fa-eye"></i>
+                            View More
                         </a>
-                        {% endif %}
-                        {% if member.linkedin %}
-                        <a href="{{ member.linkedin }}" target="_blank" class="social-link" style="width: 35px; height: 35px;">
-                            <i class="fab fa-linkedin"></i>
-                        </a>
-                        {% endif %}
                     </div>
                 </div>
             </div>

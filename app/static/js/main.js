@@ -269,7 +269,7 @@ function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `flash-message flash-Tsh {type}`;
     notification.innerHTML = `
-        <span>Tsh {message}</span>
+        <span>${message}</span>
         <button class="flash-close" onclick="this.parentElement.remove()">
             <i class="fas fa-times"></i>
         </button>
