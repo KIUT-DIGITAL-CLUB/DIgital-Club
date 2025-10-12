@@ -41,6 +41,11 @@ class Member(db.Model):
     areas_of_interest = db.Column(db.Text)  # Comma-separated areas
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Digital ID fields
+    member_id_number = db.Column(db.String(20), unique=True)  # Format: DC-YYYY-XXXX
+    digital_id_path = db.Column(db.String(200))  # Path to generated ID image
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
     # Relationship to projects
     projects = db.relationship('Project', backref='member', lazy='dynamic')
     
@@ -59,6 +64,47 @@ class Member(db.Model):
         if self.areas_of_interest:
             return [area.strip() for area in self.areas_of_interest.split(',')]
         return []
+    
+    def generate_member_id(self):
+        """Generate a unique member ID number in format DC-YYYY-XXXX"""
+        if self.member_id_number:
+            return self.member_id_number
+        
+        year = self.created_at.year if self.created_at else datetime.utcnow().year
+        
+        # Find the highest number for this year
+        prefix = f'DC-{year}-'
+        last_member = Member.query.filter(
+            Member.member_id_number.like(f'{prefix}%')
+        ).order_by(Member.member_id_number.desc()).first()
+        
+        if last_member and last_member.member_id_number:
+            try:
+                last_number = int(last_member.member_id_number.split('-')[-1])
+                new_number = last_number + 1
+            except:
+                new_number = 1
+        else:
+            new_number = 1
+        
+        self.member_id_number = f'{prefix}{new_number:04d}'
+        return self.member_id_number
+    
+    def needs_id_regeneration(self):
+        """Check if digital ID needs to be regenerated"""
+        # Regenerate if no ID exists or no image file
+        if not self.digital_id_path:
+            return True
+        
+        # Check if the file actually exists
+        import os
+        from flask import current_app
+        if current_app:
+            id_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'digital_ids', self.digital_id_path)
+            if not os.path.exists(id_path):
+                return True
+        
+        return False
     
     def __repr__(self):
         return f'<Member {self.full_name}>'

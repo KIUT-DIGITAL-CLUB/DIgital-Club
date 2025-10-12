@@ -1,10 +1,11 @@
-from flask import render_template, request, flash, redirect, url_for, current_app
+from flask import render_template, request, flash, redirect, url_for, current_app, send_file
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.routes import member_bp
 from app.models import Member, Project, User
 from app import db
+from app.id_generator import generate_digital_id, delete_digital_id
 import os
 import json
 from datetime import datetime
@@ -85,6 +86,17 @@ def edit_profile():
                     return render_template('member/edit_profile.html', member=member)
         
         db.session.commit()
+        
+        # Auto-regenerate digital ID after profile update
+        try:
+            if member.digital_id_path:
+                delete_digital_id(member)
+            generate_digital_id(member)
+            db.session.commit()
+        except Exception as e:
+            # Don't fail the profile update if ID generation fails
+            print(f"Error regenerating digital ID: {e}")
+        
         flash('Profile updated successfully!', 'success')
         return redirect(url_for('member.dashboard'))
     
@@ -206,3 +218,83 @@ def delete_project(project_id):
     
     flash('Project deleted successfully!', 'success')
     return redirect(url_for('member.my_projects'))
+
+@member_bp.route('/digital-id')
+@login_required
+def digital_id():
+    """Display member's digital ID card"""
+    if not current_user.member:
+        flash('Please complete your profile first.', 'warning')
+        return redirect(url_for('member.edit_profile'))
+    
+    member = current_user.member
+    
+    # Generate ID if it doesn't exist or needs regeneration
+    if member.needs_id_regeneration():
+        try:
+            generate_digital_id(member)
+            db.session.commit()
+            flash('Digital ID generated successfully!', 'success')
+        except Exception as e:
+            flash(f'Error generating digital ID: {str(e)}', 'error')
+            return redirect(url_for('member.dashboard'))
+    
+    return render_template('member/digital_id.html', member=member)
+
+@member_bp.route('/download-id')
+@login_required
+def download_id():
+    """Download member's digital ID card as an image"""
+    if not current_user.member:
+        flash('Please complete your profile first.', 'warning')
+        return redirect(url_for('member.edit_profile'))
+    
+    member = current_user.member
+    
+    # Generate ID if it doesn't exist
+    if member.needs_id_regeneration():
+        try:
+            generate_digital_id(member)
+            db.session.commit()
+        except Exception as e:
+            flash(f'Error generating digital ID: {str(e)}', 'error')
+            return redirect(url_for('member.dashboard'))
+    
+    # Send file for download
+    id_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'digital_ids', member.digital_id_path)
+    
+    if not os.path.exists(id_path):
+        flash('Digital ID file not found. Please regenerate.', 'error')
+        return redirect(url_for('member.digital_id'))
+    
+    return send_file(
+        id_path,
+        as_attachment=True,
+        download_name=f'DigitalClub_ID_{member.member_id_number}.png',
+        mimetype='image/png'
+    )
+
+@member_bp.route('/regenerate-id')
+@login_required
+def regenerate_id():
+    """Manually regenerate member's digital ID card"""
+    if not current_user.member:
+        flash('Please complete your profile first.', 'warning')
+        return redirect(url_for('member.edit_profile'))
+    
+    member = current_user.member
+    
+    try:
+        # Delete old ID if exists
+        if member.digital_id_path:
+            delete_digital_id(member)
+        
+        # Generate new ID
+        generate_digital_id(member)
+        db.session.commit()
+        
+        flash('Digital ID regenerated successfully!', 'success')
+    except Exception as e:
+        flash(f'Error regenerating digital ID: {str(e)}', 'error')
+    
+    return redirect(url_for('member.digital_id'))

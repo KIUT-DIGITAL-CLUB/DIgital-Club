@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash
 from app.routes import auth_bp
 from app.models import User, Member
 from app import db
+from app.id_generator import generate_digital_id
 from datetime import datetime
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -70,6 +71,16 @@ def login():
                 return render_template('auth/approval_pending.html')
             
             login_user(user)
+            
+            # Auto-generate digital ID if member doesn't have one
+            if user.member and user.member.needs_id_regeneration():
+                try:
+                    generate_digital_id(user.member)
+                    db.session.commit()
+                except Exception as e:
+                    # Don't fail login if ID generation fails
+                    print(f"Error generating digital ID on login: {e}")
+            
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.index'))
         else:

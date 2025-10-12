@@ -203,6 +203,14 @@
                             <small class="d-block text-muted">Manage your projects</small>
                         </div>
                     </a>
+                    
+                    <a href="{{ url_for('member.digital_id') }}" class="quick-action" style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 200, 200, 0.15));">
+                        <i class="fas fa-id-card"></i>
+                        <div>
+                            <strong>My Digital ID</strong>
+                            <small class="d-block text-muted">View & download your ID card</small>
+                        </div>
+                    </a>
                 </div>
             </div>
             
@@ -265,6 +273,42 @@
                     </div>
                 </div>
                 {% endif %}
+                
+                <!-- Digital ID Preview -->
+                <div class="dashboard-card" data-aos="fade-up" data-aos-delay="600" style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(0, 200, 200, 0.1));">
+                    <h5 class="mb-3"><i class="fas fa-id-card text-primary"></i> My Digital ID Card</h5>
+                    
+                    {% if member.digital_id_path %}
+                    <div class="text-center mb-3">
+                        <img src="{{ url_for('static', filename='uploads/digital_ids/' + member.digital_id_path) }}" 
+                             alt="Digital ID Preview"
+                             style="max-width: 100%; height: auto; border-radius: 10px; border: 2px solid var(--primary-color); box-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);">
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i>
+                        Your digital ID will be generated automatically
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <a href="{{ url_for('member.digital_id') }}" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View Full ID
+                        </a>
+                        <a href="{{ url_for('member.download_id') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                    
+                    {% if member.member_id_number %}
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-fingerprint"></i> 
+                            ID: <strong class="text-primary">{{ member.member_id_number }}</strong>
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

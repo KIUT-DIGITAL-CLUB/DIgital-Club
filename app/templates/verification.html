@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Member Verification - Digital Club{% endblock %}
+
+{% block extra_head %}
+<style>
+    .verification-page {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .verification-card {
+        background: rgba(0, 0, 0, 0.4);
+        border: 2px solid var(--border-color);
+        border-radius: 20px;
+        padding: 3rem;
+        max-width: 600px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .verification-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+    }
+    
+    .verification-icon.valid {
+        background: rgba(0, 255, 0, 0.1);
+        border: 3px solid #00ff00;
+        color: #00ff00;
+    }
+    
+    .verification-icon.invalid {
+        background: rgba(255, 0, 0, 0.1);
+        border: 3px solid #ff0000;
+        color: #ff0000;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        letter-spacing: 2px;
+    }
+    
+    .status-badge.valid {
+        background: rgba(0, 255, 0, 0.2);
+        color: #00ff00;
+        border: 2px solid #00ff00;
+    }
+    
+    .status-badge.invalid {
+        background: rgba(255, 0, 0, 0.2);
+        color: #ff0000;
+        border: 2px solid #ff0000;
+    }
+    
+    .member-info {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .member-photo {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--primary-color);
+        margin: 0 auto 1.5rem;
+        display: block;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    
+    .info-value {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .club-branding {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .club-logo {
+        font-size: 1.2rem;
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="verification-page">
+    <div class="verification-card" data-aos="fade-up">
+        {% if valid %}
+            <!-- Valid Member -->
+            <div class="verification-icon valid">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            
+            <div class="status-badge valid">
+                ✓ VALID MEMBER
+            </div>
+            
+            <h2 class="mb-4">Member Verification Successful</h2>
+            <p class="text-secondary">This member is a verified member of the KIUT Digital Club.</p>
+            
+            <div class="member-info" data-aos="fade-up" data-aos-delay="100">
+                {% if member.profile_image %}
+                    <img src="{{ url_for('static', filename='uploads/profiles/' + member.profile_image) }}" 
+                         alt="{{ member.full_name }}" class="member-photo">
+                {% else %}
+                    <div class="member-photo d-flex align-items-center justify-content-center" 
+                         style="background: var(--primary-color); color: var(--bg-primary); font-size: 3rem;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                
+                <h3 class="text-primary mb-3">{{ member.full_name }}</h3>
+                
+                <div class="info-row">
+                    <span class="info-label">Member ID:</span>
+                    <span class="info-value">{{ member.member_id_number }}</span>
+                </div>
+                
+                {% if member.course %}
+                <div class="info-row">
+                    <span class="info-label">Course:</span>
+                    <span class="info-value">{{ member.course }}</span>
+                </div>
+                {% endif %}
+                
+                {% if member.year %}
+                <div class="info-row">
+                    <span class="info-label">Year:</span>
+                    <span class="info-value">{{ member.year }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value text-capitalize">
+                        {{ member.status }}
+                        {% if member.status == 'student' %}
+                            <i class="fas fa-user-graduate text-success"></i>
+                        {% else %}
+                            <i class="fas fa-graduation-cap text-warning"></i>
+                        {% endif %}
+                    </span>
+                </div>
+                
+                {% if member.created_at %}
+                <div class="info-row">
+                    <span class="info-label">Member Since:</span>
+                    <span class="info-value">{{ member.created_at.strftime('%B %Y') }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+        {% else %}
+            <!-- Invalid Member ID -->
+            <div class="verification-icon invalid">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            
+            <div class="status-badge invalid">
+                ✗ INVALID
+            </div>
+            
+            <h2 class="mb-4">Verification Failed</h2>
+            <p class="text-secondary">The member ID <code class="text-danger">{{ member_id }}</code> could not be verified.</p>
+            
+            <div class="member-info" data-aos="fade-up" data-aos-delay="100">
+                <p class="text-muted mb-0">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    This ID does not match any registered member in our database.
+                </p>
+            </div>
+        {% endif %}
+        
+        <!-- Club Branding -->
+        <div class="club-branding">
+            <div class="club-logo">KIUT DIGITAL CLUB</div>
+            <p class="text-muted small mb-0">Official Member Verification System</p>
+        </div>
+        
+        <div class="mt-4">
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize AOS animations
+    AOS.init({
+        duration: 800,
+        once: true
+    });
+</script>
+{% endblock %}
+

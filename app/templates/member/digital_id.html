@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}My Digital ID - Digital Club{% endblock %}
+
+{% block extra_head %}
+<style>
+    .digital-id-page {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+    }
+    
+    .id-card-container {
+        background: rgba(0, 0, 0, 0.4);
+        border: 2px solid var(--border-color);
+        border-radius: 20px;
+        padding: 3rem;
+        max-width: 900px;
+        margin: 0 auto 2rem;
+    }
+    
+    .id-preview {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .id-preview img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 255, 255, 0.3);
+        border: 2px solid var(--primary-color);
+    }
+    
+    .id-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .action-btn {
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn i {
+        font-size: 1.2rem;
+    }
+    
+    .btn-download {
+        background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
+        color: var(--bg-primary);
+        border: none;
+    }
+    
+    .btn-download:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 255, 255, 0.5);
+        color: var(--bg-primary);
+    }
+    
+    .btn-regenerate {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+        border: 2px solid var(--border-color);
+    }
+    
+    .btn-regenerate:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        color: var(--text-primary);
+    }
+    
+    .info-section {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .info-section h4 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .info-section ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .info-section li {
+        padding: 0.5rem 0;
+        color: var(--text-secondary);
+    }
+    
+    .info-section li i {
+        color: var(--primary-color);
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="digital-id-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header" data-aos="fade-down">
+            <h1><i class="fas fa-id-card"></i> My Digital ID Card</h1>
+            <p class="text-secondary">Your official KIUT Digital Club membership ID</p>
+        </div>
+        
+        <!-- ID Card Display -->
+        <div class="id-card-container" data-aos="fade-up">
+            <div class="id-preview">
+                {% if member.digital_id_path %}
+                    <img src="{{ url_for('static', filename='uploads/digital_ids/' + member.digital_id_path) }}" 
+                         alt="Digital ID Card">
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Your digital ID is being generated. Please refresh the page.
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="id-actions">
+                <a href="{{ url_for('member.download_id') }}" class="action-btn btn-download">
+                    <i class="fas fa-download"></i>
+                    Download ID Card
+                </a>
+                
+                <a href="{{ url_for('member.regenerate_id') }}" class="action-btn btn-regenerate"
+                   onclick="return confirm('Are you sure you want to regenerate your ID card? This will replace your current ID.');">
+                    <i class="fas fa-sync-alt"></i>
+                    Regenerate ID
+                </a>
+                
+                <a href="{{ url_for('member.dashboard') }}" class="action-btn btn-regenerate">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+            
+            <!-- Information Section -->
+            <div class="info-section" data-aos="fade-up" data-aos-delay="100">
+                <h4><i class="fas fa-info-circle"></i> About Your Digital ID</h4>
+                <ul>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Your digital ID card is unique to you with ID number: <strong class="text-primary">{{ member.member_id_number }}</strong>
+                    </li>
+                    <li>
+                        <i class="fas fa-qrcode"></i>
+                        The QR code on your ID can be scanned to verify your membership status
+                    </li>
+                    <li>
+                        <i class="fas fa-download"></i>
+                        Download and save your ID card for offline use
+                    </li>
+                    <li>
+                        <i class="fas fa-mobile-alt"></i>
+                        Keep a copy on your phone to show at club events
+                    </li>
+                    <li>
+                        <i class="fas fa-sync-alt"></i>
+                        Your ID automatically updates when you change your profile information
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Verification Link Section -->
+            <div class="info-section" data-aos="fade-up" data-aos-delay="200">
+                <h4><i class="fas fa-shield-alt"></i> Verification</h4>
+                <p class="text-secondary mb-2">Anyone can verify your membership by scanning the QR code or visiting:</p>
+                <div class="input-group">
+                    <input type="text" 
+                           class="form-control" 
+                           value="{{ request.url_root }}verify-id/{{ member.member_id_number }}"
+                           id="verificationUrl"
+                           readonly>
+                    <button class="btn btn-outline-primary" 
+                            onclick="copyVerificationUrl()"
+                            id="copyBtn">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize AOS animations
+    AOS.init({
+        duration: 1000,
+        once: true
+    });
+    
+    // Copy verification URL
+    function copyVerificationUrl() {
+        const urlInput = document.getElementById('verificationUrl');
+        urlInput.select();
+        urlInput.setSelectionRange(0, 99999); // For mobile devices
+        
+        navigator.clipboard.writeText(urlInput.value).then(function() {
+            const copyBtn = document.getElementById('copyBtn');
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            copyBtn.classList.add('btn-success');
+            copyBtn.classList.remove('btn-outline-primary');
+            
+            setTimeout(function() {
+                copyBtn.innerHTML = originalHTML;
+                copyBtn.classList.remove('btn-success');
+                copyBtn.classList.add('btn-outline-primary');
+            }, 2000);
+        }).catch(function(err) {
+            alert('Failed to copy URL: ' + err);
+        });
+    }
+</script>
+{% endblock %}
+
