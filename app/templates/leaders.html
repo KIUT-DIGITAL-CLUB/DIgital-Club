@@ -10,13 +10,14 @@
         </h1>
         
         {% if leaders %}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem;">
             {% for leader in leaders %}
             <div class="card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
                 <div style="text-align: center;">
                     {% if leader.member and leader.member.profile_image %}
                     <img src="{{ url_for('static', filename='uploads/profiles/' + leader.member.profile_image) }}" 
                          alt="{{ leader.member.full_name }}" 
+                         loading="lazy" decoding="async"
                          style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; margin-bottom: 1.5rem; border: 3px solid var(--primary-color);">
                     {% else %}
                     <div style="width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center;">

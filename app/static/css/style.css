@@ -968,6 +968,192 @@ select:-webkit-autofill {
     -webkit-overflow-scrolling: touch;
 }
 
+/* Accessible tables on dark background */
+.table {
+    color: var(--text-primary);
+    background-color: transparent;
+}
+
+.table thead th {
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.table tbody td,
+.table tbody th {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+.table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Ensure badge/text contrast on warnings */
+.badge.bg-warning,
+.badge.text-bg-warning {
+    color: #000;
+}
+
+/* Membership page scoped styles */
+.membership-page .page-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.membership-page .section-title {
+    color: var(--text-primary);
+}
+
+.membership-page .status-card {
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.membership-page .status-icon {
+    font-size: 4.5rem;
+}
+
+.membership-page .status-icon-success { color: #22c55e; }
+.membership-page .status-icon-warning { color: #f59e0b; }
+.membership-page .status-icon-muted { color: var(--text-muted); }
+
+.membership-page .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+}
+
+.membership-page .chip-success { background: rgba(34, 197, 94, 0.15); color: #22c55e; border-color: rgba(34, 197, 94, 0.35); }
+.membership-page .chip-warning { background: rgba(245, 158, 11, 0.2); color: #111; border-color: rgba(245, 158, 11, 0.5); }
+.membership-page .chip-info { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.35); }
+.membership-page .chip-muted { background: rgba(255, 255, 255, 0.06); color: var(--text-secondary); border-color: rgba(255, 255, 255, 0.15); }
+
+.membership-page .chip-success-outline { color: #22c55e; border-color: rgba(34, 197, 94, 0.5); }
+.membership-page .chip-warning-outline { color: #f59e0b; border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.12); }
+.membership-page .chip-muted-outline { color: var(--text-secondary); border-color: rgba(255, 255, 255, 0.2); }
+
+.membership-page .info-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.membership-page .info-list .label {
+    color: var(--text-muted);
+    margin-right: 0.75rem;
+}
+
+.membership-page .info-list .value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.membership-page .info-list li {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.4rem;
+}
+
+.membership-page .callout {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.membership-page .callout-title { font-weight: 700; color: var(--text-primary); }
+.membership-page .callout-text { color: var(--text-secondary); }
+.membership-page .callout-hint { color: var(--text-muted); font-size: 0.9rem; }
+
+.membership-page .callout-success { border-color: rgba(34, 197, 94, 0.5); background: rgba(34, 197, 94, 0.12); }
+.membership-page .callout-warning { border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.12); }
+.membership-page .callout-info { border-color: rgba(56, 189, 248, 0.5); background: rgba(56, 189, 248, 0.12); }
+
+.membership-page .bullets {
+    list-style: disc;
+    padding-left: 1.25rem;
+}
+
+.membership-page .text-strong { font-weight: 700; color: var(--text-primary); }
+
+/* Payment history table specific styles */
+.membership-page .table-responsive {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.membership-page .table {
+    margin-bottom: 0;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.membership-page .table thead th {
+    background: rgba(0, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary-color);
+    padding: 1rem 0.75rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.membership-page .table tbody td {
+    color: var(--text-secondary);
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    vertical-align: middle;
+}
+
+.membership-page .table tbody tr {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+.membership-page .table.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.membership-page .table.table-striped > tbody > tr:nth-of-type(even) {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+.membership-page .table tbody tr:hover {
+    background: rgba(0, 255, 255, 0.05);
+}
+
+.membership-page .table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.membership-page .table tbody td strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .membership-page .status-icon { font-size: 3.8rem; }
+    
+    .membership-page .table thead th,
+    .membership-page .table tbody td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .membership-page .table thead th {
+        font-size: 0.8rem;
+    }
+}
+
 /* Footer */
 .footer {
     background: var(--bg-secondary);

@@ -10,12 +10,13 @@
         </h1>
         
         {% if gallery_items %}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
             {% for item in gallery_items %}
             <div class="card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
                 {% if item.type == 'image' %}
                 <img src="{{ item.url }}" 
                      alt="{{ item.caption or 'Gallery Image' }}" 
+                     loading="lazy" decoding="async"
                      style="width: 100%; height: 250px; object-fit: cover; border-radius: 10px; margin-bottom: 1rem;">
                 {% elif item.type == 'video' %}
                 <div style="position: relative; width: 100%; height: 250px; margin-bottom: 1rem;">

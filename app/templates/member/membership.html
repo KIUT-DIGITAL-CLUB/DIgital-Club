@@ -3,68 +3,68 @@
 {% block title %}My Membership - Digital Club{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <h2 class="mb-4"><i class="fas fa-id-card"></i> My Membership Status</h2>
+<div class="container my-5 membership-page">
+    <h2 class="mb-4 page-title"><i class="fas fa-id-card"></i> My Membership</h2>
 
     <!-- Membership Status Card -->
-    <div class="card mb-4">
+    <div class="card mb-4 status-card">
         <div class="card-body">
-            <div class="row align-items-center">
+            <div class="row align-items-center g-4">
                 <div class="col-md-3 text-center">
                     {% if membership_status == 'valid' %}
-                    <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
-                    <h4 class="text-success mt-2">Active</h4>
+                    <i class="fas fa-check-circle status-icon status-icon-success"></i>
+                    <div class="chip chip-success mt-2">Active</div>
                     {% elif membership_status == 'expired' %}
-                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 5rem;"></i>
-                    <h4 class="text-warning mt-2">Expired</h4>
+                    <i class="fas fa-exclamation-triangle status-icon status-icon-warning"></i>
+                    <div class="chip chip-warning mt-2">Expired</div>
                     {% else %}
-                    <i class="fas fa-minus-circle text-secondary" style="font-size: 5rem;"></i>
-                    <h4 class="text-secondary mt-2">No Payment</h4>
+                    <i class="fas fa-minus-circle status-icon status-icon-muted"></i>
+                    <div class="chip chip-muted mt-2">No Payment</div>
                     {% endif %}
                 </div>
                 <div class="col-md-9">
-                    <h3>Membership Status: 
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <h3 class="section-title mb-0">Membership Status</h3>
                         {% if membership_status == 'valid' %}
-                        <span class="badge bg-success">Valid</span>
+                        <span class="chip chip-success-outline">Valid</span>
                         {% elif membership_status == 'expired' %}
-                        <span class="badge bg-warning">Expired</span>
+                        <span class="chip chip-warning-outline">Expired</span>
                         {% else %}
-                        <span class="badge bg-secondary">Inactive</span>
+                        <span class="chip chip-muted-outline">Inactive</span>
                         {% endif %}
-                    </h3>
-                    
+                    </div>
                     {% if latest_payment %}
                     <div class="mt-3">
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-6">
-                                <p class="mb-2">
-                                    <strong>Last Payment:</strong> Tsh {{ "%.2f"|format(latest_payment.amount) }}<br>
-                                    <strong>Payment Date:</strong> {{ latest_payment.payment_date.strftime('%Y-%m-%d') }}<br>
-                                    <strong>Valid From:</strong> {{ latest_payment.start_date.strftime('%Y-%m-%d') }}<br>
-                                    <strong>Valid Until:</strong> {{ latest_payment.end_date.strftime('%Y-%m-%d') }}
-                                </p>
+                                <ul class="info-list">
+                                    <li><span class="label">Last Payment</span><span class="value">Tsh {{ "%.2f"|format(latest_payment.amount) }}</span></li>
+                                    <li><span class="label">Payment Date</span><span class="value">{{ latest_payment.payment_date.strftime('%Y-%m-%d') }}</span></li>
+                                    <li><span class="label">Valid From</span><span class="value">{{ latest_payment.start_date.strftime('%Y-%m-%d') }}</span></li>
+                                    <li><span class="label">Valid Until</span><span class="value">{{ latest_payment.end_date.strftime('%Y-%m-%d') }}</span></li>
+                                </ul>
                             </div>
                             <div class="col-md-6">
                                 {% if membership_status == 'valid' %}
-                                <div class="alert alert-success mb-0">
-                                    <strong><i class="fas fa-check"></i> Your membership is active!</strong><br>
-                                    {{ latest_payment.days_remaining() }} days remaining
+                                <div class="callout callout-success mb-0">
+                                    <div class="callout-title"><i class="fas fa-check"></i> Your membership is active</div>
+                                    <div class="callout-text">{{ latest_payment.days_remaining() }} days remaining</div>
                                 </div>
                                 {% elif membership_status == 'expired' %}
-                                <div class="alert alert-warning mb-0">
-                                    <strong><i class="fas fa-exclamation-triangle"></i> Membership expired!</strong><br>
-                                    Expired {{ days_expired }} days ago<br>
-                                    <small>Please contact an admin to renew your membership.</small>
+                                <div class="callout callout-warning mb-0">
+                                    <div class="callout-title"><i class="fas fa-exclamation-triangle"></i> Membership expired</div>
+                                    <div class="callout-text">Expired {{ days_expired }} days ago</div>
+                                    <div class="callout-hint">Please contact an admin to renew your membership.</div>
                                 </div>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
                     {% else %}
-                    <div class="alert alert-info mt-3">
-                        <strong><i class="fas fa-info-circle"></i> No payment records found</strong><br>
-                        You don't have any membership payments recorded yet. 
-                        Please contact an admin to register your membership payment.
+                    <div class="callout callout-info mt-3">
+                        <div class="callout-title"><i class="fas fa-info-circle"></i> No payment records found</div>
+                        <div class="callout-text">You don't have any membership payments recorded yet.</div>
+                        <div class="callout-hint">Please contact an admin to register your membership payment.</div>
                     </div>
                     {% endif %}
                 </div>
@@ -75,12 +75,12 @@
     <!-- Payment History -->
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-history"></i> Payment History</h5>
+            <h5 class="mb-0 section-title"><i class="fas fa-history"></i> Payment History</h5>
         </div>
         <div class="card-body">
             {% if payments %}
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-striped align-middle">
                     <thead>
                         <tr>
                             <th>Payment Date</th>
@@ -101,11 +101,11 @@
                             </td>
                             <td>
                                 {% if payment.is_active() %}
-                                <span class="badge bg-success">Active</span>
+                                <span class="chip chip-success">Active</span>
                                 {% elif payment.is_expired() %}
-                                <span class="badge bg-secondary">Expired</span>
+                                <span class="chip chip-muted">Expired</span>
                                 {% else %}
-                                <span class="badge bg-info">Future</span>
+                                <span class="chip chip-info">Future</span>
                                 {% endif %}
                             </td>
                             <td>{{ payment.payment_method }}</td>
@@ -115,11 +115,11 @@
                 </table>
             </div>
             <div class="mt-3">
-                <strong>Total Paid:</strong> Tsh {{ "%.2f"|format(payments|sum(attribute='amount')) }}
+                <strong class="text-primary">Total Paid:</strong> <span class="text-strong">Tsh {{ "%.2f"|format(payments|sum(attribute='amount')) }}</span>
             </div>
             {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No payment history available.
+            <div class="callout callout-info">
+                <div class="callout-title"><i class="fas fa-info-circle"></i> No payment history available</div>
             </div>
             {% endif %}
         </div>
@@ -127,17 +127,17 @@
 
     <!-- Help Section -->
     <div class="card mt-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-question-circle"></i> Need Help?</h5>
+        <div class="card-header">
+            <h5 class="mb-0 section-title"><i class="fas fa-question-circle"></i> Need Help?</h5>
         </div>
         <div class="card-body">
-            <p>If you have questions about your membership status or need to make a payment:</p>
-            <ul>
+            <p class="mb-3">If you have questions about your membership status or need to make a payment:</p>
+            <ul class="text-white">
                 <li>Contact any Digital Club admin or executive member</li>
                 <li>Visit our club office during office hours</li>
                 <li>Send an email to the club's official email address</li>
             </ul>
-            <a href="{{ url_for('main.contact') }}" class="btn btn-primary">
+            <a href="{{ url_for('main.contact') }}" class="btn btn-primary mt-2">
                 <i class="fas fa-envelope"></i> Contact Us
             </a>
         </div>

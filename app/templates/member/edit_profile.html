@@ -20,6 +20,12 @@
         margin-bottom: 2rem;
     }
     
+    @media (max-width: 768px) {
+        .edit-profile-page { padding: 1.25rem 0; }
+        .profile-form { padding: 1.25rem; }
+        .section-title { font-size: 1.05rem; }
+    }
+    
     .form-section {
         margin-bottom: 2rem;
         padding-bottom: 2rem;
@@ -85,6 +91,30 @@
         padding: 0.75rem;
         width: 100%;
     }
+
+    /* Force visible text in inputs on this page */
+    .profile-form .form-control,
+    .profile-form .form-select,
+    .profile-form textarea {
+        color: var(--text-primary) !important;
+        -webkit-text-fill-color: var(--text-primary);
+        background-color: rgba(0, 0, 0, 0.35) !important;
+        caret-color: var(--primary-color);
+    }
+
+    .profile-form .form-control::placeholder,
+    .profile-form textarea::placeholder {
+        color: var(--text-muted) !important;
+        opacity: 1;
+    }
+
+    .profile-form .form-control:-webkit-autofill,
+    .profile-form .form-select:-webkit-autofill,
+    .profile-form textarea:-webkit-autofill {
+        -webkit-text-fill-color: var(--text-primary) !important;
+        box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.35) inset;
+        transition: background-color 99999s ease-in-out 0s;
+    }
     
     .form-select:focus {
         border-color: var(--primary-color);
@@ -120,7 +150,25 @@
     
     .btn-secondary:hover {
         border-color: var(--primary-color);
-        color: var(--primary-color);
+        color: var(--primary-color) !important;
+        background-color: rgba(0, 255, 255, 0.12) !important;
+    }
+
+    /* Ensure cancel/back buttons stay readable on hover/focus */
+    .profile-form .btn.btn-secondary,
+    .profile-form a.btn.btn-secondary {
+        color: var(--text-primary) !important;
+        background-color: transparent !important;
+        border-color: var(--border-color) !important;
+    }
+    .profile-form .btn.btn-secondary:hover,
+    .profile-form .btn.btn-secondary:focus,
+    .profile-form a.btn.btn-secondary:hover,
+    .profile-form a.btn.btn-secondary:focus {
+        color: var(--bg-primary) !important;
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        text-decoration: none;
     }
     
     .profile-image-preview {
@@ -302,7 +350,7 @@
                             <div class="text-center mb-3">
                                 {% if member and member.profile_image %}
                                     <img src="{{ url_for('static', filename='uploads/profiles/' + member.profile_image) }}" 
-                                         alt="Profile Preview" class="profile-image-preview" id="image-preview">
+                                         alt="Profile Preview" class="profile-image-preview" id="image-preview" loading="lazy" decoding="async">
                                 {% else %}
                                     <div class="profile-image-preview d-flex align-items-center justify-content-center" 
                                          style="background: var(--primary-color); color: var(--bg-primary); font-size: 3rem;" id="image-preview">
@@ -331,14 +379,14 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="full_name" class="form-label">Full Name *</label>
-                                        <input type="text" class="form-control" id="full_name" name="full_name" 
+                                        <input type="text" class="form-control" id="full_name" name="full_name" autocomplete="name"
                                                value="{{ member.full_name if member else '' }}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="title" class="form-label">Professional Title</label>
-                                        <input type="text" class="form-control" id="title" name="title" 
+                                        <input type="text" class="form-control" id="title" name="title" autocomplete="organization-title"
                                                value="{{ member.title if member else '' }}" 
                                                placeholder="e.g., Software Developer, Data Scientist">
                                     </div>
@@ -347,7 +395,7 @@
                             
                             <div class="form-group">
                                 <label for="bio" class="form-label">Bio</label>
-                                <textarea class="form-control" id="bio" name="bio" rows="4" 
+                                <textarea class="form-control" id="bio" name="bio" rows="4" spellcheck="true"
                                           placeholder="Tell us about yourself...">{{ member.bio if member else '' }}</textarea>
                             </div>
                         </div>
@@ -363,7 +411,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="course" class="form-label">Course</label>
-                                        <input type="text" class="form-control" id="course" name="course" 
+                                        <input type="text" class="form-control" id="course" name="course"
                                                value="{{ member.course if member else '' }}" 
                                                placeholder="e.g., Computer Science, Information Technology">
                                     </div>
@@ -371,7 +419,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="year" class="form-label">Year</label>
-                                        <input type="text" class="form-control" id="year" name="year" 
+                                        <input type="text" class="form-control" id="year" name="year"
                                                value="{{ member.year if member else '' }}" 
                                                placeholder="e.g., Year 2, Graduate">
                                     </div>
@@ -399,7 +447,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="phone" class="form-label">Phone Number</label>
-                                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                        <input type="tel" class="form-control" id="phone" name="phone" autocomplete="tel" inputmode="tel"
                                                value="{{ member.phone if member else '' }}" 
                                                placeholder="+255 XXX XXX XXX">
                                     </div>
@@ -407,7 +455,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="areas_of_interest" class="form-label">Areas of Interest</label>
-                                        <input type="text" class="form-control" id="areas_of_interest" name="areas_of_interest" 
+                                        <input type="text" class="form-control" id="areas_of_interest" name="areas_of_interest"
                                                value="{{ member.areas_of_interest if member else '' }}" 
                                                placeholder="e.g., Web Development, AI, Data Science (comma-separated)">
                                     </div>
@@ -426,7 +474,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="github" class="form-label">GitHub Profile</label>
-                                        <input type="text" class="form-control" id="github" name="github" 
+                                        <input type="text" class="form-control" id="github" name="github" autocomplete="url"
                                                value="{{ member.github if member else '' }}" 
                                                placeholder="https://github.com/username">
                                         <div class="help-text">Optional: Your GitHub profile URL</div>
@@ -435,7 +483,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="linkedin" class="form-label">LinkedIn Profile</label>
-                                        <input type="text" class="form-control" id="linkedin" name="linkedin" 
+                                        <input type="text" class="form-control" id="linkedin" name="linkedin" autocomplete="url"
                                                value="{{ member.linkedin if member else '' }}" 
                                                placeholder="https://linkedin.com/in/username">
                                         <div class="help-text">Optional: Your LinkedIn profile URL</div>
