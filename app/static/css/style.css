@@ -952,6 +952,162 @@ a:hover, .nav-link:hover { color: var(--primary-color); }
     color: var(--text-muted);
 }
 
+/* Enhanced Select Field Styling */
+.form-select,
+select {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background-color: rgba(0, 0, 0, 0.3);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2300ffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+    padding-right: 3rem;
+}
+
+.form-select:hover,
+select:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px var(--shadow-color);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.form-select:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 20px var(--shadow-color);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.form-select option,
+select option {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 0.75rem;
+    border: none;
+    font-weight: 500;
+}
+
+.form-select option:hover,
+select option:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--primary-color);
+}
+
+.form-select option:checked,
+select option:checked {
+    background-color: var(--primary-color);
+    color: var(--bg-primary);
+    font-weight: 600;
+}
+
+/* Large select fields */
+.form-select-lg,
+select.form-control-lg {
+    padding: 1.25rem;
+    font-size: 1.1rem;
+    padding-right: 3.5rem;
+    background-size: 1.25rem;
+    background-position: right 1.25rem center;
+}
+
+/* Small select fields */
+.form-select-sm,
+select.form-control-sm {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    padding-right: 2.5rem;
+    background-size: 0.875rem;
+    background-position: right 0.75rem center;
+}
+
+/* Disabled state */
+.form-select:disabled,
+select:disabled {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.6;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23888888' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+}
+
+/* Invalid state */
+.form-select.is-invalid,
+select.is-invalid {
+    border-color: var(--error-color);
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+}
+
+.form-select.is-invalid:focus,
+select.is-invalid:focus {
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
+
+/* Valid state */
+.form-select.is-valid,
+select.is-valid {
+    border-color: var(--success-color);
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+}
+
+.form-select.is-valid:focus,
+select.is-valid:focus {
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+}
+
+/* Mobile-specific select improvements */
+@media (max-width: 767.98px) {
+    .form-select,
+    select {
+        font-size: 16px; /* Prevents zoom on iOS */
+        min-height: 44px; /* iOS recommended touch target */
+        padding: 0.875rem;
+        padding-right: 2.75rem;
+    }
+    
+    .form-select-lg,
+    select.form-control-lg {
+        font-size: 16px;
+        padding: 1rem;
+        padding-right: 3rem;
+        min-height: 48px;
+    }
+    
+    .form-select-sm,
+    select.form-control-sm {
+        font-size: 16px;
+        padding: 0.75rem;
+        padding-right: 2.5rem;
+        min-height: 40px;
+    }
+}
+
+/* Dark theme dropdown improvements */
+@media (prefers-color-scheme: dark) {
+    .form-select option,
+    select option {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+    
+    .form-select option:hover,
+    select option:hover {
+        background-color: var(--bg-tertiary);
+        color: var(--primary-color);
+    }
+}
+
 /* Ensure readable inputs across themes and autofill */
 input, select, textarea {
     color: var(--text-primary);
