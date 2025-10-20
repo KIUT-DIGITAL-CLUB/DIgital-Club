@@ -266,6 +266,9 @@ p {
     transition: transform 0.3s ease;
 }
 
+/* Remove Bootstrap caret to avoid double arrow on dropdown toggles */
+.dropdown-toggle::after { display: none !important; content: none !important; }
+
 .nav-dropdown:hover .dropdown-toggle i.fa-chevron-down {
     transform: rotate(180deg);
 }
@@ -339,6 +342,10 @@ p {
     position: relative;
     font-size: 0.95rem;
 }
+
+/* Center dropdown items' content */
+.dropdown-menu .dropdown-item { justify-content: center; text-align: center; }
+.dropdown-menu .dropdown-item:hover { padding-left: 1.5rem; }
 
 .dropdown-item:hover {
     background: rgba(0, 255, 255, 0.1);
@@ -593,6 +600,9 @@ a:hover, .nav-link:hover { color: var(--primary-color); }
     flex-direction: column;
     cursor: pointer;
 }
+
+/* Hide close button by default (desktop) */
+.nav-close { display: none; }
 
 .bar {
     width: 25px;
@@ -1609,6 +1619,28 @@ select:-webkit-autofill {
     }
 
     .nav-dropdown.active .dropdown-menu { max-height: 600px; }
+    /* Close button for mobile full-screen nav */
+    .nav-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background var(--transition-normal);
+    }
+
+    .nav-close:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--primary-color);
+    }
 }
 
 /* Close button for mobile full-screen nav */
