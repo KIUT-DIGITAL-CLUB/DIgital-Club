@@ -9,52 +9,37 @@ document.addEventListener('DOMContentLoaded', function() {
         offset: 100
     });
 
-    // Mobile Navigation Toggle
+    // Mobile Navigation Toggle (accordion pattern)
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
 
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            navToggle.classList.toggle('active');
-            const isOpen = navMenu.classList.contains('active');
-            // Body scroll lock for off-canvas menu
-            document.body.style.overflow = isOpen ? 'hidden' : '';
-            // Focus trap setup
-            if (isOpen) {
-                const focusable = navMenu.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])');
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
-                const trap = (e) => {
-                    if (e.key !== 'Tab') return;
-                    if (e.shiftKey && document.activeElement === first) {
-                        e.preventDefault();
-                        last.focus();
-                    } else if (!e.shiftKey && document.activeElement === last) {
-                        e.preventDefault();
-                        first.focus();
-                    }
-                };
-                document.addEventListener('keydown', trap);
-                // Remove trap on close
-                const removeTrap = () => {
-                    document.removeEventListener('keydown', trap);
-                    navMenu.removeEventListener('transitionend', removeTrap);
-                };
-                navMenu.addEventListener('transitionend', removeTrap);
-                if (first) first.focus();
-            }
+            const isOpen = navMenu.classList.toggle('active');
+            navToggle.classList.toggle('active', isOpen);
+            navToggle.setAttribute('aria-expanded', String(isOpen));
         });
 
         // Close mobile menu when clicking on a link
-        const navLinks = document.querySelectorAll('.nav-link');
+        const navLinks = document.querySelectorAll('.nav-link, .dropdown-item');
         navLinks.forEach(link => {
             link.addEventListener('click', () => {
                 navMenu.classList.remove('active');
                 navToggle.classList.remove('active');
-                document.body.style.overflow = '';
+                navToggle.setAttribute('aria-expanded', 'false');
             });
         });
+
+        // Close button inside full-screen menu
+        const navClose = document.getElementById('nav-close');
+        if (navClose) {
+            navClose.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+                navToggle.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navToggle.focus();
+            });
+        }
     }
 
     // Dropdown Navigation Functionality

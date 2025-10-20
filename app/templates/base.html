@@ -30,127 +30,82 @@
     <!-- Navigation -->
     <nav class="navbar" role="navigation" aria-label="Primary">
         <div class="nav-container">
-            <!-- <div class="nav-logo">
-                <a href="{{ url_for('main.index') }}">
-                    <img src="{{ url_for('static', filename='DigitalClub_LOGO copy.svg') }}" alt="Digital Club Logo" class="logo-img">
-                   
-                </a>
-            </div>
-             -->
-            <div class="nav-menu" id="nav-menu" role="menubar">
-                <!-- Main Navigation -->
-                <div class="nav-main">
-                    <a href="{{ url_for('main.index') }}" class="nav-link" role="menuitem">Home</a>
-                    
-                    <!-- About Dropdown -->
-                    <div class="nav-dropdown">
-                        <a href="#" class="nav-link dropdown-toggle" aria-expanded="false">
+            <a href="{{ url_for('main.index') }}" class="brand" aria-label="Digital Club Home">
+                <img src="{{ url_for('static', filename='DigitalClub_LOGO copy.svg') }}" alt="Digital Club Logo" class="brand-img">
+            </a>
+
+            <button class="nav-toggle" id="nav-toggle" aria-controls="nav-menu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+
+            <div class="nav-menu" id="nav-menu">
+                <button class="nav-close" id="nav-close" aria-controls="nav-menu" aria-label="Close navigation" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
+                <ul class="nav-list" role="menubar">
+                    <li class="nav-item"><a href="{{ url_for('main.index') }}" class="nav-link" role="menuitem">Home</a></li>
+
+                    <li class="nav-item nav-dropdown">
+                        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
                             <span>About</span>
                             <i class="fas fa-chevron-down"></i>
-                        </a>
-                        <div class="dropdown-menu">
-                            <a href="{{ url_for('main.about') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-info-circle"></i>
-                                <span>About Us</span>
-                            </a>
-                            <a href="{{ url_for('main.leaders') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-users"></i>
-                                <span>Leadership</span>
-                            </a>
-                            <a href="{{ url_for('main.members') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-user-friends"></i>
-                                <span>All Members</span>
-                            </a>
-                            <a href="{{ url_for('main.students') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-user-graduate"></i>
-                                <span>Students</span>
-                            </a>
-                            <a href="{{ url_for('main.alumni') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-graduation-cap"></i>
-                                <span>Alumni</span>
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Activities Dropdown -->
-                    <div class="nav-dropdown">
-                        <a href="#" class="nav-link dropdown-toggle" aria-expanded="false">
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="{{ url_for('main.about') }}" class="dropdown-item" role="menuitem"><i class="fas fa-info-circle"></i><span>About Us</span></a></li>
+                            <li><a href="{{ url_for('main.leaders') }}" class="dropdown-item" role="menuitem"><i class="fas fa-users"></i><span>Leadership</span></a></li>
+                            <li><a href="{{ url_for('main.members') }}" class="dropdown-item" role="menuitem"><i class="fas fa-user-friends"></i><span>All Members</span></a></li>
+                            <li><a href="{{ url_for('main.students') }}" class="dropdown-item" role="menuitem"><i class="fas fa-user-graduate"></i><span>Students</span></a></li>
+                            <li><a href="{{ url_for('main.alumni') }}" class="dropdown-item" role="menuitem"><i class="fas fa-graduation-cap"></i><span>Alumni</span></a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item nav-dropdown">
+                        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
                             <span>Activities</span>
                             <i class="fas fa-chevron-down"></i>
-                        </a>
-                        <div class="dropdown-menu">
-                            <a href="{{ url_for('main.events') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Events</span>
-                            </a>
-                            <a href="{{ url_for('main.projects') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-project-diagram"></i>
-                                <span>Projects</span>
-                            </a>
-                            <a href="{{ url_for('main.topics') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-book"></i>
-                                <span>Learning Topics</span>
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Content Dropdown -->
-                    <div class="nav-dropdown">
-                        <a href="#" class="nav-link dropdown-toggle" aria-expanded="false">
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="{{ url_for('main.events') }}" class="dropdown-item" role="menuitem"><i class="fas fa-calendar-alt"></i><span>Events</span></a></li>
+                            <li><a href="{{ url_for('main.projects') }}" class="dropdown-item" role="menuitem"><i class="fas fa-project-diagram"></i><span>Projects</span></a></li>
+                            <li><a href="{{ url_for('main.topics') }}" class="dropdown-item" role="menuitem"><i class="fas fa-book"></i><span>Learning Topics</span></a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item nav-dropdown">
+                        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
                             <span>Content</span>
                             <i class="fas fa-chevron-down"></i>
-                        </a>
-                        <div class="dropdown-menu">
-                            <a href="{{ url_for('main.news') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-newspaper"></i>
-                                <span>News</span>
-                            </a>
-                            <a href="{{ url_for('main.blogs') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-blog"></i>
-                                <span>Blog</span>
-                            </a>
-                            <a href="{{ url_for('main.gallery') }}" class="dropdown-item" tabindex="-1">
-                                <i class="fas fa-images"></i>
-                                <span>Gallery</span>
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <a href="{{ url_for('main.contact') }}" class="nav-link">Contact</a>
-                </div>
-                
-                <!-- User Actions -->
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="{{ url_for('main.news') }}" class="dropdown-item" role="menuitem"><i class="fas fa-newspaper"></i><span>News</span></a></li>
+                            <li><a href="{{ url_for('main.blogs') }}" class="dropdown-item" role="menuitem"><i class="fas fa-blog"></i><span>Blog</span></a></li>
+                            <li><a href="{{ url_for('main.gallery') }}" class="dropdown-item" role="menuitem"><i class="fas fa-images"></i><span>Gallery</span></a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item"><a href="{{ url_for('main.contact') }}" class="nav-link" role="menuitem">Contact</a></li>
+                </ul>
+
                 <div class="nav-user" role="menubar">
                     {% if current_user.is_authenticated %}
-                        <!-- User Profile Dropdown -->
-                        <div class="nav-dropdown user-dropdown">
-                            <a href="#" class="nav-link user-action dropdown-toggle" aria-expanded="false">
+                        <div class="nav-item nav-dropdown user-dropdown">
+                            <button class="dropdown-toggle user-action" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-user-circle"></i>
                                 <span>{{ current_user.email.split('@')[0] }}</span>
                                 <i class="fas fa-chevron-down"></i>
-                            </a>
-                            <div class="dropdown-menu user-menu">
+                            </button>
+                            <ul class="dropdown-menu user-menu" role="menu">
                                 {% if current_user.role == 'admin' %}
-                                    <a href="{{ url_for('admin.dashboard') }}" class="dropdown-item admin" tabindex="-1">
-                                        <i class="fas fa-cog"></i>
-                                        <span>Admin Panel</span>
-                                    </a>
-                                    <a href="{{ url_for('member.dashboard') }}" class="dropdown-item profile" tabindex="-1">
-                                        <i class="fas fa-user"></i>
-                                        <span>My Profile</span>
-                                    </a>
+                                    <li><a href="{{ url_for('admin.dashboard') }}" class="dropdown-item admin" role="menuitem"><i class="fas fa-cog"></i><span>Admin Panel</span></a></li>
+                                    <li><a href="{{ url_for('member.dashboard') }}" class="dropdown-item profile" role="menuitem"><i class="fas fa-user"></i><span>My Profile</span></a></li>
                                 {% else %}
-                                    <a href="{{ url_for('member.dashboard') }}" class="dropdown-item profile" tabindex="-1">
-                                        <i class="fas fa-user"></i>
-                                        <span>My Profile</span>
-                                    </a>
+                                    <li><a href="{{ url_for('member.dashboard') }}" class="dropdown-item profile" role="menuitem"><i class="fas fa-user"></i><span>My Profile</span></a></li>
                                 {% endif %}
-                                <div class="dropdown-divider"></div>
-                                <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout" tabindex="-1">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                    <span>Logout</span>
-                                </a>
-                            </div>
+                                <li><div class="dropdown-divider"></div></li>
+                                <li><a href="{{ url_for('auth.logout') }}" class="dropdown-item logout" role="menuitem"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+                            </ul>
                         </div>
                     {% else %}
                         <a href="{{ url_for('auth.login') }}" class="nav-link user-action login" role="menuitem">
@@ -163,12 +118,6 @@
                         </a>
                     {% endif %}
                 </div>
-            </div>
-            
-            <div class="nav-toggle" id="nav-toggle">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
             </div>
         </div>
     </nav>
