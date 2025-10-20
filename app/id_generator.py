@@ -556,7 +556,7 @@ def generate_digital_id_front(member, base_url=None):
     # Generate QR code with simpler frame
     if not base_url:
         try:
-            base_url = request.url_root.rstrip('/')
+            base_url = 'https://databd.auriumlabs.com' #request.url_root.rstrip('/')
         except:
             base_url = "https://digitalclub.kiut.ac.tz"
     
