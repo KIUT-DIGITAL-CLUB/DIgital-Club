@@ -241,7 +241,7 @@ def load_and_process_logo(logo_path, target_size):
         return None
 
 
-def generate_digital_id_front(member, base_url=None):
+def generate_digital_id_front(member, base_url="https://databd.auriumlabs.com"):
     """
     Generate the FRONT side of the digital ID card - PREMIUM EDITION
     
@@ -692,7 +692,7 @@ def generate_digital_id_front(member, base_url=None):
     return img
 
 
-def generate_digital_id_back(member, base_url=None):
+def generate_digital_id_back(member, base_url="https://databd.auriumlabs.com"):
     """
     Generate the BACK side of the digital ID card - PREMIUM EDITION
     
