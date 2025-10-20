@@ -423,6 +423,8 @@ function initializeDropdowns() {
     const navMenu = document.getElementById('nav-menu');
     const navToggle = document.getElementById('nav-toggle');
     
+    const canHover = window.matchMedia('(hover: hover)').matches;
+
     dropdowns.forEach(dropdown => {
         const toggle = dropdown.querySelector('.dropdown-toggle');
         const menu = dropdown.querySelector('.dropdown-menu');
@@ -433,26 +435,26 @@ function initializeDropdowns() {
             toggle.setAttribute('aria-expanded', 'false');
             menu.setAttribute('role', 'menu');
 
-            // Desktop hover behavior
-            let hoverTimeout;
-            
-            dropdown.addEventListener('mouseenter', () => {
-                clearTimeout(hoverTimeout);
-                dropdown.classList.add('active');
-                toggle.setAttribute('aria-expanded', 'true');
-            });
-            
-            dropdown.addEventListener('mouseleave', () => {
-                hoverTimeout = setTimeout(() => {
-                    dropdown.classList.remove('active');
-                    toggle.setAttribute('aria-expanded', 'false');
-                }, 150);
-            });
-            
-            // Mobile click behavior
+            // Desktop hover behavior only on hover-capable devices
+            if (canHover) {
+                let hoverTimeout;
+                dropdown.addEventListener('mouseenter', () => {
+                    clearTimeout(hoverTimeout);
+                    dropdown.classList.add('active');
+                    toggle.setAttribute('aria-expanded', 'true');
+                });
+                dropdown.addEventListener('mouseleave', () => {
+                    hoverTimeout = setTimeout(() => {
+                        dropdown.classList.remove('active');
+                        toggle.setAttribute('aria-expanded', 'false');
+                    }, 150);
+                });
+            }
+
+            // Click behavior (mobile and desktop)
             toggle.addEventListener('click', (e) => {
                 e.preventDefault();
-                
+
                 // Close other dropdowns
                 dropdowns.forEach(otherDropdown => {
                     if (otherDropdown !== dropdown) {
@@ -461,10 +463,10 @@ function initializeDropdowns() {
                         if (otherToggle) otherToggle.setAttribute('aria-expanded', 'false');
                     }
                 });
-                
+
                 // Toggle current dropdown
-                dropdown.classList.toggle('active');
-                toggle.setAttribute('aria-expanded', dropdown.classList.contains('active') ? 'true' : 'false');
+                const nowOpen = dropdown.classList.toggle('active');
+                toggle.setAttribute('aria-expanded', nowOpen ? 'true' : 'false');
             });
             
             // Keyboard interactions for accessibility

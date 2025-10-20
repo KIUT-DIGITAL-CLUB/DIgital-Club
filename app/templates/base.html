@@ -48,7 +48,7 @@
                     <li class="nav-item"><a href="{{ url_for('main.index') }}" class="nav-link" role="menuitem">Home</a></li>
 
                     <li class="nav-item nav-dropdown">
-                        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                        <button class="dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false">
                             <span>About</span>
                             <i class="fas fa-chevron-down"></i>
                         </button>
@@ -62,7 +62,7 @@
                     </li>
 
                     <li class="nav-item nav-dropdown">
-                        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                        <button class="dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false">
                             <span>Activities</span>
                             <i class="fas fa-chevron-down"></i>
                         </button>
@@ -74,7 +74,7 @@
                     </li>
 
                     <li class="nav-item nav-dropdown">
-                        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                        <button class="dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false">
                             <span>Content</span>
                             <i class="fas fa-chevron-down"></i>
                         </button>
@@ -91,7 +91,7 @@
                 <div class="nav-user" role="menubar">
                     {% if current_user.is_authenticated %}
                         <div class="nav-item nav-dropdown user-dropdown">
-                            <button class="dropdown-toggle user-action" aria-haspopup="true" aria-expanded="false">
+                            <button class="dropdown-toggle user-action" type="button" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-user-circle"></i>
                                 <span>{{ current_user.email.split('@')[0] }}</span>
                                 <i class="fas fa-chevron-down"></i>
