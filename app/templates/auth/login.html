@@ -71,6 +71,12 @@
         
         <div class="login-footer">
             <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                Forgot your password?
+                <a href="{{ url_for('auth.forgot_password') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    Reset it here
+                </a>
+            </p>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
                 Don't have an account? 
                 <a href="{{ url_for('auth.register') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
                     Join Digital Club <i class="fas fa-arrow-right"></i>

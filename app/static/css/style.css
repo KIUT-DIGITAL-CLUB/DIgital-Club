@@ -1123,8 +1123,11 @@ textarea::placeholder {
 input:-webkit-autofill,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
+    /* Force dark background + bright text for browser autofill */
     -webkit-text-fill-color: var(--text-primary) !important;
-    box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.3) inset;
+    box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.6) inset !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    border-color: var(--primary-color) !important;
     transition: background-color 99999s ease-in-out 0s;
 }
 
@@ -2179,4 +2182,13 @@ select:-webkit-autofill {
     40% { transform: translate(2px, -2px); }
     60% { transform: translate(2px, 2px); }
     80% { transform: translate(-2px, 2px); }
+}
+
+/* Leaders page tweaks */
+.leader-bio {
+    max-height: 6.5rem; /* limit how tall each bio can get */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
 }

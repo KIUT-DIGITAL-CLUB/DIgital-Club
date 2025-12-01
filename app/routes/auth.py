@@ -1,11 +1,49 @@
 from flask import render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from app.routes import auth_bp
 from app.models import User, Member
 from app import db
 from app.id_generator import generate_digital_id
+from app.utils import get_notification_service
 from datetime import datetime
+
+
+def _get_serializer():
+    """Create a serializer for generating secure tokens."""
+    secret_key = current_app.config.get('SECRET_KEY')
+    if not secret_key:
+        raise RuntimeError("SECRET_KEY is not configured")
+    return URLSafeTimedSerializer(secret_key, salt='password-reset-salt')
+
+
+def generate_password_reset_token(user):
+    """Generate a time-limited password reset token for a user."""
+    s = _get_serializer()
+    return s.dumps({'user_id': user.id, 'email': user.email})
+
+
+def verify_password_reset_token(token, max_age=3600 * 24):
+    """Verify a password reset token and return the user if valid."""
+    s = _get_serializer()
+    try:
+        data = s.loads(token, max_age=max_age)
+    except SignatureExpired:
+        return None  # Token valid but expired
+    except BadSignature:
+        return None  # Invalid token
+
+    user_id = data.get('user_id')
+    email = data.get('email')
+    if not user_id or not email:
+        return None
+
+    user = User.query.get(user_id)
+    if not user or user.email != email:
+        return None
+
+    return user
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -98,3 +136,76 @@ def logout():
 @auth_bp.route('/approval-pending')
 def approval_pending():
     return render_template('auth/approval_pending.html')
+
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """Request a password reset link via email."""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    if request.method == 'POST':
+        email = request.form.get('email')
+        if not email:
+            flash('Please enter your email address.', 'error')
+            return render_template('auth/forgot_password.html')
+
+        user = User.query.filter_by(email=email).first()
+
+        # For security, always show the same message even if the email is not registered
+        if user:
+            try:
+                token = generate_password_reset_token(user)
+                reset_url = url_for('auth.reset_password', token=token, _external=True)
+
+                subject = "Reset your Digital Club password"
+                html_body = render_template('auth/email_reset_password.html', reset_url=reset_url, user=user)
+
+                notification_service = get_notification_service()
+                notification_service.send_email(
+                    to_email=user.email,
+                    subject=subject,
+                    message=html_body,
+                    is_html=True
+                )
+            except Exception as e:
+                current_app.logger.error(f"Error sending password reset email: {e}")
+                # Still show generic message below
+
+        flash('If an account with that email exists, a password reset link has been sent.', 'info')
+        return redirect(url_for('auth.login'))
+
+    return render_template('auth/forgot_password.html')
+
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Reset password using a token sent via email."""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    user = verify_password_reset_token(token)
+    if not user:
+        flash('The password reset link is invalid or has expired.', 'error')
+        return redirect(url_for('auth.forgot_password'))
+
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        if not password or not confirm_password:
+            flash('Please fill in all fields.', 'error')
+            return render_template('auth/reset_password.html', token=token)
+
+        if password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('auth/reset_password.html', token=token)
+
+        # Update password
+        user.set_password(password)
+        db.session.commit()
+
+        flash('Your password has been reset. You can now log in.', 'success')
+        return redirect(url_for('auth.login'))
+
+    return render_template('auth/reset_password.html', token=token)

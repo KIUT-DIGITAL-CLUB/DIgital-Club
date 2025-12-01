@@ -16,11 +16,11 @@ class NotificationService:
     def _load_config(self):
         """Load configuration from Flask app context"""
         try:
-            self.smtp_server = current_app.config.get('SMTP_SERVER', 'smtp.gmail.com')
-            self.smtp_port = current_app.config.get('SMTP_PORT', 587)
-            self.smtp_username = current_app.config.get('SMTP_USERNAME')
-            self.smtp_password = current_app.config.get('SMTP_PASSWORD')
-            self.from_email = current_app.config.get('FROM_EMAIL', 'noreply@digitalclub.kiut.ac.tz')
+            self.smtp_server = "smtp.gmail.com" #current_app.config.get('SMTP_SERVER', 'smtp.gmail.com')
+            self.smtp_port = 587#current_app.config.get('SMTP_PORT', 587)
+            self.smtp_username = "kiutdigitalclubs@gmail.com" #current_app.config.get('SMTP_USERNAME')
+            self.smtp_password = "rkxw rvsh waap tuqo" #current_app.config.get('SMTP_PASSWORD')
+            self.from_email = "kiutdigitalclubs@gmail.com"#current_app.config.get('FROM_EMAIL', 'noreply@digitalclub.kiut.ac.tz')
             
             # SMS configuration (using Twilio as example)
             self.twilio_account_sid = current_app.config.get('TWILIO_ACCOUNT_SID')

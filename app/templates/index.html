@@ -5,13 +5,16 @@
 {% block extra_head %}
 <style>
     .hero-section {
-        height: 100vh;
+        /* Use flexible height so the hero fits better on smaller / zoomed screens */
+        min-height: calc(100vh - 70px);
+        padding: 5rem 1.5rem 4rem;
         background: radial-gradient(ellipse at top, #1a1a2e 0%, #0f0f1e 50%, #050510 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         position: relative;
         overflow: hidden;
+        box-sizing: border-box;
     }
     
     /* Animated gradient background */
@@ -339,6 +342,28 @@
         .orbit-container { width: 300px; height: 300px; }
         .orbit-icon { font-size: 1.5rem; }
         .btn-primary, .btn-secondary { padding: 1rem 2rem; font-size: 1rem; }
+    }
+
+    /* Short viewport height (e.g. 150% zoom on laptops) */
+    @media (max-height: 800px) {
+        .hero-section {
+            min-height: calc(100vh - 70px);
+            padding: 4rem 1.5rem 3rem;
+        }
+        .hero-logo {
+            width: 120px;
+            height: 120px;
+        }
+        .hero-title {
+            font-size: 3.5rem;
+        }
+        .hero-subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .hero-stats {
+            margin-bottom: 1.5rem;
+        }
     }
     
     .section {

@@ -33,7 +33,9 @@
                     {% endif %}
                     
                     {% if leader.member and leader.member.bio %}
-                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">{{ leader.member.bio }}</p>
+                    <p class="leader-bio" style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
+                        {{ leader.member.bio }}
+                    </p>
                     {% endif %}
                     
                     <div style="display: flex; gap: 1rem; justify-content: center;">
