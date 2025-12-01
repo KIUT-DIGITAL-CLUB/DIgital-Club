@@ -45,7 +45,7 @@ EXPOSE 5051
 # Set environment variables
 ENV FLASK_APP=main.py
 ENV PYTHONUNBUFFERED=1
-
+#CMD ["python", "main.py"]
 # Run the application with Gunicorn
 CMD ["gunicorn", "-c", "gunicorn_conf.py", "main:app"]
 

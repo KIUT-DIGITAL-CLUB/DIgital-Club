@@ -9,7 +9,8 @@ services:
     environment:
       - FLASK_APP=main.py
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
-      - DATABASE_URL=sqlite:///digital_club_01.db
+      # Use PostgreSQL by default (falls back to SQLite if DATABASE_URL is not set)
+      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg2://digital_club_user:digital_club_password@db:5432/digital_club_db}
       - PORT=5051
       # Email configuration (optional)
       - SMTP_SERVER=${SMTP_SERVER:-}
@@ -38,3 +39,16 @@ services:
         soft: 65535
         hard: 65535
 
+  db:
+    image: postgres:16-alpine
+    container_name: digital_club_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=digital_club_db
+      - POSTGRES_USER=digital_club_user
+      - POSTGRES_PASSWORD=digital_club_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
