@@ -73,6 +73,13 @@ def approve_user(user_id):
     user = User.query.get_or_404(user_id)
     user.is_approved = True
     db.session.commit()
+
+    try:
+        notification_service = get_notification_service()
+        notification_service.send_user_approval_email(user)
+    except Exception as exc:
+        current_app.logger.error(f"Failed to send approval email for user {user.email}: {exc}")
+    
     flash(f'User {user.email} has been approved.', 'success')
     return redirect(url_for('admin.users'))
 
@@ -1133,6 +1140,12 @@ def promote_member(member_id):
     
     user.role = 'admin'
     db.session.commit()
+
+    try:
+        notification_service = get_notification_service()
+        notification_service.send_admin_promotion_email(user, current_user)
+    except Exception as exc:
+        current_app.logger.error(f"Failed to send admin promotion email for {user.email}: {exc}")
     
     flash(f'{member.full_name} has been promoted to admin!', 'success')
     return redirect(url_for('admin.members'))

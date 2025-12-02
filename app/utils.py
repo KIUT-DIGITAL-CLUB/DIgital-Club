@@ -178,6 +178,64 @@ Digital Club Team
                 'error': str(e)
             }
 
+    def send_user_approval_email(self, user):
+        """Notify a user that their account has been approved"""
+        try:
+            if not user.email:
+                current_app.logger.warning("Approved user is missing email address")
+                return False
+            
+            subject = "Your Digital Club account is approved"
+            message = f"""
+Hello {user.member.full_name if user.member else user.email},
+
+Great news! Your Digital Club account has been approved. You can now log in and explore events, projects, and community resources.
+
+Login email: {user.email}
+Dashboard: {current_app.config.get('BASE_URL', 'https://digitalclub.kiut.ac.tz')}/login
+
+If you did not request this approval, please contact the club leadership.
+
+See you inside!
+Digital Club Team
+            """.strip()
+            
+            return self.send_email(user.email, subject, message)
+        
+        except Exception as exc:
+            current_app.logger.error(f"Failed to send approval email: {exc}")
+            return False
+
+    def send_admin_promotion_email(self, user, promoted_by):
+        """Notify a member they have been promoted to admin"""
+        try:
+            if not user.email:
+                current_app.logger.warning("Promoted user is missing email address")
+                return False
+            
+            subject = "You have been promoted to Digital Club admin"
+            promoter = promoted_by.member.full_name if promoted_by and promoted_by.member else promoted_by.email if promoted_by else "System"
+            message = f"""
+Hello {user.member.full_name if user.member else user.email},
+
+Congratulations! You have been granted admin access to the Digital Club platform by {promoter}.
+
+You can now manage members, events, content, and system settings. Please log in and review the admin dashboard to get started.
+
+Dashboard: {current_app.config.get('BASE_URL', 'https://digitalclub.kiut.ac.tz')}/admin
+
+If you believe this was a mistake, contact a super admin immediately.
+
+Thank you for helping lead the community,
+Digital Club Team
+            """.strip()
+            
+            return self.send_email(user.email, subject, message)
+        
+        except Exception as exc:
+            current_app.logger.error(f"Failed to send admin promotion email: {exc}")
+            return False
+
 # Global notification service instance (will be created when needed)
 notification_service = None
 
