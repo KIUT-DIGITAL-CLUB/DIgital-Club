@@ -31,6 +31,11 @@ services:
       - 8.8.8.8
       - 8.8.4.4
       - 1.1.1.1
+    dns_search:
+      - .
+    dns_opt:
+      - "attempts:3"
+      - "timeout:2"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://127.0.0.1:5051')"]
