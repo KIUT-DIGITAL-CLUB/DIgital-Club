@@ -70,17 +70,16 @@ class NotificationService:
 
             # Explicit DNS resolution before SMTP connection
             smtp_host = self.smtp_server
+            smtp_ip = None
             try:
                 # Resolve hostname to IP address explicitly
                 smtp_ip = socket.gethostbyname(self.smtp_server)
                 try:
-                    current_app.logger.debug(f"Resolved {self.smtp_server} to {smtp_ip}")
+                    current_app.logger.info(f"DNS resolution successful: {self.smtp_server} -> {smtp_ip}")
                 except RuntimeError:
-                    logging.debug(f"Resolved {self.smtp_server} to {smtp_ip}")
-                # Option to use IP directly (some networks prefer this)
-                # smtp_host = smtp_ip  # Uncomment if direct IP connection works better
+                    logging.info(f"DNS resolution successful: {self.smtp_server} -> {smtp_ip}")
             except socket.gaierror as dns_error:
-                # DNS resolution failed
+                # DNS resolution failed - this is the actual DNS problem
                 error_msg = f"DNS resolution failed for {self.smtp_server}: {dns_error}"
                 try:
                     current_app.logger.error(f"Failed to send email to {to_email}: {error_msg}")
@@ -94,6 +93,17 @@ class NotificationService:
                     current_app.logger.warning(f"DNS resolution issue for {self.smtp_server}, proceeding with hostname: {error_msg}")
                 except RuntimeError:
                     logging.warning(f"DNS resolution issue for {self.smtp_server}, proceeding with hostname: {error_msg}")
+            
+            # Try using IP address directly if DNS resolution succeeded (helps with some network configurations)
+            # Note: Using IP may cause TLS certificate validation issues, so we'll fall back to hostname if needed
+            use_ip_directly = False
+            if smtp_ip:
+                try:
+                    current_app.logger.info(f"DNS resolved {self.smtp_server} to {smtp_ip}. Will attempt connection with hostname first.")
+                except RuntimeError:
+                    logging.info(f"DNS resolved {self.smtp_server} to {smtp_ip}. Will attempt connection with hostname first.")
+                # Start with hostname (better for TLS), but we can switch to IP if hostname fails
+                smtp_host = self.smtp_server
 
             # Retry mechanism with exponential backoff
             max_retries = 3
@@ -133,9 +143,23 @@ class NotificationService:
                     
                 except OSError as e:
                     # Network errors (including errno -3)
-                    error_type = "Network/OS error"
+                    # Check for specific errno -3 (EAI_NONAME - Temporary failure in name resolution)
+                    if hasattr(e, 'errno') and e.errno == -3:
+                        error_type = "DNS resolution failure during SMTP connection (errno -3)"
+                        # If we're using hostname and have IP, try IP on next attempt
+                        if smtp_ip and smtp_host == self.smtp_server and attempt < max_retries - 1:
+                            try:
+                                current_app.logger.warning(f"Connection to hostname {self.smtp_server} failed with DNS error (errno -3), will try IP {smtp_ip} on next attempt")
+                            except RuntimeError:
+                                logging.warning(f"Connection to hostname {self.smtp_server} failed with DNS error (errno -3), will try IP {smtp_ip} on next attempt")
+                            smtp_host = smtp_ip  # Switch to IP for next retry
+                            error_msg = f"{error_type} on {self.smtp_server}, will retry with IP {smtp_ip}"
+                        else:
+                            error_msg = f"{error_type} connecting to {smtp_host}:{self.smtp_port} - {e}"
+                    else:
+                        error_type = "Network/OS error"
+                        error_msg = f"{error_type} connecting to {smtp_host}:{self.smtp_port} - {e}"
                     last_error = e
-                    error_msg = f"{error_type} connecting to {smtp_host}:{self.smtp_port} - {e}"
                     
                 except smtplib.SMTPAuthenticationError as e:
                     # Authentication error - don't retry
