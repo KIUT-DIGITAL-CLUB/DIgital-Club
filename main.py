@@ -90,11 +90,11 @@ def add_sample_data():
         },
     ]
 
-    admin_user = User.query.filter_by(role="admin").first()
-    for news_item_data in news_data:
-        if not News.query.filter_by(title=news_item_data["title"]).first() and admin_user:
-            news_item = News(author_id=admin_user.id, **news_item_data)
-            db.session.add(news_item)
+    # admin_user = User.query.filter_by(role="admin").first()
+    # for news_item_data in news_data:
+    #     if not News.query.filter_by(title=news_item_data["title"]).first() and admin_user:
+    #         news_item = News(author_id=admin_user.id, **news_item_data)
+    #         db.session.add(news_item)
 
     # Sample events
     from datetime import datetime, timedelta, timezone
@@ -114,10 +114,10 @@ def add_sample_data():
         },
     ]
 
-    for event_data in events_data:
-        if not Event.query.filter_by(title=event_data["title"]).first():
-            event = Event(**event_data)
-            db.session.add(event)
+    # for event_data in events_data:
+    #     if not Event.query.filter_by(title=event_data["title"]).first():
+    #         event = Event(**event_data)
+    #         db.session.add(event)
 
     # Sample blog posts
     blog_data = [
@@ -221,13 +221,13 @@ def add_sample_data():
         },
     ]
 
-    admin_user = User.query.filter_by(role="admin").first()
-    for blog_item_data in blog_data:
-        if not Blog.query.filter_by(title=blog_item_data["title"]).first() and admin_user:
-            blog_item = Blog(author_id=admin_user.id, **blog_item_data)
-            db.session.add(blog_item)
+    # admin_user = User.query.filter_by(role="admin").first()
+    # for blog_item_data in blog_data:
+    #     if not Blog.query.filter_by(title=blog_item_data["title"]).first() and admin_user:
+    #         blog_item = Blog(author_id=admin_user.id, **blog_item_data)
+    #         db.session.add(blog_item)
 
-    db.session.commit()
+    # db.session.commit()
 
 
 # Ensure DB and admin user are initialized whenever the app starts (e.g. under Gunicorn)
