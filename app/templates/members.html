@@ -57,15 +57,27 @@
         backdrop-filter: blur(10px);
     }
     
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .members-controls {
+            padding: 1.25rem;
+        }
+    }
+    
     .search-bar {
         position: relative;
         margin-bottom: 1.5rem;
         display: flex;
-        gap: 0.75rem;
+        gap: 5px;
+        align-items: stretch;
+    }
+    
+    .search-bar > div {
+        flex: 1;
+        min-width: 0;
     }
     
     .search-bar input {
-        flex: 1;
+        width: 100%;
         padding: 1rem 1rem 1rem 3.5rem;
         background: rgba(255, 255, 255, 0.05);
         border: 2px solid var(--border-color);
@@ -73,6 +85,7 @@
         color: var(--text-primary);
         font-size: 1rem;
         transition: all 0.3s ease;
+        box-sizing: border-box;
     }
     
     .search-bar input:focus {
@@ -88,10 +101,11 @@
         transform: translateY(-50%);
         color: var(--text-muted);
         pointer-events: none;
+        z-index: 1;
     }
     
     .search-btn {
-        padding: 1rem 2rem;
+        padding: 1rem 1.5rem;
         background: var(--gradient-primary);
         border: none;
         border-radius: 15px;
@@ -103,7 +117,10 @@
         white-space: nowrap;
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
+        min-width: 120px;
+        flex-shrink: 0;
     }
     
     .search-btn:hover {
@@ -119,11 +136,18 @@
     @media (max-width: 768px) {
         .search-bar {
             flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .search-bar > div {
+            width: 100%;
         }
         
         .search-btn {
             width: 100%;
-            justify-content: center;
+            min-width: unset;
+            padding: 1rem;
+            min-height: 48px;
         }
     }
     
@@ -132,6 +156,15 @@
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
         margin-bottom: 1rem;
+    }
+    
+    .filters-row .form-control {
+        min-height: 48px;
+        font-size: 1rem;
+    }
+    
+    .filters-row button {
+        min-height: 48px;
     }
     
     .view-controls {
@@ -156,10 +189,15 @@
         background: transparent;
         border: none;
         color: var(--text-secondary);
-        padding: 0.5rem 1rem;
+        padding: 0.6rem 1rem;
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s ease;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .view-toggle button.active {
@@ -171,15 +209,23 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .sort-control label {
+        font-size: 0.95rem;
+        white-space: nowrap;
     }
     
     .sort-control select {
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid var(--border-color);
         border-radius: 10px;
-        padding: 0.6rem 1rem;
+        padding: 0.7rem 1rem;
         color: var(--text-primary);
         cursor: pointer;
+        min-height: 44px;
+        font-size: 0.95rem;
     }
     
     .members-grid {
@@ -191,6 +237,13 @@
     
     .members-grid.list-view {
         grid-template-columns: 1fr;
+    }
+    
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .members-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
     }
     
     .member-card {
@@ -290,6 +343,7 @@
         color: var(--text-primary);
         margin-bottom: 0.5rem;
         font-size: 1.5rem;
+        word-wrap: break-word;
     }
     
     .member-title {
@@ -426,11 +480,17 @@
         transition: all 0.3s ease;
         border: none;
         cursor: pointer;
+        min-height: 44px;
+        justify-content: center;
     }
     
     .view-profile-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
+    }
+    
+    .view-profile-btn:active {
+        transform: translateY(0);
     }
     
     .pagination-wrapper {
@@ -454,10 +514,12 @@
         text-decoration: none;
         transition: all 0.3s ease;
         min-width: 44px;
+        min-height: 44px;
         text-align: center;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        font-size: 0.95rem;
     }
     
     .pagination a {
@@ -501,6 +563,26 @@
         font-size: 1.1rem;
     }
     
+    /* Tablet Styles (769px - 1024px) */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .members-header h1 {
+            font-size: 2.5rem;
+        }
+        
+        .members-stats {
+            gap: 1.5rem;
+        }
+        
+        .stat-item {
+            padding: 0.9rem 1.75rem;
+        }
+        
+        .filters-row {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+    }
+    
+    /* Mobile Styles (max-width: 768px) */
     @media (max-width: 768px) {
         .members-header h1 {
             font-size: 2rem;
@@ -508,35 +590,62 @@
         
         .members-stats {
             gap: 1rem;
+            flex-direction: column;
         }
         
         .stat-item {
             padding: 0.8rem 1.5rem;
+            width: 100%;
+            max-width: 300px;
         }
         
         .stat-item .stat-number {
             font-size: 1.5rem;
         }
         
+        .members-controls {
+            padding: 1.25rem;
+            border-radius: 15px;
+        }
+        
         .filters-row {
             grid-template-columns: 1fr;
+            gap: 0.75rem;
         }
         
         .view-controls {
             flex-direction: column;
             align-items: stretch;
+            gap: 0.75rem;
         }
         
         .view-toggle {
             justify-content: center;
+            width: 100%;
         }
         
         .sort-control {
             justify-content: center;
+            width: 100%;
+            flex-direction: column;
+        }
+        
+        .sort-control label {
+            width: 100%;
+            text-align: center;
+        }
+        
+        .sort-control select {
+            width: 100%;
         }
         
         .members-grid {
             grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .member-card {
+            padding: 1.5rem;
         }
         
         .member-card.list-view {
@@ -553,19 +662,87 @@
         .member-avatar-placeholder i {
             font-size: 2rem;
         }
+        
+        .pagination {
+            gap: 0.4rem;
+        }
+        
+        .pagination a,
+        .pagination span {
+            padding: 0.6rem 1rem;
+            min-width: 40px;
+            min-height: 40px;
+            font-size: 0.9rem;
+        }
     }
     
+    /* Small Mobile Styles (max-width: 480px) */
     @media (max-width: 480px) {
+        .members-header h1 {
+            font-size: 1.75rem;
+        }
+        
         .members-controls {
             padding: 1rem;
+            border-radius: 12px;
+        }
+        
+        .search-bar input {
+            padding: 0.875rem 0.875rem 0.875rem 3rem;
+            font-size: 0.95rem;
+        }
+        
+        .search-bar i {
+            left: 1rem;
         }
         
         .member-card {
-            padding: 1.5rem;
+            padding: 1.25rem;
+        }
+        
+        .member-info h3 {
+            font-size: 1.25rem;
         }
         
         .points-number {
             font-size: 2rem;
+        }
+        
+        .trophy-icon {
+            font-size: 2rem;
+        }
+        
+        .view-profile-btn {
+            padding: 0.7rem 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .pagination-wrapper {
+            margin-top: 2rem;
+        }
+        
+        .pagination {
+            gap: 0.3rem;
+        }
+        
+        .pagination a,
+        .pagination span {
+            padding: 0.5rem 0.8rem;
+            min-width: 36px;
+            min-height: 36px;
+            font-size: 0.85rem;
+        }
+        
+        .stat-item {
+            padding: 0.75rem 1.25rem;
+        }
+        
+        .stat-item .stat-number {
+            font-size: 1.35rem;
+        }
+        
+        .stat-item .stat-label {
+            font-size: 0.85rem;
         }
     }
 </style>
