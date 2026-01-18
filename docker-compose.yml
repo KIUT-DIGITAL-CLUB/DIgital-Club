@@ -12,7 +12,7 @@ services:
       - BEEM_API_KEY=${BEEM_API_KEY}
       - BEEM_SECRET_KEY=${BEEM_SECRET_KEY}
       # Use PostgreSQL by default (falls back to SQLite if DATABASE_URL is not set)
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg2://digital_club_user:digital_club_password@db:5432/digital_club_db}
       - PORT=5051
       # Email configuration (optional)
       - SMTP_SERVER=${SMTP_SERVER:-}
@@ -21,6 +21,9 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - FROM_EMAIL=${FROM_EMAIL:-}
       # SMS configuration (optional)
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
     volumes:
       # Persist database
       - ./instance:/app/instance
