@@ -168,6 +168,7 @@ def forgot_password():
                     message=html_body,
                     is_html=True
                 )
+                notification_service.send_sms(user.phone_number, "Your password reset link is " + reset_url + "   if you did not request this, please ignore this message")
             except Exception as e:
                 current_app.logger.error(f"Error sending password reset email: {e}")
                 # Still show generic message below

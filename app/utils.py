@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.message import EmailMessage
 from flask import current_app
 import logging
+from app.sms import send_sms
 
 class NotificationService:
     """Service for sending email and SMS notifications"""
@@ -342,48 +343,12 @@ class NotificationService:
     
     def send_sms(self, phone_number, message):
         """Send SMS notification using Twilio"""
+        if phone_number[0] == '0':
+            phone_number = '+255' + phone_number[1:]
+        elif phone_number[0] == '+':
+            phone_number = phone_number[1:]
         try:
-            # Reload config if not loaded or in app context
-            if not self._config_loaded:
-                self._load_config()
-            
-            if not all([self.twilio_account_sid, self.twilio_auth_token, self.twilio_phone_number]):
-                try:
-                    current_app.logger.warning("Twilio credentials not configured. SMS not sent.")
-                except RuntimeError:
-                    logging.warning("Twilio credentials not configured. SMS not sent.")
-                return False
-            
-            # Remove any non-digit characters from phone number
-            phone_number = ''.join(filter(str.isdigit, phone_number))
-            
-            # Add country code if not present (assuming Tanzania +255)
-            if not phone_number.startswith('255'):
-                phone_number = '255' + phone_number.lstrip('0')
-            
-            url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
-            
-            data = {
-                'From': self.twilio_phone_number,
-                'To': f'+{phone_number}',
-                'Body': message
-            }
-            
-            response = requests.post(url, data=data, auth=(self.twilio_account_sid, self.twilio_auth_token))
-            
-            if response.status_code == 201:
-                try:
-                    current_app.logger.info(f"SMS sent successfully to {phone_number}")
-                except RuntimeError:
-                    logging.info(f"SMS sent successfully to {phone_number}")
-                return True
-            else:
-                try:
-                    current_app.logger.error(f"Failed to send SMS to {phone_number}: {response.text}")
-                except RuntimeError:
-                    logging.error(f"Failed to send SMS to {phone_number}: {response.text}")
-                return False
-                
+            send_sms(phone_number, message)
         except Exception as e:
             try:
                 current_app.logger.error(f"Failed to send SMS to {phone_number}: {str(e)}")
@@ -397,38 +362,38 @@ class NotificationService:
             if status == 'approved':
                 subject = f"RSVP Approved - {rsvp.event.title}"
                 email_message = f"""
-Dear {rsvp.full_name},
+            Dear {rsvp.full_name},
 
-Your RSVP for "{rsvp.event.title}" has been approved!
+            Your RSVP for "{rsvp.event.title}" has been approved!
 
-Event Details:
-- Date: {rsvp.event.event_date.strftime('%B %d, %Y at %I:%M %p')}
-- Location: {rsvp.event.location or 'TBA'}
+            Event Details:
+            - Date: {rsvp.event.event_date.strftime('%B %d, %Y at %I:%M %p')}
+            - Location: {rsvp.event.location or 'TBA'}
 
-Your Acceptance Code: {rsvp.acceptance_code}
+            Your Acceptance Code: {rsvp.acceptance_code}
 
-Please bring this code with you to the event for verification.
+            Please bring this code with you to the event for verification.
 
-Best regards,
-Digital Club Team
-                """
+            Best regards,
+            Digital Club Team
+                            """
                 
                 sms_message = f"RSVP Approved! Event: {rsvp.event.title} on {rsvp.event.event_date.strftime('%B %d, %Y')}. Your code: {rsvp.acceptance_code}. Bring this code to the event."
                 
             else:  # rejected
                 subject = f"RSVP Update - {rsvp.event.title}"
                 email_message = f"""
-Dear {rsvp.full_name},
+                Dear {rsvp.full_name},
 
-Thank you for your interest in "{rsvp.event.title}".
+                Thank you for your interest in "{rsvp.event.title}".
 
-Unfortunately, we are unable to accommodate your RSVP at this time due to capacity limitations.
+                Unfortunately, we are unable to accommodate your RSVP at this time due to capacity limitations.
 
-We appreciate your understanding and hope to see you at future events.
+                We appreciate your understanding and hope to see you at future events.
 
-Best regards,
-Digital Club Team
-                """
+                Best regards,
+                Digital Club Team
+                                """
                 
                 sms_message = f"RSVP Update: Unfortunately, we cannot accommodate your RSVP for {rsvp.event.title} due to capacity limitations. We hope to see you at future events!"
             

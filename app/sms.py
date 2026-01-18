@@ -1,0 +1,52 @@
+import requests
+import json
+import base64
+import os
+import dotenv
+
+dotenv.load_dotenv()
+
+api_key = os.getenv('BEEM_API_KEY')
+secret_key = os.getenv('BEEM_SECRET_KEY')
+print(api_key, secret_key)
+# Official Beem SMS API endpoint
+URL = 'https://apisms.beem.africa/v1/send'
+
+# Replace these with your actual Beem API credentials
+content_type = 'application/json'
+
+def send_sms(phone_number, message):
+    """
+    Sends an SMS using the Beem SMS gateway API v1 with certificate verification enabled.
+    """
+    payload = {
+        "source_addr": "KIUTCLUBS",
+        "encoding": 0,
+        "schedule_time": "",
+        "message": message,
+        "recipients": [
+            {"recipient_id": "1", "dest_addr": phone_number}
+        ]
+    }
+    # Beem requires HTTP Basic Authentication with api_key:secret_key as the credentials
+    auth_value = base64.b64encode(f"{api_key}:{secret_key}".encode("utf-8")).decode("utf-8")
+    headers = {
+        "Content-Type": content_type,
+        "Authorization": f"Basic {auth_value}",
+    }
+    try:
+        response = requests.post(
+            url=URL,
+            data=json.dumps(payload),
+            headers=headers,
+            timeout=10  # Reasonable timeout to avoid hanging
+        )
+        response.raise_for_status()  # Will raise for 4xx/5xx responses
+        return response.status_code
+    except requests.exceptions.SSLError as ssl_err:
+        return f"SSL Error: {ssl_err}. Please ensure your system has up-to-date CA certificates."
+    except requests.exceptions.RequestException as e:
+        return f"Error sending SMS: {e}"
+
+if __name__ == "__main__":
+    print(send_sms("+255749300606", "Hello Mr. Yunus, We are pleased to confirm that your RSVP for the Cyber Hackathon Digital Club event has been successfully received. You are warmly welcome to attend the event. Ticket ID: 10454  #KIUTClubs #DigitalClub"))
