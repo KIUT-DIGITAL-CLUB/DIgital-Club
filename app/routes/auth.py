@@ -145,12 +145,14 @@ def forgot_password():
         return redirect(url_for('main.index'))
 
     if request.method == 'POST':
+        print("this part was excuted 456")
         email = request.form.get('email')
         if not email:
             flash('Please enter your email address.', 'error')
             return render_template('auth/forgot_password.html')
 
         user = User.query.filter_by(email=email).first()
+        member : Member = Member.query.filter_by(user_id=user.id).first()
 
         # For security, always show the same message even if the email is not registered
         if user:
@@ -160,7 +162,7 @@ def forgot_password():
 
                 subject = "Reset your Digital Club password"
                 html_body = render_template('auth/email_reset_password.html', reset_url=reset_url, user=user)
-
+                print("this part was excuted 123")
                 notification_service = get_notification_service()
                 notification_service.send_email(
                     to_email=user.email,
@@ -168,7 +170,10 @@ def forgot_password():
                     message=html_body,
                     is_html=True
                 )
-                notification_service.send_sms(user.phone_number, "Your password reset link is " + reset_url + "   if you did not request this, please ignore this message")
+                print(member.phone)
+                print(reset_url)
+                print("sending sms")
+                notification_service.send_sms(member.phone, "We received a request to reset your password. Use the link below to set a new one: \n"  + reset_url + " \n \n If you did not request this, please ignore this message")
             except Exception as e:
                 current_app.logger.error(f"Error sending password reset email: {e}")
                 # Still show generic message below
