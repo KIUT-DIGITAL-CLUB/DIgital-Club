@@ -348,7 +348,7 @@ class NotificationService:
         elif phone_number[0] == '+':
             phone_number = phone_number[1:]
         try:
-            send_sms(phone_number, message)
+           current_app.logger.info(send_sms(phone_number, message))
         except Exception as e:
             print(f"Failed to send SMS to {phone_number}: {str(e)}")
             try:

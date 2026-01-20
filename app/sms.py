@@ -3,6 +3,7 @@ import json
 import base64
 import os
 import dotenv
+from flask import current_app
 
 dotenv.load_dotenv()
 
@@ -48,6 +49,7 @@ def send_sms(phone_number, message):
         response.raise_for_status()  # Will raise for 4xx/5xx responses
         return response.status_code
     except requests.exceptions.SSLError as ssl_err:
+        current_app.logger.error(f"SSL Error: {ssl_err}. Please ensure your system has up-to-date CA certificates.")
         return f"SSL Error: {ssl_err}. Please ensure your system has up-to-date CA certificates."
     except requests.exceptions.RequestException as e:
         return f"Error sending SMS: {e}"
@@ -56,6 +58,7 @@ def send_sms(phone_number, message):
     finally:
         # Only log status if a response was obtained
         if response is not None:
+            current_app.logger.info("SMS sent successfully: " + str(response.status_code))
             print("SMS sent successfully: " + str(response.status_code))
 
 if __name__ == "__main__":
