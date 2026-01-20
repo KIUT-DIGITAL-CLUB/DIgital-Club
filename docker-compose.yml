@@ -29,22 +29,22 @@ services:
       - ./instance:/app/instance
       # Persist uploaded files
       - ./app/static/uploads:/app/app/static/uploads
-    # dns:
-    #   - 8.8.8.8
-    #   - 8.8.4.4
-    #   - 1.1.1.1
-    # # dns_search:
-    # #   - .
-    # #network_mode: bridge 
-    # extra_hosts:
-    #   - "smtp.gmail.com:64.233.184.108"
-    #   - "smtp.gmail.com:64.233.184.109"
-    #   - "smtp.gmail.com:64.233.184.16"
-    # sysctls:
-    #   - net.ipv6.conf.all.disable_ipv6=1
-    # dns_opt:
-    #   - "attempts:3"
-    #   - "timeout:2"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+    # dns_search:
+    #   - .
+    #network_mode: digital_club_network
+    extra_hosts:
+      - "smtp.gmail.com:64.233.184.108"
+      - "smtp.gmail.com:64.233.184.109"
+      - "smtp.gmail.com:64.233.184.16"
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    dns_opt:
+      - "attempts:3"
+      - "timeout:2"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://127.0.0.1:5051')"]
@@ -52,15 +52,19 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    # ulimits:
-    #   nofile:
-    #     soft: 65535
-    #     hard: 65535
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      - digital_club_network
 
   db:
     image: postgres:16-alpine
     container_name: digital_club_db
     restart: unless-stopped
+    networks:
+      - digital_club_network
     environment:
       - POSTGRES_DB=digital_club_db
       - POSTGRES_USER=digital_club_user
