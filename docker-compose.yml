@@ -29,21 +29,6 @@ services:
       - ./instance:/app/instance
       # Persist uploaded files
       - ./app/static/uploads:/app/app/static/uploads
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-      - 1.1.1.1
-    dns_search:
-      - .
-    extra_hosts:
-      - "smtp.gmail.com:64.233.184.108"
-      - "smtp.gmail.com:64.233.184.109"
-      - "smtp.gmail.com:64.233.184.16"
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1
-    dns_opt:
-      - "attempts:3"
-      - "timeout:2"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://127.0.0.1:5051')"]
