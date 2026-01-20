@@ -1,54 +1,71 @@
+version: '3.8'
+
 services:
   web:
     build: .
+    container_name: digital_club_app
     ports:
       - "5051:5051"
     environment:
-      FLASK_APP: main.py
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
-      BEEM_API_KEY: ${BEEM_API_KEY:-}
-      BEEM_SECRET_KEY: ${BEEM_SECRET_KEY:-}
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://digital_club_user:digital_club_password@db:5432/digital_club_db}
-      PORT: 5051
-      SMTP_SERVER: ${SMTP_SERVER:-}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USERNAME: ${SMTP_USERNAME:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      FROM_EMAIL: ${FROM_EMAIL:-}
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
-      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+      - FLASK_APP=main.py
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - BEEM_API_KEY=${BEEM_API_KEY}
+      - BEEM_SECRET_KEY=${BEEM_SECRET_KEY}
+      # Use PostgreSQL by default (falls back to SQLite if DATABASE_URL is not set)
+      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg2://digital_club_user:digital_club_password@db:5432/digital_club_db}
+      - PORT=5051
+      # Email configuration (optional)
+      - SMTP_SERVER=${SMTP_SERVER:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - FROM_EMAIL=${FROM_EMAIL:-}
+      # SMS configuration (optional)
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
     volumes:
+      # Persist database
       - ./instance:/app/instance
+      # Persist uploaded files
       - ./app/static/uploads:/app/app/static/uploads
     dns:
-      - 1.1.1.1
       - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+    dns_search:
+      - .
+    extra_hosts:
+      - "smtp.gmail.com:64.233.184.108"
+      - "smtp.gmail.com:64.233.184.109"
+      - "smtp.gmail.com:64.233.184.16"
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    dns_opt:
+      - "attempts:3"
+      - "timeout:2"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', 5051)); s.close()\""]
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://127.0.0.1:5051')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - digital_club_network
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
 
   db:
     image: postgres:16-alpine
+    container_name: digital_club_db
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: digital_club_db
-      POSTGRES_USER: digital_club_user
-      POSTGRES_PASSWORD: digital_club_password
+      - POSTGRES_DB=digital_club_db
+      - POSTGRES_USER=digital_club_user
+      - POSTGRES_PASSWORD=digital_club_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    networks:
-      - digital_club_network
 
 volumes:
   postgres_data:
-
-networks:
-  digital_club_network:
-    driver: bridge
