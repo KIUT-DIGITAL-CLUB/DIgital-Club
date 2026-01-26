@@ -5,7 +5,7 @@ services:
     build: .
     container_name: digital_club_app
     ports:
-      - "5051:5051"
+      - "127.0.0.1:5051:5051"
     environment:
       - FLASK_APP=main.py
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
