@@ -21,74 +21,79 @@ def init_db():
             db.session.add(admin_user)
             db.session.commit()
             print("Admin user created: admin@digitalclub.kiut.ac.tz / admin123")
+            # ⚠️ WARNING:
+            # Do NOT use these credentials in production.
+            # As soon as the system goes live, these credentials should be reset.
+            # These credentials are for the SUPER ADMIN account (development/testing only).
+
         else:
             print("Admin user already exists.")
 
         # Add sample data
-        add_sample_data()
+        # add_sample_data()
         print("Database initialized with sample data (if missing).")
     except Exception as e:
         print(f"Database init error (can usually be ignored if already set up): {e}")
 
-def add_sample_data():
-    """Add sample data for testing (only if it does not already exist)."""
-    # Sample topics
-    topics_data = [
-        {
-            "name": "Python Programming",
-            "description": "Learn Python from basics to advanced concepts",
-            "icon": "fab fa-python",
-        },
-        {
-            "name": "Web Development",
-            "description": "HTML, CSS, JavaScript, and modern frameworks",
-            "icon": "fas fa-code",
-        },
-        {
-            "name": "Mobile Development",
-            "description": "Android and iOS app development",
-            "icon": "fas fa-mobile-alt",
-        },
-        {
-            "name": "Data Science",
-            "description": "Data analysis, machine learning, and AI",
-            "icon": "fas fa-chart-line",
-        },
-        {
-            "name": "Cybersecurity",
-            "description": "Ethical hacking and security practices",
-            "icon": "fas fa-shield-alt",
-        },
-        {
-            "name": "Cloud Computing",
-            "description": "AWS, Azure, and cloud technologies",
-            "icon": "fas fa-cloud",
-        },
-    ]
+# def add_sample_data():
+#     """Add sample data for testing (only if it does not already exist)."""
+#     # Sample topics
+#     topics_data = [
+#         {
+#             "name": "Python Programming",
+#             "description": "Learn Python from basics to advanced concepts",
+#             "icon": "fab fa-python",
+#         },
+#         {
+#             "name": "Web Development",
+#             "description": "HTML, CSS, JavaScript, and modern frameworks",
+#             "icon": "fas fa-code",
+#         },
+#         {
+#             "name": "Mobile Development",
+#             "description": "Android and iOS app development",
+#             "icon": "fas fa-mobile-alt",
+#         },
+#         {
+#             "name": "Data Science",
+#             "description": "Data analysis, machine learning, and AI",
+#             "icon": "fas fa-chart-line",
+#         },
+#         {
+#             "name": "Cybersecurity",
+#             "description": "Ethical hacking and security practices",
+#             "icon": "fas fa-shield-alt",
+#         },
+#         {
+#             "name": "Cloud Computing",
+#             "description": "AWS, Azure, and cloud technologies",
+#             "icon": "fas fa-cloud",
+#         },
+#     ]
 
-    for topic_data in topics_data:
-        if not Topic.query.filter_by(name=topic_data["name"]).first():
-            topic = Topic(**topic_data)
-            db.session.add(topic)
+#     for topic_data in topics_data:
+#         if not Topic.query.filter_by(name=topic_data["name"]).first():
+#             topic = Topic(**topic_data)
+#             db.session.add(topic)
 
-    # Sample news
-    news_data = [
-        {
-            "title": "Digital Club Hackathon 2024 Registration Open!",
-            "content": "Join us for the biggest hackathon of the year! Build innovative solutions and compete for amazing prizes.",
-            "category": "hackathon",
-        },
-        {
-            "title": "New Python Workshop Series Starting",
-            "content": "Learn Python programming from scratch in our comprehensive workshop series.",
-            "category": "workshop",
-        },
-        {
-            "title": "Club Members Win National Coding Competition",
-            "content": "Congratulations to our team for securing first place in the national coding competition!",
-            "category": "achievement",
-        },
-    ]
+#     # Sample news
+#     news_data = [
+#         {
+#             "title": "Digital Club Hackathon 2024 Registration Open!",
+#             "content": "Join us for the biggest hackathon of the year! Build innovative solutions and compete for amazing prizes.",
+#             "category": "hackathon",
+#         },
+#         {
+#             "title": "New Python Workshop Series Starting",
+#             "content": "Learn Python programming from scratch in our comprehensive workshop series.",
+#             "category": "workshop",
+#         },
+#         {
+#             "title": "Club Members Win National Coding Competition",
+#             "content": "Congratulations to our team for securing first place in the national coding competition!",
+#             "category": "achievement",
+#         },
+#     ]
 
     # admin_user = User.query.filter_by(role="admin").first()
     # for news_item_data in news_data:
@@ -96,23 +101,23 @@ def add_sample_data():
     #         news_item = News(author_id=admin_user.id, **news_item_data)
     #         db.session.add(news_item)
 
-    # Sample events
-    from datetime import datetime, timedelta, timezone
+    # # Sample events
+    # from datetime import datetime, timedelta, timezone
 
-    events_data = [
-        {
-            "title": "Python Workshop",
-            "description": "Introduction to Python programming",
-            "event_date": datetime.now(timezone.utc) + timedelta(days=7),
-            "location": "Computer Lab 1",
-        },
-        {
-            "title": "Hackathon Kickoff",
-            "description": "Digital Club Hackathon 2024 kickoff event",
-            "event_date": datetime.now(timezone.utc) + timedelta(days=14),
-            "location": "Main Auditorium",
-        },
-    ]
+    # events_data = [
+    #     {
+    #         "title": "Python Workshop",
+    #         "description": "Introduction to Python programming",
+    #         "event_date": datetime.now(timezone.utc) + timedelta(days=7),
+    #         "location": "Computer Lab 1",
+    #     },
+    #     {
+    #         "title": "Hackathon Kickoff",
+    #         "description": "Digital Club Hackathon 2024 kickoff event",
+    #         "event_date": datetime.now(timezone.utc) + timedelta(days=14),
+    #         "location": "Main Auditorium",
+    #     },
+    # ]
 
     # for event_data in events_data:
     #     if not Event.query.filter_by(title=event_data["title"]).first():
