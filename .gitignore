@@ -7,10 +7,8 @@ dist/
 wheels/
 *.egg-info
 instance/
-instance/
 # Virtual environments
 .venv
 .env
-node_modules/
 .node-persist/
 session/
