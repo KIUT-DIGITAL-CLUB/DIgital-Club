@@ -200,28 +200,24 @@ FLASK_ENV=development
 - `SECRET_KEY`: used by Flask for sessions and security (keep it secret in real deployments).
 - `DATABASE_URL`: database connection string.
   - For local SQLite (default): `sqlite:///digital_club_01.db`
-  - For PostgreSQL: something like `postgresql+psycopg2://user:password@host:5432/dbname`
+  - For PostgreSQL: something like `postgresql+psycopg2://digital_club_user:digital_club_password@db:5432/digital_club_db`
 
 > In `app/__init__.py`, if `DATABASE_URL` is not set, it falls back to `sqlite:///digital_club_01.db` in the project root.
-
 ### 2. Email & SMS (Optional)
 
-For email/SMS notifications, configure values in `config.py` (copied from `config_example.py`):
+For email/SMS notifications, configure values in `.env` (copied from `config_example.1env`):
 
 ```python
-SMTP_SERVER = 'smtp.gmail.com'
-SMTP_PORT = 587
-SMTP_USERNAME = 'your-email@gmail.com'
-SMTP_PASSWORD = 'your-app-password'
-FROM_EMAIL = 'your-email@gmail.com'
+BEEM_API_KEY = '19example62d4ee1b0726e'
+BEEM_SECRET_KEY = 'example_MGMwNGJlZWM5NNlMDA1YmNiYjk0U4OGZlY2I0OY2MDzY4NWNlNTMzdDZlYjE5NTE1ZWkYTk2MTVlOTQ4YzJhNg=='
 
-TWILIO_ACCOUNT_SID = 'your-twilio-account-sid'
-TWILIO_AUTH_TOKEN = 'your-twilio-auth-token'
-TWILIO_PHONE_NUMBER = '+1234567890'
 ```
 
-These are used by the `NotificationService` in `app/utils.py` to send emails and SMS (e.g., confirmations, alerts).
+These are used by the `NotificationService` in `app/utils.py` and `app/sms.py` to send emails and SMS (e.g., confirmations, alerts).
+Also used to attach dockerized postgresql in `app/__init__.py`
+> For learning purposes you can skip real credentials and keep email/SMS features disabled; the rest of the app will still work.
 
+---
 > For learning purposes you can skip real credentials and keep email/SMS features disabled; the rest of the app will still work.
 
 ---
