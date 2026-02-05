@@ -5,12 +5,15 @@
 {% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Payments</span>{% endblock %}
 
 {% block admin_content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="admin-page-header mb-4">
     <div>
         <h2 class="mb-1">Membership Payments</h2>
         <p class="text-muted mb-0">Track all membership fee payments</p>
     </div>
-    <div>
+    <div class="admin-page-header-actions">
+        <a href="{{ url_for('admin.financial') }}" class="admin-btn admin-btn-outline">
+            <i class="fas fa-chart-line"></i> Financial Management
+        </a>
         <a href="{{ url_for('admin.export_payments', status=current_status, member_id=current_member_id) }}" 
            class="admin-btn admin-btn-success">
             <i class="fas fa-download"></i> Export to CSV
@@ -42,6 +45,27 @@
         </div>
     </div>
 </div>
+{% else %}
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <div class="d-flex align-items-center">
+            <div class="admin-alert-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5 class="mb-1">No Active Financial Period</h5>
+                <p class="mb-0 text-muted">
+                    Create a financial period so new payments are tied to a budget cycle.
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('admin.create_financial_period') }}" class="admin-btn admin-btn-primary">
+                    <i class="fas fa-plus"></i> Create Period
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 <!-- Statistics -->
@@ -65,10 +89,9 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="admin-stat-card">
-            <a href="{{ url_for('admin.financial') }}" class="admin-btn admin-btn-outline admin-btn-sm">
-                <i class="fas fa-chart-line"></i> Financial Management
-            </a>
+        <div class="admin-stat-card warning">
+            <h5>{{ unassigned_payments_count }}</h5>
+            <p>Unassigned Payments</p>
         </div>
     </div>
 </div>
@@ -121,6 +144,7 @@
             <thead>
                 <tr>
                     <th>Member</th>
+                    <th>Period</th>
                     <th>Amount</th>
                     <th>Payment Date</th>
                     <th>Membership Period</th>
@@ -137,6 +161,15 @@
                             {{ payment.member.full_name }}
                         </a><br>
                         <small class="text-muted">{{ payment.member.member_id_number }}</small>
+                    </td>
+                    <td>
+                        {% if payment.financial_period %}
+                        <a href="{{ url_for('admin.financial_period_detail', period_id=payment.financial_period.id) }}">
+                            {{ payment.financial_period.name }}
+                        </a>
+                        {% else %}
+                        <span class="admin-badge admin-badge-warning">Unassigned</span>
+                        {% endif %}
                     </td>
                     <td><strong>Tsh {{ "%.2f"|format(payment.amount) }}</strong></td>
                     <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
@@ -181,23 +214,3 @@
 </div>
 {% endif %}
 {% endblock %}
-
-{% block extra_head %}
-<style>
-.admin-alert-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-}
-
-.admin-alert-icon.info {
-    background: rgba(0, 255, 255, 0.2);
-    color: #00ffff;
-}
-</style>
-{% endblock %}
-

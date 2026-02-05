@@ -1821,6 +1821,9 @@ def payments():
     total_payments = MembershipPayment.query.count()
     active_payments = sum(1 for p in MembershipPayment.query.all() if p.is_active())
     total_revenue = db.session.query(db.func.sum(MembershipPayment.amount)).scalar() or 0
+    unassigned_payments_count = MembershipPayment.query.filter(
+        MembershipPayment.financial_period_id.is_(None)
+    ).count()
     
     # Get current financial period
     current_period = FinancialPeriod.query.filter_by(status='open').first()
@@ -1833,6 +1836,7 @@ def payments():
                          total_payments=total_payments,
                          active_payments=active_payments,
                          total_revenue=total_revenue,
+                         unassigned_payments_count=unassigned_payments_count,
                          current_period=current_period)
 
 
@@ -2223,6 +2227,17 @@ def financial():
     ).scalar() or 0
     
     all_time_balance = all_time_revenue - all_time_expenses
+
+    membership_payments_total = db.session.query(db.func.sum(MembershipPayment.amount)).scalar() or 0
+    membership_payments_count = MembershipPayment.query.count()
+    unassigned_payments_count = MembershipPayment.query.filter(
+        MembershipPayment.financial_period_id.is_(None)
+    ).count()
+    current_period_payments_total = 0
+    if current_period:
+        current_period_payments_total = db.session.query(db.func.sum(MembershipPayment.amount)).filter(
+            MembershipPayment.financial_period_id == current_period.id
+        ).scalar() or 0
     
     return render_template('admin/financial.html',
                          periods=periods,
@@ -2232,7 +2247,11 @@ def financial():
                          closed_periods=closed_periods,
                          all_time_revenue=all_time_revenue,
                          all_time_expenses=all_time_expenses,
-                         all_time_balance=all_time_balance)
+                         all_time_balance=all_time_balance,
+                         membership_payments_total=membership_payments_total,
+                         membership_payments_count=membership_payments_count,
+                         unassigned_payments_count=unassigned_payments_count,
+                         current_period_payments_total=current_period_payments_total)
 
 
 @admin_bp.route('/financial/create', methods=['GET', 'POST'])
