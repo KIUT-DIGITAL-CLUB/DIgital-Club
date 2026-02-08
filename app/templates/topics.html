@@ -1,63 +1,691 @@
 {% extends "base.html" %}
 
-{% block title %}Topics - Digital Club{% endblock %}
+{% block title %}Topics - Digital Club - KIUT{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Hero Section */
+    .topics-hero {
+        min-height: 40vh;
+        padding: 8rem 0 5rem;
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .topics-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%);
+    }
+    
+    .topics-hero h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+    }
+    
+    .topics-hero p {
+        font-size: 1.3rem;
+        color: var(--text-secondary);
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+    
+    /* Content Section */
+    .topics-section {
+        padding: 6rem 0;
+        position: relative;
+    }
+    
+    .section-title {
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .section-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 4rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Topics Grid */
+    .topics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 4rem;
+    }
+    
+    .topic-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2.5rem 2rem;
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+    
+    .topic-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+    }
+    
+    .topic-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-color);
+        box-shadow: 0 20px 40px var(--shadow-color);
+    }
+    
+    .topic-card:hover::before {
+        opacity: 1;
+    }
+    
+    .topic-icon {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    .topic-icon::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        opacity: 0;
+        animation: pulse 2s infinite;
+    }
+    
+    .topic-card:hover .topic-icon::after {
+        opacity: 0.3;
+    }
+    
+    .topic-icon i {
+        font-size: 2.5rem;
+        color: var(--bg-primary);
+        z-index: 1;
+    }
+    
+    .topic-name {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .topic-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        font-size: 1.05rem;
+    }
+    
+    /* Topic Categories */
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+    
+    .category-card {
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2rem;
+        text-align: center;
+        transition: all var(--transition-normal);
+    }
+    
+    .category-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+        background: var(--surface-2);
+    }
+    
+    .category-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .category-title {
+        font-size: 1.3rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .category-count {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+    
+    .category-description {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+    
+    /* Learning Paths */
+    .paths-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 4rem;
+    }
+    
+    .path-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2.5rem;
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .path-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transition: transform var(--transition-normal);
+    }
+    
+    .path-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-color);
+        box-shadow: 0 20px 40px var(--shadow-color);
+    }
+    
+    .path-card:hover::after {
+        transform: scaleX(1);
+    }
+    
+    .path-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .path-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        min-width: 60px;
+    }
+    
+    .path-title {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .path-description {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+        font-size: 1.05rem;
+    }
+    
+    .path-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .skill-tag {
+        background: rgba(var(--particle-color), 0.12);
+        color: var(--primary-color);
+        padding: 0.4rem 0.9rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        border: 1px solid rgba(var(--particle-color), 0.3);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-state h3 {
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+        background: linear-gradient(135deg, rgba(var(--particle-color), 0.12) 0%, rgba(var(--particle-color), 0.06) 100%);
+        padding: 5rem 0;
+        text-align: center;
+        border-radius: var(--border-radius-md);
+        margin-top: 3rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .cta-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .cta-text {
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 2.5rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Animations */
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.1); opacity: 0.5; }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .topics-hero {
+            padding: 6rem 0 4rem;
+            min-height: 30vh;
+        }
+        
+        .topics-section {
+            padding: 4rem 0;
+        }
+        
+        .topics-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .topic-card {
+            padding: 2rem 1.5rem;
+        }
+        
+        .topic-icon {
+            width: 70px;
+            height: 70px;
+        }
+        
+        .topic-icon i {
+            font-size: 2rem;
+        }
+        
+        .categories-grid,
+        .paths-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .category-card,
+        .path-card {
+            padding: 1.5rem;
+        }
+        
+        .path-header {
+            gap: 1rem;
+        }
+        
+        .path-icon {
+            font-size: 2rem;
+            min-width: 50px;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<section style="padding: 5rem 0;">
+<!-- Hero Section -->
+<section class="topics-hero">
     <div class="container">
-        <h1 style="text-align: center; font-size: 3rem; margin-bottom: 3rem; color: var(--primary-color);" data-aos="fade-up">
-            Topics We Cover
-        </h1>
-        
-        <p style="text-align: center; font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 4rem; max-width: 800px; margin-left: auto; margin-right: auto;" data-aos="fade-up" data-aos-delay="200">
-            Explore the wide range of technologies and skills we teach and practice in Digital Club
+        <h1 data-aos="fade-up">Topics We Cover</h1>
+        <p data-aos="fade-up" data-aos-delay="200">
+            Master the technologies and skills driving the digital future through our comprehensive learning programs
+        </p>
+    </div>
+</section>
+
+<!-- Topics Section -->
+<section class="topics-section">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Technology Stack</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Comprehensive coverage of modern technologies and programming languages
         </p>
         
         {% if topics %}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div class="topics-grid" data-aos="fade-up" data-aos-delay="400">
             {% for topic in topics %}
-            <div class="card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-                <div style="text-align: center;">
-                    <div style="width: 80px; height: 80px; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); border-radius: 50%; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center;">
-                        <i class="{{ topic.icon }}" style="font-size: 2rem; color: var(--bg-primary);"></i>
-                    </div>
-                    
-                    <h3 style="color: var(--text-primary); margin-bottom: 1rem;">{{ topic.name }}</h3>
-                    
-                    {% if topic.description %}
-                    <p style="color: var(--text-secondary); line-height: 1.6;">
-                        {{ topic.description }}
-                    </p>
-                    {% endif %}
+            <div class="topic-card">
+                <div class="topic-icon">
+                    <i class="{{ topic.icon }}"></i>
                 </div>
+                
+                <h3 class="topic-name">{{ topic.name }}</h3>
+                
+                {% if topic.description %}
+                <p class="topic-description">
+                    {{ topic.description }}
+                </p>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div style="text-align: center; padding: 3rem;">
-            <i class="fas fa-book" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
-            <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">Topics Coming Soon</h3>
-            <p style="color: var(--text-muted);">We're preparing comprehensive learning materials for various technologies.</p>
+        <div class="empty-state" data-aos="fade-up">
+            <i class="fas fa-book"></i>
+            <h3>Topics Coming Soon</h3>
+            <p>We're preparing comprehensive learning materials for various technologies. Check back soon!</p>
         </div>
         {% endif %}
+    </div>
+</section>
+
+<!-- Learning Paths -->
+<section class="topics-section" style="background: var(--surface-5);">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Learning Paths</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Structured learning journeys to build expertise in specific technology domains
+        </p>
         
-        <!-- Call to Action -->
-        <div style="text-align: center; margin-top: 5rem;" data-aos="fade-up">
-            <div style="background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 3rem; border: 1px solid var(--border-color);">
-                <h2 style="color: var(--text-primary); margin-bottom: 1rem;">Want to Learn More?</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem;">
-                    Join our workshops and hands-on sessions to dive deeper into these technologies
+        <div class="paths-grid" data-aos="fade-up" data-aos-delay="400">
+            <div class="path-card">
+                <div class="path-header">
+                    <div class="path-icon">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <h3 class="path-title">Web Development</h3>
+                </div>
+                <p class="path-description">
+                    Master frontend and backend development with modern frameworks. Build responsive websites and scalable web applications.
                 </p>
-                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                    <a href="{{ url_for('auth.register') }}" class="btn-primary">
-                        <i class="fas fa-user-plus"></i> Join Digital Club
-                    </a>
-                    <a href="{{ url_for('main.events') }}" class="btn-secondary">
-                        <i class="fas fa-calendar"></i> View Events
-                    </a>
+                <div class="path-skills">
+                    <span class="skill-tag">HTML/CSS</span>
+                    <span class="skill-tag">JavaScript</span>
+                    <span class="skill-tag">React</span>
+                    <span class="skill-tag">Node.js</span>
+                    <span class="skill-tag">Databases</span>
+                </div>
+            </div>
+            
+            <div class="path-card">
+                <div class="path-header">
+                    <div class="path-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="path-title">Mobile Development</h3>
+                </div>
+                <p class="path-description">
+                    Create native and cross-platform mobile applications for iOS and Android using industry-standard tools and frameworks.
+                </p>
+                <div class="path-skills">
+                    <span class="skill-tag">React Native</span>
+                    <span class="skill-tag">Flutter</span>
+                    <span class="skill-tag">iOS Development</span>
+                    <span class="skill-tag">Android Development</span>
+                    <span class="skill-tag">UI/UX Design</span>
+                </div>
+            </div>
+            
+            <div class="path-card">
+                <div class="path-header">
+                    <div class="path-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="path-title">AI & Machine Learning</h3>
+                </div>
+                <p class="path-description">
+                    Explore artificial intelligence, machine learning, and data science. Build intelligent systems and predictive models.
+                </p>
+                <div class="path-skills">
+                    <span class="skill-tag">Python</span>
+                    <span class="skill-tag">TensorFlow</span>
+                    <span class="skill-tag">PyTorch</span>
+                    <span class="skill-tag">Data Analysis</span>
+                    <span class="skill-tag">Neural Networks</span>
+                </div>
+            </div>
+            
+            <div class="path-card">
+                <div class="path-header">
+                    <div class="path-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="path-title">Cybersecurity</h3>
+                </div>
+                <p class="path-description">
+                    Learn ethical hacking, network security, and digital forensics. Protect systems and data from modern cyber threats.
+                </p>
+                <div class="path-skills">
+                    <span class="skill-tag">Ethical Hacking</span>
+                    <span class="skill-tag">Network Security</span>
+                    <span class="skill-tag">Cryptography</span>
+                    <span class="skill-tag">Penetration Testing</span>
+                    <span class="skill-tag">Security Analysis</span>
+                </div>
+            </div>
+            
+            <div class="path-card">
+                <div class="path-header">
+                    <div class="path-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <h3 class="path-title">Cloud Computing</h3>
+                </div>
+                <p class="path-description">
+                    Master cloud platforms and DevOps practices. Deploy scalable applications and manage infrastructure in the cloud.
+                </p>
+                <div class="path-skills">
+                    <span class="skill-tag">AWS</span>
+                    <span class="skill-tag">Azure</span>
+                    <span class="skill-tag">Docker</span>
+                    <span class="skill-tag">Kubernetes</span>
+                    <span class="skill-tag">DevOps</span>
+                </div>
+            </div>
+            
+            <div class="path-card">
+                <div class="path-header">
+                    <div class="path-icon">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <h3 class="path-title">Game Development</h3>
+                </div>
+                <p class="path-description">
+                    Create engaging games using modern game engines. Learn game design principles, graphics, and interactive mechanics.
+                </p>
+                <div class="path-skills">
+                    <span class="skill-tag">Unity</span>
+                    <span class="skill-tag">Unreal Engine</span>
+                    <span class="skill-tag">C#</span>
+                    <span class="skill-tag">3D Graphics</span>
+                    <span class="skill-tag">Game Physics</span>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<!-- Topic Categories -->
+<section class="topics-section">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Skill Categories</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Organized learning tracks to develop comprehensive expertise
+        </p>
+        
+        <div class="categories-grid" data-aos="fade-up" data-aos-delay="400">
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h3 class="category-title">Programming Languages</h3>
+                <div class="category-count">12+ Languages</div>
+                <p class="category-description">
+                    Master Python, JavaScript, Java, C++, and other essential programming languages.
+                </p>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3 class="category-title">Databases & Storage</h3>
+                <div class="category-count">8+ Technologies</div>
+                <p class="category-description">
+                    Learn SQL, NoSQL, data modeling, and database optimization techniques.
+                </p>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <h3 class="category-title">Networking & Infrastructure</h3>
+                <div class="category-count">6+ Areas</div>
+                <p class="category-description">
+                    Understand networks, servers, cloud infrastructure, and system administration.
+                </p>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h3 class="category-title">Development Tools</h3>
+                <div class="category-count">15+ Tools</div>
+                <p class="category-description">
+                    Master Git, Docker, IDEs, debugging tools, and development workflows.
+                </p>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-paint-brush"></i>
+                </div>
+                <h3 class="category-title">Design & UX</h3>
+                <div class="category-count">7+ Disciplines</div>
+                <p class="category-description">
+                    Learn UI/UX design, prototyping, user research, and design systems.
+                </p>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="category-title">Data Science</h3>
+                <div class="category-count">10+ Tools</div>
+                <p class="category-description">
+                    Explore data analysis, visualization, statistics, and business intelligence.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="topics-section" style="background: var(--surface-5);">
+    <div class="container">
+        <div class="cta-section" data-aos="fade-up">
+            <h2 class="cta-title">Ready to Master New Technologies?</h2>
+            <p class="cta-text">
+                Join our workshops, hands-on sessions, and expert-led training to build in-demand skills 
+                and advance your career in technology.
+            </p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('auth.register') }}" class="btn-primary">
+                    <i class="fas fa-rocket"></i> Start Learning
+                </a>
+                <a href="{{ url_for('main.events') }}" class="btn-secondary">
+                    <i class="fas fa-calendar"></i> View Workshops
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize AOS animations
+    AOS.init({
+        duration: 1000,
+        once: true,
+        offset: 100
+    });
+</script>
 {% endblock %}

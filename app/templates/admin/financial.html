@@ -257,21 +257,21 @@
 {% block extra_head %}
 <style>
 .admin-period-card {
-    background: #1a1a2e;
-    border: 1px solid rgba(0, 255, 255, 0.2);
+    background: var(--admin-bg-secondary);
+    border: 1px solid var(--admin-border);
     border-radius: 8px;
     padding: 1rem;
     transition: all 0.3s ease;
 }
 
 .admin-period-card:hover {
-    border-color: rgba(0, 255, 255, 0.4);
+    border-color: var(--admin-primary);
     transform: translateY(-2px);
 }
 
 .admin-period-card.active {
-    border-color: #00ffff;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.2);
 }
 
 .admin-period-header {
@@ -283,7 +283,7 @@
 
 .admin-period-title {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     flex-grow: 1;
 }
@@ -306,12 +306,12 @@
 
 .admin-period-stat strong {
     display: block;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
 }
 
 .admin-period-stat small {
-    color: #888;
-    font-size: 0.8rem;
+    color: var(--admin-text-muted);
+    font-size: 0.72rem;
 }
 
 .admin-period-actions {

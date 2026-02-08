@@ -1,59 +1,365 @@
 {% extends "base.html" %}
 
-{% block title %}Events - Digital Club{% endblock %}
+{% block title %}Events - Digital Club - KIUT{% endblock %}
 
 {% block extra_head %}
 <style>
-    .events-header {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-        padding: 5rem 0;
+    /* Hero Section */
+    .events-hero {
+        min-height: 40vh;
+        padding: 8rem 0 5rem;
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
         text-align: center;
+        border-bottom: 1px solid var(--border-color);
     }
     
+    .events-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%);
+    }
+    
+    .events-hero h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+    }
+    
+    .events-hero p {
+        font-size: 1.3rem;
+        color: var(--text-secondary);
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+    
+    /* Content Section */
+    .events-section {
+        padding: 6rem 0;
+        position: relative;
+    }
+    
+    .section-title {
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .section-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 4rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Navigation Tabs */
     .events-nav {
         display: flex;
         justify-content: center;
         gap: 1rem;
-        margin-bottom: 3rem;
+        margin-bottom: 4rem;
         flex-wrap: wrap;
     }
     
     .nav-tab {
         padding: 1rem 2rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(0, 255, 255, 0.2);
-        border-radius: 25px;
+        background: var(--surface-2);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-lg);
         color: var(--text-secondary);
         text-decoration: none;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal);
         cursor: pointer;
-    }
-    
-    .nav-tab.active {
-        background: var(--primary-color);
-        color: var(--bg-primary);
-        border-color: var(--primary-color);
+        font-weight: 500;
+        font-size: 1rem;
     }
     
     .nav-tab:hover {
+        background: var(--surface-3);
         border-color: var(--primary-color);
         color: var(--primary-color);
+        transform: translateY(-2px);
     }
     
+    .nav-tab.active {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        border-color: transparent;
+        box-shadow: 0 5px 20px var(--shadow-color);
+    }
+    
+    /* Countdown Timer */
+    .countdown-section {
+        background: linear-gradient(135deg, rgba(var(--particle-color), 0.15) 0%, rgba(var(--particle-color), 0.08) 100%);
+        border: 1px solid rgba(var(--particle-color), 0.25);
+        border-radius: var(--border-radius-md);
+        padding: 3rem;
+        margin-bottom: 4rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .countdown-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .countdown-title {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .countdown-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+    
+    .countdown-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1.5rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .countdown-item {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform var(--transition-normal);
+    }
+    
+    .countdown-item:hover {
+        transform: translateY(-5px);
+    }
+    
+    .countdown-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        display: block;
+        margin-bottom: 0.5rem;
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .countdown-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+    
+    /* Events Content Tabs */
     .events-content {
         display: none;
+        animation: fadeIn 0.5s ease;
     }
     
     .events-content.active {
         display: block;
     }
     
-    .calendar-container {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Upcoming Events Grid */
+    .events-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 4rem;
+    }
+    
+    .event-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
         padding: 2rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .event-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+    }
+    
+    .event-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-color);
+        box-shadow: 0 20px 40px var(--shadow-color);
+    }
+    
+    .event-card:hover::before {
+        opacity: 1;
+    }
+    
+    .event-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+    
+    .event-badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .event-category {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(var(--particle-color), 0.15);
+        color: var(--primary-color);
+        border: 1px solid rgba(var(--particle-color), 0.3);
+    }
+    
+    .category-workshop {
+        background: rgba(0, 255, 255, 0.15);
+        color: var(--primary-color);
+    }
+    
+    .category-hackathon {
+        background: rgba(255, 0, 255, 0.15);
+        color: var(--secondary-color);
+    }
+    
+    .category-talk {
+        background: rgba(255, 255, 0, 0.15);
+        color: var(--accent-color);
+    }
+    
+    .category-social {
+        background: rgba(0, 255, 0, 0.15);
+        color: #00ff00;
+    }
+    
+    .event-status {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .status-upcoming {
+        background: rgba(0, 255, 0, 0.15);
+        color: #00ff00;
+        border: 1px solid rgba(0, 255, 0, 0.3);
+    }
+    
+    .status-ongoing {
+        background: rgba(255, 255, 0, 0.15);
+        color: var(--accent-color);
+        border: 1px solid rgba(255, 255, 0, 0.3);
+    }
+    
+    .status-completed {
+        background: rgba(128, 128, 128, 0.15);
+        color: var(--text-muted);
+        border: 1px solid rgba(128, 128, 128, 0.3);
+    }
+    
+    .event-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .event-title {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .event-details {
+        margin-bottom: 1.5rem;
+    }
+    
+    .event-detail {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+    }
+    
+    .event-detail i {
+        color: var(--primary-color);
+        width: 16px;
+    }
+    
+    .event-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .event-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    /* Calendar View */
+    .calendar-container {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2rem;
         margin-bottom: 3rem;
+        backdrop-filter: blur(10px);
     }
     
     .calendar-header {
@@ -64,24 +370,30 @@
     }
     
     .calendar-nav {
-        background: none;
-        border: none;
+        background: var(--surface-2);
+        border: 1px solid var(--border-color);
         color: var(--primary-color);
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0.5rem;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all var(--transition-normal);
     }
     
     .calendar-nav:hover {
-        background: rgba(0, 255, 255, 0.1);
+        background: var(--surface-3);
+        border-color: var(--primary-color);
+        transform: scale(1.1);
     }
     
     .calendar-title {
         font-size: 1.5rem;
         color: var(--text-primary);
         font-weight: 600;
+        text-align: center;
     }
     
     .calendar-grid {
@@ -96,6 +408,7 @@
         color: var(--text-muted);
         font-weight: 600;
         font-size: 0.9rem;
+        text-transform: uppercase;
     }
     
     .calendar-day {
@@ -103,161 +416,183 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 8px;
+        border-radius: var(--border-radius-sm);
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal);
         position: relative;
         font-size: 0.95rem;
+        color: var(--text-primary);
+        background: var(--surface-1);
+        border: 1px solid transparent;
     }
     
     .calendar-day:hover {
-        background: rgba(0, 255, 255, 0.1);
+        background: rgba(var(--particle-color), 0.1);
+        border-color: var(--border-color);
     }
     
     .calendar-day.has-event {
-        background: rgba(0, 255, 255, 0.2);
+        background: rgba(var(--particle-color), 0.15);
         color: var(--primary-color);
         font-weight: 600;
+        border-color: rgba(var(--particle-color), 0.3);
     }
     
     .calendar-day.has-event::after {
         content: '';
         position: absolute;
-        bottom: 2px;
+        bottom: 5px;
         left: 50%;
         transform: translateX(-50%);
-        width: 4px;
-        height: 4px;
+        width: 6px;
+        height: 6px;
         background: var(--primary-color);
         border-radius: 50%;
     }
     
     .calendar-day.today {
-        background: var(--primary-color);
+        background: var(--gradient-primary);
         color: var(--bg-primary);
+        border-color: transparent;
     }
     
     .calendar-day.other-month {
         color: var(--text-muted);
         opacity: 0.5;
+        background: transparent;
     }
     
-    .event-category {
-        display: inline-block;
-        padding: 0.3rem 0.8rem;
-        border-radius: 15px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-    
-    .category-workshop {
-        background: rgba(0, 255, 255, 0.2);
-        color: var(--primary-color);
-    }
-    
-    .category-hackathon {
-        background: rgba(255, 0, 255, 0.2);
-        color: var(--secondary-color);
-    }
-    
-    .category-talk {
-        background: rgba(255, 255, 0, 0.2);
-        color: var(--accent-color);
-    }
-    
-    .category-social {
-        background: rgba(0, 255, 0, 0.2);
-        color: #00ff00;
-    }
-    
-    .event-status {
-        display: inline-block;
-        padding: 0.3rem 0.8rem;
-        border-radius: 15px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-left: 1rem;
-    }
-    
-    .status-upcoming {
-        background: rgba(0, 255, 0, 0.2);
-        color: #00ff00;
-    }
-    
-    .status-ongoing {
-        background: rgba(255, 255, 0, 0.2);
-        color: var(--accent-color);
-    }
-    
-    .status-completed {
-        background: rgba(128, 128, 128, 0.2);
-        color: #808080;
-    }
-    
-    .countdown-timer {
-        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-        color: var(--bg-primary);
-        padding: 2rem;
-        border-radius: 15px;
-        text-align: center;
-        margin-bottom: 3rem;
-    }
-    
-    .countdown-grid {
+    /* Categories Grid */
+    .categories-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
     }
     
-    .countdown-item {
+    .category-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2.5rem 2rem;
         text-align: center;
+        transition: all var(--transition-normal);
     }
     
-    .countdown-number {
-        font-size: 2rem;
+    .category-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+        box-shadow: 0 15px 35px var(--shadow-color);
+    }
+    
+    .category-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 80px;
+    }
+    
+    .category-name {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .category-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .category-stats {
+        background: rgba(var(--particle-color), 0.12);
+        border: 1px solid rgba(var(--particle-color), 0.2);
+        border-radius: var(--border-radius-sm);
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .category-count {
+        font-size: 2.5rem;
         font-weight: 700;
-        display: block;
+        color: var(--primary-color);
+        margin-bottom: 0.3rem;
+        font-family: 'Fira Code', monospace;
     }
     
-    .countdown-label {
+    .category-label {
         font-size: 0.9rem;
-        opacity: 0.9;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-state h3 {
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
     }
     
     /* Modal Styles */
     .modal {
         display: none;
         position: fixed;
-        z-index: 1000;
+        z-index: 10000;
         left: 0;
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(5px);
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(10px);
         animation: fadeIn 0.3s ease;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
     }
     
     .modal.active {
         display: flex;
-        align-items: center;
-        justify-content: center;
     }
     
     .modal-content {
-        background: var(--bg-secondary);
-        border: 1px solid rgba(0, 255, 255, 0.3);
-        border-radius: 20px;
-        padding: 2rem;
-        max-width: 600px;
-        width: 90%;
-        max-height: 80vh;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2.5rem;
+        max-width: 700px;
+        width: 100%;
+        max-height: 85vh;
         overflow-y: auto;
         animation: slideUp 0.3s ease;
         position: relative;
-        scroll-behavior: smooth;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
     }
     
     .modal-content::-webkit-scrollbar {
@@ -265,7 +600,7 @@
     }
     
     .modal-content::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--surface-1);
         border-radius: 10px;
     }
     
@@ -280,60 +615,79 @@
     
     .modal-close {
         position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: rgba(255, 0, 0, 0.2);
-        border: 1px solid rgba(255, 0, 0, 0.4);
-        color: #ff4444;
-        width: 40px;
-        height: 40px;
+        top: 1.5rem;
+        right: 1.5rem;
+        background: var(--surface-2);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        font-size: 1.5rem;
-        transition: all 0.3s ease;
+        font-size: 1.2rem;
+        transition: all var(--transition-normal);
+        z-index: 1;
     }
     
     .modal-close:hover {
-        background: rgba(255, 0, 0, 0.4);
+        background: var(--surface-3);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
         transform: rotate(90deg);
     }
     
     .modal-header {
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
     }
     
     .modal-date {
+        font-size: 1.5rem;
         color: var(--primary-color);
-        font-size: 1.2rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
     
+    .modal-count {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+    
+    .modal-events {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
     .modal-event {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(0, 255, 255, 0.2);
-        border-radius: 15px;
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
         padding: 1.5rem;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal);
     }
     
     .modal-event:hover {
         border-color: var(--primary-color);
-        background: rgba(255, 255, 255, 0.08);
-        transform: translateY(-2px);
+        transform: translateX(5px);
+    }
+    
+    .modal-event-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
     }
     
     .modal-event-title {
-        color: var(--text-primary);
         font-size: 1.3rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
         font-weight: 600;
-        margin-bottom: 0.8rem;
     }
     
     .modal-event-info {
@@ -342,6 +696,7 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        font-size: 0.95rem;
     }
     
     .modal-event-description {
@@ -349,12 +704,8 @@
         line-height: 1.6;
         margin-top: 1rem;
         padding-top: 1rem;
-        border-top: 1px solid rgba(0, 255, 255, 0.1);
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        border-top: 1px solid var(--border-color);
+        font-size: 0.95rem;
     }
     
     @keyframes slideUp {
@@ -367,50 +718,102 @@
             transform: translateY(0);
         }
     }
-
-    /* Responsive adjustments */
+    
+    /* Responsive */
     @media (max-width: 768px) {
-        .calendar-title { font-size: 1.2rem; }
-        .calendar-day-header { padding: 0.5rem 0.25rem; font-size: 0.75rem; }
-        .calendar-day { font-size: 0.85rem; }
-        .events-header { padding: 3.5rem 0; }
+        .events-hero {
+            padding: 6rem 0 4rem;
+            min-height: 30vh;
+        }
+        
+        .events-section {
+            padding: 4rem 0;
+        }
+        
+        .events-nav {
+            gap: 0.5rem;
+        }
+        
+        .nav-tab {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .events-grid,
+        .categories-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .event-card,
+        .category-card {
+            padding: 1.5rem;
+        }
+        
+        .countdown-section {
+            padding: 2rem;
+        }
+        
+        .countdown-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .countdown-number {
+            font-size: 2rem;
+        }
+        
+        .calendar-grid {
+            gap: 0.3rem;
+        }
+        
+        .calendar-day-header {
+            padding: 0.8rem 0.3rem;
+            font-size: 0.8rem;
+        }
+        
+        .calendar-day {
+            font-size: 0.85rem;
+        }
+        
+        .modal-content {
+            padding: 1.5rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Events Header -->
-<section class="events-header">
+<!-- Hero Section -->
+<section class="events-hero">
     <div class="container">
-        <h1 style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary-color);" data-aos="fade-up">
-            Events Calendar
-        </h1>
-        <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto;" data-aos="fade-up" data-aos-delay="200">
+        <h1 data-aos="fade-up">Events Calendar</h1>
+        <p data-aos="fade-up" data-aos-delay="200">
             Join our exciting workshops, hackathons, tech talks, and networking events
         </p>
     </div>
 </section>
 
-<!-- Events Navigation -->
-<section style="padding: 3rem 0;">
+<!-- Events Section -->
+<section class="events-section">
     <div class="container">
+        <!-- Navigation Tabs -->
         <div class="events-nav" data-aos="fade-up">
             <div class="nav-tab active" data-tab="upcoming">Upcoming Events</div>
             <div class="nav-tab" data-tab="calendar">Calendar View</div>
             <div class="nav-tab" data-tab="past">Past Events</div>
-            <div class="nav-tab" data-tab="categories">By Category</div>
+            <div class="nav-tab" data-tab="categories">Categories</div>
         </div>
         
-        <!-- Countdown Timer for Next Major Event -->
+        <!-- Countdown Timer -->
         {% if upcoming_events and upcoming_events|length > 0 %}
-        <div class="countdown-timer" data-aos="fade-up" data-aos-delay="200">
-            <h3 style="margin-bottom: 1rem;">Next Event</h3>
-            <h4 style="margin-bottom: 0.5rem;">{{ upcoming_events[0].title }}</h4>
-            <p style="opacity: 0.9; margin-bottom: 1rem;">
-                {{ upcoming_events[0].event_date.strftime('%B %d, %Y at %I:%M %p') }}
+        <div class="countdown-section" data-aos="fade-up" data-aos-delay="200">
+            <h2 class="countdown-title">Next Major Event</h2>
+            <p class="countdown-subtitle">
+                {{ upcoming_events[0].title }} • {{ upcoming_events[0].event_date.strftime('%B %d, %Y') }}
                 {% if upcoming_events[0].location %} • {{ upcoming_events[0].location }}{% endif %}
             </p>
-            <div class="countdown-grid" id="countdown-timer">
+            <div class="countdown-grid">
                 <div class="countdown-item">
                     <span class="countdown-number" id="days">00</span>
                     <span class="countdown-label">Days</span>
@@ -432,71 +835,99 @@
         {% endif %}
         
         <!-- Upcoming Events Content -->
-        <div class="events-content active" id="upcoming-events">
+        <div class="events-content active" id="upcoming-events" data-aos="fade-up">
+            <h2 class="section-title">Upcoming Events</h2>
+            <p class="section-subtitle">
+                Don't miss these exciting opportunities to learn, network, and grow your skills
+            </p>
+            
             {% if upcoming_events %}
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <div class="events-grid">
                 {% for event in upcoming_events %}
-                <div class="card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="event-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
                     {% if event.image %}
-                    <div style="margin-bottom: 1rem;">
-                        <img src="{{ url_for('static', filename=event.image) }}" alt="{{ event.title }}" 
-                             style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px;">
-                    </div>
+                    <img src="{{ url_for('static', filename=event.image) }}" 
+                         alt="{{ event.title }}" 
+                         class="event-image">
                     {% endif %}
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div style="width: 100%;">
-                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <span class="event-category category-{{ event.category or 'workshop' }}">
-                                    {% if event.category == 'tech_talk' %}Tech Talk{% elif event.category == 'social_event' %}Social Event{% else %}{{ event.category|title }}{% endif %}
-                                </span>
-                                <span class="event-status status-upcoming">Upcoming</span>
-                            </div>
-                            <h3 style="color: var(--text-primary); margin: 0.5rem 0;">{{ event.title }}</h3>
-                            <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 0.5rem;">
-                                <i class="fas fa-calendar-alt"></i> {{ event.event_date.strftime('%B %d, %Y at %I:%M %p') }}
-                            </p>
-                            {% if event.location %}
-                            <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
-                                <i class="fas fa-map-marker-alt"></i> {{ event.location }}
-                            </p>
-                            {% endif %}
-                            {% if event.max_attendees %}
-                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0;">
-                                <i class="fas fa-users"></i> Max Attendees: {{ event.max_attendees }}
-                            </p>
-                            {% endif %}
+                    
+                    <div class="event-header">
+                        <div class="event-badges">
+                            <span class="event-category category-{{ event.category or 'workshop' }}">
+                                {% if event.category == 'tech_talk' %}
+                                    Tech Talk
+                                {% elif event.category == 'social_event' %}
+                                    Social Event
+                                {% else %}
+                                    {{ event.category|title }}
+                                {% endif %}
+                            </span>
+                            <span class="event-status status-upcoming">Upcoming</span>
                         </div>
                     </div>
                     
+                    <h3 class="event-title">{{ event.title }}</h3>
+                    
+                    <div class="event-details">
+                        <div class="event-detail">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>{{ event.event_date.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        </div>
+                        
+                        {% if event.location %}
+                        <div class="event-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ event.location }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if event.max_attendees %}
+                        <div class="event-detail">
+                            <i class="fas fa-users"></i>
+                            <span>Max Attendees: {{ event.max_attendees }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
                     {% if event.description %}
-                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
+                    <p class="event-description">
                         {{ event.description[:200] }}{% if event.description|length > 200 %}...{% endif %}
                     </p>
                     {% endif %}
                     
-                    <div style="display: flex; gap: 1rem;">
-                        <a href="{{ url_for('main.event_rsvp', event_id=event.id) }}" class="btn-primary" style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                    <div class="event-actions">
+                        <a href="{{ url_for('main.event_rsvp', event_id=event.id) }}" 
+                           class="btn-primary" style="flex: 1;">
                             <i class="fas fa-calendar-plus"></i> RSVP
                         </a>
-                        <button class="btn-secondary" style="flex: 1;" onclick="shareEvent('{{ event.title }}', '{{ url_for('main.events', _external=True) }}')">
-                            <i class="fas fa-share"></i> Share
+                        <button class="btn-secondary" style="flex: 1;" 
+                                onclick="shareEvent('{{ event.title }}', '{{ url_for('main.events', _external=True) }}')">
+                            <i class="fas fa-share-alt"></i> Share
                         </button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div style="text-align: center; padding: 3rem;">
-                <i class="fas fa-calendar-alt" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
-                <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">No Upcoming Events</h3>
-                <p style="color: var(--text-muted);">Check back soon for exciting workshops and events!</p>
+            <div class="empty-state">
+                <i class="fas fa-calendar-alt"></i>
+                <h3>No Upcoming Events</h3>
+                <p>Check back soon for exciting workshops and events!</p>
+                <a href="{{ url_for('main.contact') }}" class="btn-primary">
+                    <i class="fas fa-envelope"></i> Suggest an Event
+                </a>
             </div>
             {% endif %}
         </div>
         
         <!-- Calendar View Content -->
         <div class="events-content" id="calendar-events">
-            <div class="calendar-container" data-aos="fade-up">
+            <h2 class="section-title" data-aos="fade-up">Calendar View</h2>
+            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+                Browse events by month and see what's happening each day
+            </p>
+            
+            <div class="calendar-container" data-aos="fade-up" data-aos-delay="400">
                 <div class="calendar-header">
                     <button class="calendar-nav" id="prev-month">
                         <i class="fas fa-chevron-left"></i>
@@ -514,135 +945,153 @@
         
         <!-- Past Events Content -->
         <div class="events-content" id="past-events">
-            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-primary);" data-aos="fade-up">
-                Past Events Archive
-            </h2>
+            <h2 class="section-title" data-aos="fade-up">Past Events</h2>
+            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+                Relive our successful events and see what we've accomplished
+            </p>
+            
             {% if past_events %}
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
+            <div class="events-grid" data-aos="fade-up" data-aos-delay="400">
                 {% for event in past_events %}
-                <div class="card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="event-card">
                     {% if event.image %}
-                    <div style="margin-bottom: 1rem;">
-                        <img src="{{ url_for('static', filename=event.image) }}" alt="{{ event.title }}" 
-                             style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; opacity: 0.8;">
-                    </div>
+                    <img src="{{ url_for('static', filename=event.image) }}" 
+                         alt="{{ event.title }}" 
+                         class="event-image" style="opacity: 0.7;">
                     {% endif %}
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div>
-                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <span class="event-category category-{{ event.category or 'workshop' }}">
-                                    {% if event.category == 'tech_talk' %}Tech Talk{% elif event.category == 'social_event' %}Social Event{% else %}{{ event.category|title }}{% endif %}
-                                </span>
-                                <span class="event-status status-completed">Completed</span>
-                            </div>
-                            <h3 style="color: var(--text-primary); margin: 0.5rem 0;">{{ event.title }}</h3>
-                            <p style="color: var(--text-muted); font-size: 0.9rem;">
-                                <i class="fas fa-calendar-alt"></i> {{ event.event_date.strftime('%B %d, %Y') }}
-                            </p>
-                            {% if event.location %}
-                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0;">
-                                <i class="fas fa-map-marker-alt"></i> {{ event.location }}
-                            </p>
-                            {% endif %}
+                    
+                    <div class="event-header">
+                        <div class="event-badges">
+                            <span class="event-category category-{{ event.category or 'workshop' }}">
+                                {% if event.category == 'tech_talk' %}
+                                    Tech Talk
+                                {% elif event.category == 'social_event' %}
+                                    Social Event
+                                {% else %}
+                                    {{ event.category|title }}
+                                {% endif %}
+                            </span>
+                            <span class="event-status status-completed">Completed</span>
                         </div>
                     </div>
+                    
+                    <h3 class="event-title">{{ event.title }}</h3>
+                    
+                    <div class="event-details">
+                        <div class="event-detail">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>{{ event.event_date.strftime('%B %d, %Y') }}</span>
+                        </div>
+                        
+                        {% if event.location %}
+                        <div class="event-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ event.location }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
                     {% if event.description %}
-                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                    <p class="event-description">
                         {{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}
                     </p>
                     {% endif %}
-                    <div style="display: flex; gap: 1rem;">
-                        <a href="{{ url_for('main.gallery') }}" class="btn-secondary" style="flex: 1; text-decoration: none; text-align: center;">
-                            <i class="fas fa-images"></i> Gallery
+                    
+                    <div class="event-actions">
+                        <a href="{{ url_for('main.gallery') }}" class="btn-secondary" style="flex: 1;">
+                            <i class="fas fa-images"></i> View Gallery
                         </a>
-                        <button class="btn-secondary" style="flex: 1;" onclick="shareEvent('{{ event.title }}', '{{ url_for('main.events', _external=True) }}')">
-                            <i class="fas fa-share"></i> Share
+                        <button class="btn-secondary" style="flex: 1;" 
+                                onclick="shareEvent('{{ event.title }}', '{{ url_for('main.events', _external=True) }}')">
+                            <i class="fas fa-share-alt"></i> Share
                         </button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div style="text-align: center; padding: 3rem;">
-                <i class="fas fa-calendar-check" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
-                <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">No Past Events</h3>
-                <p style="color: var(--text-muted);">Past events will appear here once they're completed.</p>
+            <div class="empty-state">
+                <i class="fas fa-calendar-check"></i>
+                <h3>No Past Events</h3>
+                <p>Past events will appear here once they're completed.</p>
             </div>
             {% endif %}
         </div>
         
         <!-- Categories Content -->
         <div class="events-content" id="categories-events">
-            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-primary);" data-aos="fade-up">
-                Events by Category
-            </h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                <div class="card" data-aos="fade-up" data-aos-delay="100">
-                    <div style="text-align: center;">
-                        <i class="fas fa-code" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
-                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">Workshops</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                            Hands-on learning sessions covering various technologies and programming languages.
-                        </p>
-                        <div style="background: rgba(0, 255, 255, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ category_counts.workshop }}</div>
-                            <div style="color: var(--text-secondary);">Total Workshops</div>
-                        </div>
-                        <a href="{{ url_for('main.events', category='workshop') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
-                            <i class="fas fa-calendar"></i> View Workshops
-                        </a>
+            <h2 class="section-title" data-aos="fade-up">Event Categories</h2>
+            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+                Explore our different types of events and find what interests you most
+            </p>
+            
+            <div class="categories-grid" data-aos="fade-up" data-aos-delay="400">
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-code"></i>
                     </div>
+                    <h3 class="category-name">Workshops</h3>
+                    <p class="category-description">
+                        Hands-on learning sessions covering various technologies and programming languages.
+                    </p>
+                    <div class="category-stats">
+                        <div class="category-count">{{ category_counts.workshop or 0 }}</div>
+                        <div class="category-label">Total Workshops</div>
+                    </div>
+                    <a href="{{ url_for('main.events', category='workshop') }}" class="btn-primary">
+                        <i class="fas fa-calendar"></i> View Workshops
+                    </a>
                 </div>
                 
-                <div class="card" data-aos="fade-up" data-aos-delay="200">
-                    <div style="text-align: center;">
-                        <i class="fas fa-trophy" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
-                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">Hackathons</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                            Intensive coding competitions where teams build innovative solutions in limited time.
-                        </p>
-                        <div style="background: rgba(255, 0, 255, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--secondary-color);">{{ category_counts.hackathon }}</div>
-                            <div style="color: var(--text-secondary);">Total Hackathons</div>
-                        </div>
-                        <a href="{{ url_for('main.events', category='hackathon') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
-                            <i class="fas fa-calendar"></i> View Hackathons
-                        </a>
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-trophy"></i>
                     </div>
+                    <h3 class="category-name">Hackathons</h3>
+                    <p class="category-description">
+                        Intensive coding competitions where teams build innovative solutions in limited time.
+                    </p>
+                    <div class="category-stats">
+                        <div class="category-count">{{ category_counts.hackathon or 0 }}</div>
+                        <div class="category-label">Total Hackathons</div>
+                    </div>
+                    <a href="{{ url_for('main.events', category='hackathon') }}" class="btn-primary">
+                        <i class="fas fa-calendar"></i> View Hackathons
+                    </a>
                 </div>
                 
-                <div class="card" data-aos="fade-up" data-aos-delay="300">
-                    <div style="text-align: center;">
-                        <i class="fas fa-microphone" style="font-size: 3rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
-                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">Tech Talks</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                            Inspiring presentations by industry experts and successful alumni sharing their experiences.
-                        </p>
-                        <div style="background: rgba(255, 255, 0, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-color);">{{ category_counts.tech_talk }}</div>
-                            <div style="color: var(--text-secondary);">Total Tech Talks</div>
-                        </div>
-                        <a href="{{ url_for('main.events', category='tech_talk') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
-                            <i class="fas fa-calendar"></i> View Tech Talks
-                        </a>
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-microphone"></i>
                     </div>
+                    <h3 class="category-name">Tech Talks</h3>
+                    <p class="category-description">
+                        Inspiring presentations by industry experts and alumni sharing their experiences.
+                    </p>
+                    <div class="category-stats">
+                        <div class="category-count">{{ category_counts.tech_talk or 0 }}</div>
+                        <div class="category-label">Total Tech Talks</div>
+                    </div>
+                    <a href="{{ url_for('main.events', category='tech_talk') }}" class="btn-primary">
+                        <i class="fas fa-calendar"></i> View Tech Talks
+                    </a>
                 </div>
                 
-                <div class="card" data-aos="fade-up" data-aos-delay="400">
-                    <div style="text-align: center;">
-                        <i class="fas fa-users" style="font-size: 3rem; color: #00ff00; margin-bottom: 1rem;"></i>
-                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">Social Events</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                            Networking events, game nights, and social gatherings to build community connections.
-                        </p>
-                        <div style="background: rgba(0, 255, 0, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: #00ff00;">{{ category_counts.social_event }}</div>
-                            <div style="color: var(--text-secondary);">Total Social Events</div>
-                        </div>
-                        <a href="{{ url_for('main.events', category='social_event') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
-                            <i class="fas fa-calendar"></i> View Social Events
-                        </a>
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-users"></i>
                     </div>
+                    <h3 class="category-name">Social Events</h3>
+                    <p class="category-description">
+                        Networking events, game nights, and social gatherings to build community connections.
+                    </p>
+                    <div class="category-stats">
+                        <div class="category-count">{{ category_counts.social_event or 0 }}</div>
+                        <div class="category-label">Total Social Events</div>
+                    </div>
+                    <a href="{{ url_for('main.events', category='social_event') }}" class="btn-primary">
+                        <i class="fas fa-calendar"></i> View Social Events
+                    </a>
                 </div>
             </div>
         </div>
@@ -657,14 +1106,13 @@
         </button>
         <div class="modal-header">
             <div class="modal-date" id="modalDate">Date</div>
-            <div style="color: var(--text-muted); font-size: 0.9rem;" id="modalEventCount">Events</div>
+            <div class="modal-count" id="modalEventCount">Events</div>
         </div>
-        <div id="modalEventsContainer">
+        <div class="modal-events" id="modalEventsContainer">
             <!-- Events will be dynamically inserted here -->
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_scripts %}
@@ -675,9 +1123,6 @@
         once: true,
         offset: 100
     });
-
-    // Calendar events data from backend
-    const calendarEventsData = {{ calendar_events|tojson|safe }};
 
     // Events Navigation Tabs
     const navTabs = document.querySelectorAll('.nav-tab');
@@ -694,6 +1139,9 @@
             // Add active class to clicked tab and corresponding content
             tab.classList.add('active');
             document.getElementById(targetTab + '-events').classList.add('active');
+            
+            // Refresh animations
+            AOS.refresh();
         });
     });
 
@@ -869,9 +1317,11 @@
             else categoryLabel = categoryLabel.charAt(0).toUpperCase() + categoryLabel.slice(1);
             
             eventDiv.innerHTML = `
-                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap;">
-                    <span class="event-category ${categoryClass}">${categoryLabel}</span>
-                    <span class="event-status ${statusClass}">${statusText}</span>
+                <div class="modal-event-header">
+                    <div class="event-badges">
+                        <span class="event-category ${categoryClass}">${categoryLabel}</span>
+                        <span class="event-status ${statusClass}">${statusText}</span>
+                    </div>
                 </div>
                 <div class="modal-event-title">${event.title}</div>
                 <div class="modal-event-info">
@@ -896,8 +1346,8 @@
                 </div>
                 ` : ''}
                 ${!isPast ? `
-                <div style="margin-top: 1rem;">
-                    <a href="/event/rsvp/${event.id}" class="btn-primary" style="text-decoration: none; display: inline-block; padding: 0.6rem 1.5rem;">
+                <div style="margin-top: 1.5rem;">
+                    <a href="/event/rsvp/${event.id}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                         <i class="fas fa-calendar-plus"></i> RSVP for this event
                     </a>
                 </div>
@@ -909,11 +1359,13 @@
         
         // Show modal
         modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
     
     function closeModal() {
         const modal = document.getElementById('eventModal');
         modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
     }
     
     // Close modal when clicking outside
@@ -940,6 +1392,9 @@
         currentDate.setMonth(currentDate.getMonth() + 1);
         generateCalendar();
     });
+
+    // Calendar events data from backend
+    const calendarEventsData = {{ calendar_events|tojson|safe }};
 
     // Initialize calendar
     generateCalendar();

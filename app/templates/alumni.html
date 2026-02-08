@@ -1,139 +1,246 @@
 {% extends "base.html" %}
 
-{% block title %}Alumni - Digital Club{% endblock %}
+{% block title %}Alumni - Digital Club - KIUT{% endblock %}
 
 {% block extra_head %}
 <style>
-    .alumni-page {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-        min-height: 100vh;
-        padding: 2rem 0;
-    }
-    
-    .alumni-header {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-        color: var(--bg-primary);
-        padding: 4rem 0;
+    /* Hero Section */
+    .alumni-hero {
+        min-height: 40vh;
+        padding: 8rem 0 5rem;
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
         text-align: center;
-        margin-bottom: 3rem;
+        border-bottom: 1px solid var(--border-color);
     }
     
-    .alumni-header h1 {
-        font-size: 3rem;
+    .alumni-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%);
+    }
+    
+    .alumni-hero h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+    }
+    
+    .alumni-hero p {
+        font-size: 1.3rem;
+        color: var(--text-secondary);
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+    
+    /* Content Section */
+    .alumni-section {
+        padding: 6rem 0;
+        position: relative;
+    }
+    
+    .section-title {
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .section-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 4rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        transition: transform var(--transition-normal);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
         margin-bottom: 1rem;
     }
     
-    .alumni-header p {
-        font-size: 1.2rem;
-        opacity: 0.9;
-        max-width: 600px;
-        margin: 0 auto;
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-family: 'Fira Code', monospace;
     }
     
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+    
+    /* Filter Section */
     .filter-section {
-        background: rgba(0, 0, 0, 0.3);
+        background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: 15px;
+        border-radius: var(--border-radius-md);
         padding: 2rem;
         margin-bottom: 3rem;
+        backdrop-filter: blur(10px);
     }
     
-    .filter-row {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-    
-    .filter-input {
-        flex: 1;
-        min-width: 300px;
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: 25px;
-        background: rgba(0, 0, 0, 0.3);
+    .filter-title {
         color: var(--text-primary);
-        outline: none;
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        font-weight: 600;
     }
     
-    .filter-input:focus {
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all var(--transition-normal);
+    }
+    
+    .form-control:focus {
+        outline: none;
         border-color: var(--primary-color);
         box-shadow: 0 0 20px var(--shadow-color);
     }
     
-    .filter-select {
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: 25px;
-        background: rgba(0, 0, 0, 0.3);
-        color: var(--text-primary);
-        outline: none;
-        min-width: 150px;
+    .filter-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
     }
     
-    .filter-select:focus {
-        border-color: var(--primary-color);
-    }
-    
+    /* Alumni Grid */
     .alumni-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 2rem;
-        margin-bottom: 3rem;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 4rem;
     }
     
     .alumni-card {
-        background: rgba(0, 0, 0, 0.3);
+        background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: 15px;
+        border-radius: var(--border-radius-md);
         padding: 2rem;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal);
         position: relative;
         overflow: hidden;
+        text-align: center;
     }
     
     .alumni-card::before {
         content: '';
         position: absolute;
         top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        transition: left 0.5s;
-    }
-    
-    .alumni-card:hover::before {
-        left: 100%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
     }
     
     .alumni-card:hover {
+        transform: translateY(-8px);
         border-color: var(--primary-color);
-        box-shadow: 0 0 20px var(--shadow-color);
-        transform: translateY(-5px);
+        box-shadow: 0 20px 40px var(--shadow-color);
+    }
+    
+    .alumni-card:hover::before {
+        opacity: 1;
     }
     
     .alumni-avatar {
-        width: 100px;
-        height: 100px;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid var(--primary-color);
         margin: 0 auto 1.5rem;
+        border: 3px solid var(--primary-color);
         display: block;
+    }
+    
+    .alumni-avatar.placeholder {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .alumni-name {
         font-size: 1.5rem;
-        font-weight: 600;
         color: var(--text-primary);
-        text-align: center;
         margin-bottom: 0.5rem;
+        font-weight: 600;
     }
     
     .alumni-title {
         color: var(--primary-color);
-        text-align: center;
+        font-weight: 600;
         margin-bottom: 1rem;
         font-size: 1.1rem;
     }
@@ -145,169 +252,283 @@
     .info-item {
         display: flex;
         align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
         margin-bottom: 0.5rem;
         color: var(--text-secondary);
+        font-size: 0.95rem;
     }
     
     .info-item i {
-        width: 20px;
-        margin-right: 0.5rem;
         color: var(--primary-color);
+        width: 16px;
     }
     
     .alumni-bio {
         color: var(--text-secondary);
         font-style: italic;
         margin-bottom: 1.5rem;
-        text-align: center;
+        line-height: 1.6;
+        font-size: 0.95rem;
     }
     
     .alumni-areas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
         margin-bottom: 1.5rem;
     }
     
     .area-tag {
-        display: inline-block;
-        background: rgba(0, 255, 255, 0.1);
+        background: rgba(var(--particle-color), 0.12);
         color: var(--primary-color);
         padding: 0.3rem 0.8rem;
-        border-radius: 15px;
-        font-size: 0.8rem;
-        margin: 0.2rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        border: 1px solid rgba(var(--particle-color), 0.3);
     }
     
-    .social-links {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
+    .alumni-achievements {
+        background: linear-gradient(135deg, rgba(var(--particle-color), 0.18) 0%, rgba(var(--particle-color), 0.08) 100%);
+        border: 1px solid rgba(var(--particle-color), 0.3);
+        border-radius: var(--border-radius-sm);
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
     }
     
-    .social-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        background: rgba(0, 255, 255, 0.1);
-        border: 1px solid var(--border-color);
-        border-radius: 50%;
+    .points-display {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .points-number {
+        font-size: 2.2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #fbbf24, #f97316);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.3rem;
+    }
+    
+    .points-label {
+        font-size: 0.9rem;
         color: var(--text-primary);
-        text-decoration: none;
-        transition: all 0.3s ease;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
     
-    .social-link:hover {
-        background: var(--primary-color);
-        color: var(--bg-primary);
-        transform: translateY(-2px);
+    .trophies-section {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 1rem;
     }
     
+    .trophies-title {
+        text-align: center;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.8rem;
+        letter-spacing: 1px;
+    }
+    
+    .trophies-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        justify-content: center;
+    }
+    
+    .trophy-item {
+        text-align: center;
+        min-width: 70px;
+    }
+    
+    .trophy-icon {
+        font-size: 2rem;
+        margin-bottom: 0.4rem;
+        filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+        color: #fbbf24;
+    }
+    
+    .trophy-name {
+        color: var(--text-primary);
+        font-size: 0.7rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+    
+    .alumni-actions {
+        text-align: center;
+    }
+    
+    /* Empty State */
     .empty-state {
         text-align: center;
         padding: 4rem 2rem;
-        color: var(--text-secondary);
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
     }
     
     .empty-state i {
         font-size: 4rem;
         color: var(--text-muted);
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
     
-    .stats-section {
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid var(--border-color);
-        border-radius: 15px;
-        padding: 2rem;
-        margin-bottom: 3rem;
-        text-align: center;
-    }
-    
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
-    }
-    
-    .stat-item {
-        text-align: center;
-    }
-    
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        display: block;
-    }
-    
-    .stat-label {
+    .empty-state h3 {
         color: var(--text-secondary);
-        font-size: 1rem;
-        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .alumni-hero {
+            padding: 6rem 0 4rem;
+            min-height: 30vh;
+        }
+        
+        .alumni-section {
+            padding: 4rem 0;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .alumni-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .alumni-card {
+            padding: 1.5rem;
+        }
+        
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="alumni-page">
-    <!-- Alumni Header -->
-    <section class="alumni-header">
-        <div class="container">
-            <h1 data-aos="fade-up">
-                <i class="fas fa-graduation-cap"></i> Alumni
-            </h1>
-            <p data-aos="fade-up" data-aos-delay="200">
-                Meet our accomplished graduates who continue to make an impact in the tech industry
-            </p>
-        </div>
-    </section>
-
+<!-- Hero Section -->
+<section class="alumni-hero">
     <div class="container">
-        <!-- Alumni Statistics -->
-        <div class="stats-section" data-aos="fade-up">
-            <h3 class="text-primary mb-3">Alumni Statistics</h3>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-number">{{ alumni_count }}</span>
-                    <span class="stat-label">Total Alumni</span>
+        <h1 data-aos="fade-up">Our Alumni</h1>
+        <p data-aos="fade-up" data-aos-delay="200">
+            Meet our accomplished graduates who are making significant contributions to the tech industry
+        </p>
+    </div>
+</section>
+
+<!-- Alumni Section -->
+<section class="alumni-section">
+    <div class="container">
+        <!-- Stats Section -->
+        <div class="section-title" data-aos="fade-up">Alumni Network</div>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Connecting generations of KIUT tech talent
+        </p>
+        
+        <div class="stats-grid" data-aos="fade-up" data-aos-delay="400">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-graduate"></i>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">{{ current_year }}</span>
-                    <span class="stat-label">Current Year</span>
+                <div class="stat-number">{{ alumni_count }}</div>
+                <div class="stat-label">Total Alumni</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-briefcase"></i>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">{{ companies_count }}</span>
-                    <span class="stat-label">Companies Represented</span>
+                <div class="stat-number">{{ companies_count }}</div>
+                <div class="stat-label">Companies</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-globe"></i>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">{{ countries_count }}</span>
-                    <span class="stat-label">Countries</span>
+                <div class="stat-number">{{ countries_count }}</div>
+                <div class="stat-label">Countries</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
                 </div>
+                <div class="stat-number">85%</div>
+                <div class="stat-label">Career Growth</div>
             </div>
         </div>
-
+        
         <!-- Filter Section -->
         <div class="filter-section" data-aos="fade-up">
-            <h4 class="text-primary mb-3">Filter Alumni</h4>
-            <div class="filter-row">
-                <input type="text" class="filter-input" placeholder="Search alumni by name, title, or company..." id="search-input">
-                <select class="filter-select" id="course-filter">
-                    <option value="">All Courses</option>
-                    {% for course in courses %}
-                    <option value="{{ course }}">{{ course }}</option>
-                    {% endfor %}
-                </select>
-                <select class="filter-select" id="year-filter">
-                    <option value="">All Years</option>
-                    {% for year in years %}
-                    <option value="{{ year }}">{{ year }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+            <h3 class="filter-title">Find Alumni</h3>
+            <form method="GET" id="alumni-filters">
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="search">Search</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               placeholder="Search by name, company, or role" 
+                               value="{{ search_query if search_query else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="course">Course</label>
+                        <select class="form-control" id="course" name="course">
+                            <option value="">All Courses</option>
+                            {% for course in courses %}
+                            <option value="{{ course }}" {% if request.args.get('course') == course %}selected{% endif %}>{{ course }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="year">Graduation Year</label>
+                        <select class="form-control" id="year" name="year">
+                            <option value="">All Years</option>
+                            {% for year in years %}
+                            <option value="{{ year }}" {% if request.args.get('year') == year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-search"></i> Search Alumni
+                    </button>
+                    <a href="{{ url_for('main.alumni') }}" class="btn-secondary">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </a>
+                </div>
+            </form>
         </div>
-
+        
         <!-- Alumni Grid -->
         {% if alumni %}
         <div class="alumni-grid" id="alumni-grid">
@@ -317,13 +538,13 @@
                     <img src="{{ url_for('static', filename='uploads/profiles/' + member.profile_image) }}" 
                          alt="{{ member.full_name }}" class="alumni-avatar">
                 {% else %}
-                    <div class="alumni-avatar d-flex align-items-center justify-content-center" 
-                         style="background: var(--primary-color); color: var(--bg-primary); font-size: 2rem;">
-                        <i class="fas fa-user"></i>
+                    <div class="alumni-avatar placeholder">
+                        <i class="fas fa-user-graduate"></i>
                     </div>
                 {% endif %}
                 
                 <h3 class="alumni-name">{{ member.full_name }}</h3>
+                
                 {% if member.title %}
                     <div class="alumni-title">{{ member.title }}</div>
                 {% endif %}
@@ -335,17 +556,18 @@
                         <span>{{ member.course }}</span>
                     </div>
                     {% endif %}
+                    
                     {% if member.year %}
                     <div class="info-item">
                         <i class="fas fa-calendar"></i>
-                        <span>{{ member.year }}</span>
+                        <span>Class of {{ member.year }}</span>
                     </div>
                     {% endif %}
                 </div>
                 
                 {% if member.bio %}
                 <div class="alumni-bio">
-                    "{{ member.bio[:100] }}{% if member.bio|length > 100 %}...{% endif %}"
+                    "{{ member.bio[:120] }}{% if member.bio|length > 120 %}...{% endif %}"
                 </div>
                 {% endif %}
                 
@@ -360,43 +582,29 @@
                 </div>
                 {% endif %}
                 
-                <!-- Always show achievements section if member has trophies or points -->
                 {% if member.trophies or member.get_total_points() > 0 %}
-                <div class="alumni-achievements" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 165, 0, 0.15) 100%); border: 2px solid rgba(255, 215, 0, 0.4); border-radius: 15px; padding: 1.2rem; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);">
-                    <!-- Points Display - Only show if member has points -->
+                <div class="alumni-achievements">
                     {% if member.get_total_points() > 0 %}
-                    <div style="text-align: center; margin-bottom: 1rem;">
-                        <div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #FFD700, #FF8C00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: 0 0 20px rgba(255, 215, 0, 0.6); margin-bottom: 0.3rem;">
-                            {{ member.get_total_points() }}
-                        </div>
-                        <div style="font-size: 1rem; color: white; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;">
-                            Total Points
-                        </div>
+                    <div class="points-display">
+                        <div class="points-number">{{ member.get_total_points() }}</div>
+                        <div class="points-label">Total Points</div>
                     </div>
                     {% endif %}
                     
-                    <!-- Trophies Display - Always show if member has trophies -->
                     {% if member.trophies %}
-                    <div class="trophies-section" style="{% if member.get_total_points() > 0 %}border-top: 2px solid rgba(255, 255, 255, 0.2); padding-top: 1rem;{% endif %}">
-                        <div style="text-align: center; color: white; font-weight: 700; font-size: 1rem; margin-bottom: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase;">
-                            🏆 Legacy Achievements
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 1rem; justify-items: center;">
-                            {% for trophy in member.trophies %}
-                            <div style="text-align: center;">
-                                <div style="font-size: 2.5rem; margin-bottom: 0.4rem; filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.8)); transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2) rotate(-5deg)'" onmouseout="this.style.transform='scale(1) rotate(0deg)'">
+                    <div class="trophies-section">
+                        <div class="trophies-title">🏆 Achievements</div>
+                        <div class="trophies-grid">
+                            {% for trophy in member.trophies[:3] %}
+                            <div class="trophy-item">
+                                <div class="trophy-icon">
                                     {% if trophy.icon.startswith('fa') %}
                                     <i class="{{ trophy.icon }}"></i>
                                     {% else %}
                                     {{ trophy.icon }}
                                     {% endif %}
                                 </div>
-                                <div style="color: white; font-size: 0.75rem; font-weight: 700; line-height: 1.3; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                                    {{ trophy.name }}
-                                </div>
-                                <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.65rem; margin-top: 0.2rem;">
-                                    {{ trophy.points_required }} pts
-                                </div>
+                                <div class="trophy-name">{{ trophy.name }}</div>
                             </div>
                             {% endfor %}
                         </div>
@@ -405,13 +613,10 @@
                 </div>
                 {% endif %}
                 
-                <!-- View More Button -->
-                <div style="text-align: center; margin-top: 1rem;">
+                <div class="alumni-actions">
                     <a href="{{ url_for('main.member_public_profile', member_id=member.id) }}" 
-                       class="btn-primary" 
-                       style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border-radius: 25px; text-decoration: none; transition: all 0.3s ease;">
-                        <i class="fas fa-eye"></i>
-                        View More
+                       class="btn-primary view-more">
+                        <i class="fas fa-eye"></i> View Profile
                     </a>
                 </div>
             </div>
@@ -419,13 +624,37 @@
         </div>
         {% else %}
         <div class="empty-state" data-aos="fade-up">
-            <i class="fas fa-graduation-cap"></i>
+            <i class="fas fa-user-graduate"></i>
             <h3>No Alumni Found</h3>
-            <p>Alumni profiles will appear here once members update their status to alumni.</p>
+            <p>Alumni profiles will appear here once members graduate and update their status.</p>
+            <a href="{{ url_for('main.members') }}" class="btn-primary">
+                <i class="fas fa-users"></i> View Current Members
+            </a>
         </div>
         {% endif %}
     </div>
-</div>
+</section>
+
+<!-- CTA Section -->
+<section class="alumni-section" style="background: var(--surface-5);">
+    <div class="container">
+        <div class="cta-section" data-aos="fade-up">
+            <h2 class="cta-title">Stay Connected</h2>
+            <p class="cta-text">
+                Join our alumni network to stay connected with fellow graduates, 
+                mentor current students, and discover career opportunities.
+            </p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('main.contact') }}" class="btn-primary">
+                    <i class="fas fa-handshake"></i> Join Alumni Network
+                </a>
+                <a href="{{ url_for('main.events') }}" class="btn-secondary">
+                    <i class="fas fa-calendar"></i> View Alumni Events
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -438,9 +667,9 @@
     });
 
     // Filter functionality
-    const searchInput = document.getElementById('search-input');
-    const courseFilter = document.getElementById('course-filter');
-    const yearFilter = document.getElementById('year-filter');
+    const searchInput = document.getElementById('search');
+    const courseFilter = document.getElementById('course');
+    const yearFilter = document.getElementById('year');
     const alumniGrid = document.getElementById('alumni-grid');
 
     function filterAlumni() {

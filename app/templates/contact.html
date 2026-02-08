@@ -1,139 +1,839 @@
 {% extends "base.html" %}
 
-{% block title %}Contact Us - Digital Club{% endblock %}
+{% block title %}Contact Us - Digital Club - KIUT{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Hero Section */
+    .contact-hero {
+        min-height: 40vh;
+        padding: 8rem 0 5rem;
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .contact-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%);
+    }
+    
+    .contact-hero h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+    }
+    
+    .contact-hero p {
+        font-size: 1.3rem;
+        color: var(--text-secondary);
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+    
+    /* Contact Section */
+    .contact-section {
+        padding: 6rem 0;
+        position: relative;
+    }
+    
+    .section-title {
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .section-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 4rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Contact Grid */
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 3rem;
+        margin-bottom: 5rem;
+    }
+    
+    /* Contact Form */
+    .contact-form-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2.5rem;
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+    
+    .contact-form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+    }
+    
+    .contact-form-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 20px 40px var(--shadow-color);
+    }
+    
+    .contact-form-card:hover::before {
+        opacity: 1;
+    }
+    
+    .form-title {
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin-bottom: 2rem;
+        font-weight: 600;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.7rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 1rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 1rem 1.2rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all var(--transition-normal);
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 20px var(--shadow-color);
+    }
+    
+    .form-control::placeholder {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 150px;
+        line-height: 1.6;
+    }
+    
+    /* Contact Info Cards */
+    .contact-info-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        transition: all var(--transition-normal);
+        backdrop-filter: blur(10px);
+    }
+    
+    .contact-info-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 15px 35px var(--shadow-color);
+        transform: translateY(-5px);
+    }
+    
+    .info-title {
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin-bottom: 2rem;
+        font-weight: 600;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* Contact Items */
+    .contact-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        transition: transform var(--transition-normal);
+    }
+    
+    .contact-item:hover {
+        transform: translateX(5px);
+    }
+    
+    .contact-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .contact-icon {
+        font-size: 1.8rem;
+        color: var(--primary-color);
+        margin-right: 1.2rem;
+        min-width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+        background: rgba(var(--particle-color), 0.12);
+        border-radius: 50%;
+        border: 1px solid rgba(var(--particle-color), 0.3);
+    }
+    
+    .contact-content h4 {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .contact-content p {
+        color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+    
+    .contact-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: color var(--transition-normal);
+        display: inline-block;
+        font-weight: 500;
+    }
+    
+    .contact-link:hover {
+        color: var(--secondary-color);
+        text-decoration: underline;
+    }
+    
+    /* Social Links */
+    .social-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2.5rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .social-title {
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .social-description {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    .social-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 1rem;
+    }
+    
+    .social-card {
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        padding: 1.5rem;
+        text-align: center;
+        transition: all var(--transition-normal);
+        text-decoration: none;
+        color: var(--text-primary);
+    }
+    
+    .social-card:hover {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px var(--shadow-color);
+    }
+    
+    .social-card:hover .social-icon,
+    .social-card:hover .social-name {
+        color: var(--bg-primary);
+    }
+    
+    .social-icon {
+        font-size: 2rem;
+        margin-bottom: 0.8rem;
+        color: var(--primary-color);
+        transition: color var(--transition-normal);
+        display: block;
+    }
+    
+    .social-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        transition: color var(--transition-normal);
+    }
+    
+    /* Map Section */
+    .map-section {
+        margin-top: 5rem;
+        padding: 5rem 0;
+        background: var(--surface-5);
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--border-color);
+    }
+    
+    .map-title {
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 2.5rem);
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .map-container {
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        margin-bottom: 1.5rem;
+    }
+    
+    .map-iframe {
+        width: 100%;
+        height: 450px;
+        border: none;
+        display: block;
+    }
+    
+    .map-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .map-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.9rem 1.8rem;
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        border-radius: var(--border-radius-lg);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition-normal);
+    }
+    
+    .map-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px var(--shadow-hover);
+    }
+    
+    .map-button.secondary {
+        background: transparent;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+    }
+    
+    .map-button.secondary:hover {
+        background: var(--primary-color);
+        color: var(--bg-primary);
+    }
+    
+    /* Hours & Availability */
+    .hours-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 4rem;
+    }
+    
+    .hours-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2rem;
+        text-align: center;
+        transition: all var(--transition-normal);
+    }
+    
+    .hours-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-5px);
+    }
+    
+    .hours-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 80px;
+    }
+    
+    .hours-title {
+        font-size: 1.4rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .hours-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .hours-item {
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    .hours-item.highlight {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .contact-hero {
+            padding: 6rem 0 4rem;
+            min-height: 30vh;
+        }
+        
+        .contact-section {
+            padding: 4rem 0;
+        }
+        
+        .contact-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        .contact-form-card,
+        .contact-info-card,
+        .social-section {
+            padding: 1.8rem;
+        }
+        
+        .form-title,
+        .info-title,
+        .social-title {
+            font-size: 1.5rem;
+        }
+        
+        .social-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+        }
+        
+        .social-card {
+            padding: 1.2rem;
+        }
+        
+        .social-icon {
+            font-size: 1.5rem;
+        }
+        
+        .map-section {
+            padding: 3rem 0;
+            margin-top: 3rem;
+        }
+        
+        .map-iframe {
+            height: 350px;
+        }
+        
+        .hours-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<section style="padding: 5rem 0;">
+<!-- Hero Section -->
+<section class="contact-hero">
     <div class="container">
-        <h1 style="text-align: center; font-size: 3rem; margin-bottom: 3rem; color: var(--primary-color);" data-aos="fade-up">
-            Contact Us
-        </h1>
+        <h1 data-aos="fade-up">Contact Us</h1>
+        <p data-aos="fade-up" data-aos-delay="200">
+            Get in touch with Digital Club - KIUT. We're here to answer your questions, 
+            collaborate on projects, and help you grow in technology.
+        </p>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="contact-section">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Get in Touch</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Reach out to us for inquiries, collaborations, or to learn more about our programs
+        </p>
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem;">
+        <div class="contact-grid" data-aos="fade-up" data-aos-delay="400">
             <!-- Contact Form -->
-            <div class="card" data-aos="fade-right">
-                <h3 style="color: var(--primary-color); margin-bottom: 2rem;">Send us a Message</h3>
+            <div class="contact-form-card">
+                <h3 class="form-title">Send us a Message</h3>
                 
                 <form method="POST">
                     <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="name" class="form-control" placeholder="Enter your full name" required>
+                        <label class="form-label" for="name">Full Name</label>
+                        <input type="text" name="name" id="name" class="form-control" 
+                               placeholder="Enter your full name" required>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-control" placeholder="your.email@kiut.ac.tz" required>
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" name="email" id="email" class="form-control" 
+                               placeholder="your.email@kiut.ac.tz" required>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Subject</label>
-                        <input type="text" name="subject" class="form-control" placeholder="What's this about?" required>
+                        <label class="form-label" for="subject">Subject</label>
+                        <input type="text" name="subject" id="subject" class="form-control" 
+                               placeholder="What's this about?" required>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Message</label>
-                        <textarea name="message" class="form-control" rows="5" placeholder="Tell us more..." required></textarea>
+                        <label class="form-label" for="message">Message</label>
+                        <textarea name="message" id="message" class="form-control" rows="5" 
+                                  placeholder="Tell us more about your inquiry..." required></textarea>
                     </div>
                     
-                    <button type="submit" class="btn-primary" style="width: 100%;">
+                    <button type="submit" class="btn-primary" style="width: 100%; padding: 1.2rem;">
                         <i class="fas fa-paper-plane"></i> Send Message
                     </button>
                 </form>
             </div>
             
             <!-- Contact Information -->
-            <div data-aos="fade-left">
-                <div class="card" style="margin-bottom: 2rem;">
-                    <h3 style="color: var(--primary-color); margin-bottom: 2rem;">Get in Touch</h3>
+            <div>
+                <div class="contact-info-card">
+                    <h3 class="info-title">Contact Information</h3>
                     
-                    <div style="margin-bottom: 2rem;">
-                        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
-                            <i class="fas fa-map-marker-alt" style="color: var(--primary-color); font-size: 1.5rem; margin-right: 1rem;"></i>
-                            <div>
-                                <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">Location</h4>
-                                <p style="color: var(--text-secondary); margin: 0;">
-                                    Kampala International University in Tanzania<br>
-                                    Kampala Road No. 2, Off Nyerere Road<br>
-                                    Gongo la Mboto, Dar es Salaam, Tanzania
-                                </p>
-                            </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
                         </div>
-                        
-                        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
-                            <i class="fas fa-envelope" style="color: var(--primary-color); font-size: 1.5rem; margin-right: 1rem;"></i>
-                            <div>
-                                <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">Email</h4>
-                                <p style="color: var(--text-secondary); margin: 0;">
-                                    <a href="mailto:digitalclub@kiut.ac.tz" style="color: var(--primary-color); text-decoration: none;">
-                                        digitalclub@kiut.ac.tz
-                                    </a>
-                                </p>
-                            </div>
+                        <div class="contact-content">
+                            <h4>Location</h4>
+                            <p>
+                                Kampala International University in Tanzania<br>
+                                Kampala Road No. 2, Off Nyerere Road<br>
+                                Gongo la Mboto, Dar es Salaam, Tanzania
+                            </p>
                         </div>
-                        
-                        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
-                            <i class="fas fa-phone" style="color: var(--primary-color); font-size: 1.5rem; margin-right: 1rem;"></i>
-                            <div>
-                                <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">Phone</h4>
-                                <p style="color: var(--text-secondary); margin: 0;">
-                                    <a href="tel:+255716153399" style="color: var(--primary-color); text-decoration: none;">
-                                        +255 716 153 399
-                                    </a>
-                                </p>
-                            </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-content">
+                            <h4>Email</h4>
+                            <p>
+                                <a href="mailto:digitalclub@kiut.ac.tz" class="contact-link">
+                                    digitalclub@kiut.ac.tz
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="contact-content">
+                            <h4>Phone</h4>
+                            <p>
+                                <a href="tel:+255716153399" class="contact-link">
+                                    +255 716 153 399
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="contact-content">
+                            <h4>Response Time</h4>
+                            <p>
+                                We typically respond to emails within 24-48 hours during weekdays
+                            </p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="card">
-                    <h3 style="color: var(--primary-color); margin-bottom: 2rem;">Follow Us</h3>
+                <div class="social-section">
+                    <h3 class="social-title">Connect With Us</h3>
+                    <p class="social-description">
+                        Follow us on social media for the latest updates, events, and tech insights
+                    </p>
                     
-                    <div class="social-links" style="justify-content: flex-start;">
-                        <a href="#" class="social-link" title="Facebook">
-                            <i class="fab fa-facebook"></i>
+                    <div class="social-grid">
+                        <a href="#" class="social-card" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-facebook-f social-icon"></i>
+                            <span class="social-name">Facebook</span>
                         </a>
-                        <a href="#" class="social-link" title="Twitter">
-                            <i class="fab fa-twitter"></i>
+                        
+                        <a href="#" class="social-card" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-twitter social-icon"></i>
+                            <span class="social-name">Twitter</span>
                         </a>
-                        <a href="#" class="social-link" title="Instagram">
-                            <i class="fab fa-instagram"></i>
+                        
+                        <a href="#" class="social-card" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-instagram social-icon"></i>
+                            <span class="social-name">Instagram</span>
                         </a>
-                        <a href="#" class="social-link" title="LinkedIn">
-                            <i class="fab fa-linkedin"></i>
+                        
+                        <a href="#" class="social-card" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-linkedin-in social-icon"></i>
+                            <span class="social-name">LinkedIn</span>
                         </a>
-                        <a href="#" class="social-link" title="GitHub">
-                            <i class="fab fa-github"></i>
+                        
+                        <a href="#" class="social-card" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-github social-icon"></i>
+                            <span class="social-name">GitHub</span>
+                        </a>
+                        
+                        <a href="#" class="social-card" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-telegram social-icon"></i>
+                            <span class="social-name">Telegram</span>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
         
+        <!-- Hours & Availability -->
+        <div class="hours-grid" data-aos="fade-up" data-aos-delay="600">
+            <div class="hours-card">
+                <div class="hours-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3 class="hours-title">Meeting Hours</h3>
+                <ul class="hours-list">
+                    <li class="hours-item">Monday - Friday</li>
+                    <li class="hours-item highlight">9:00 AM - 5:00 PM</li>
+                    <li class="hours-item">Saturday</li>
+                    <li class="hours-item">10:00 AM - 2:00 PM</li>
+                    <li class="hours-item">Sunday: Closed</li>
+                </ul>
+            </div>
+            
+            <div class="hours-card">
+                <div class="hours-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="hours-title">Club Meetings</h3>
+                <ul class="hours-list">
+                    <li class="hours-item">Weekly Tech Sessions</li>
+                    <li class="hours-item highlight">Every Wednesday 4:00 PM</li>
+                    <li class="hours-item">Workshops</li>
+                    <li class="hours-item">Every Saturday 10:00 AM</li>
+                    <li class="hours-item">Location: KIUT Tech Lab</li>
+                </ul>
+            </div>
+            
+            <div class="hours-card">
+                <div class="hours-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h3 class="hours-title">Quick Support</h3>
+                <ul class="hours-list">
+                    <li class="hours-item">Technical Queries</li>
+                    <li class="hours-item highlight">24-48 hour response</li>
+                    <li class="hours-item">Project Support</li>
+                    <li class="hours-item">Schedule a meeting</li>
+                    <li class="hours-item">Emergency: +255 716 153 399</li>
+                </ul>
+            </div>
+        </div>
+        
         <!-- Map Section -->
-        <div style="margin-top: 5rem;" data-aos="fade-up">
-            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem; color: var(--text-primary);">Find Us</h2>
-            <div class="card" style="padding: 0; overflow: hidden;">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d7922.061507094932!2d39.15610654232788!3d-6.886919783037395!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x185c37f5d4dd8981%3A0xbb051746b026d171!2sKampala%20International%20University%20in%20Tanzania!5e0!3m2!1sen!2stz!4v1760300669430!5m2!1sen!2stz" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-                <!-- <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.8201518924557!2d39.156128!3d-6.886302!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x185c4d9e08c76e9f%3A0x930b98e65ce42928!2sKampala%20International%20University%20in%20Tanzania%20(KIUT)!5e0!3m2!1sen!2stz!4v1718038085000!5m2!1sen!2stz" 
-                    width="100%" 
-                    height="450" 
-                    style="border:0;" 
+        <div class="map-section" data-aos="fade-up">
+            <h2 class="map-title">Find Our Campus</h2>
+            
+            <div class="map-container">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d7922.061507094932!2d39.15610654232788!3d-6.886919783037395!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x185c37f5d4dd8981%3A0xbb051746b026d171!2sKampala%20International%20University%20in%20Tanzania!5e0!3m2!1sen!2stz!4v1760300669430!5m2!1sen!2stz" 
+                    class="map-iframe"
                     allowfullscreen="" 
                     loading="lazy" 
-                    referrerpolicy="no-referrer-when-downgrade">
+                    referrerpolicy="no-referrer-when-downgrade"
+                    title="KIUT Campus Location">
                 </iframe>
-                 -->
-                <div style="padding: 1rem; background: rgba(0, 255, 255, 0.05); text-align: center;">
-                    <a href="https://maps.app.goo.gl/nPxLKexsxsemM1Cw9" 
-                       target="_blank"  
-                       rel="noopener noreferrer"
-                       style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
-                        <i class="fas fa-external-link-alt"></i> Open in Google Maps
-                    </a>
-                </div>
+            </div>
+            
+            <div class="map-actions">
+                <a href="https://maps.app.goo.gl/nPxLKexsxsemM1Cw9" 
+                   target="_blank"  
+                   rel="noopener noreferrer"
+                   class="map-button">
+                    <i class="fas fa-external-link-alt"></i> Open in Google Maps
+                </a>
+                <a href="https://www.google.com/maps/dir//Kampala+International+University+in+Tanzania,+Dar+es+Salaam,+Tanzania/@-6.886302,39.156128,17z/data=!4m9!4m8!1m0!1m5!1m1!1s0x185c4d9e08c76e9f:0x930b98e65ce42928!2m2!1d39.156128!2d-6.886302!3e0" 
+                   target="_blank"  
+                   rel="noopener noreferrer"
+                   class="map-button secondary">
+                    <i class="fas fa-directions"></i> Get Directions
+                </a>
+            </div>
+        </div>
+        
+        <!-- CTA Section -->
+        <div style="margin-top: 5rem; text-align: center;" data-aos="fade-up">
+            <h2 style="font-size: clamp(2rem, 4vw, 2.5rem); color: var(--text-primary); margin-bottom: 1.5rem;">
+                Ready to Join or Collaborate?
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 2.5rem; max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.7;">
+                Whether you're a student looking to join, an organization wanting to partner, 
+                or a professional interested in mentoring, we'd love to hear from you.
+            </p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('auth.register') }}" class="btn-primary">
+                    <i class="fas fa-user-plus"></i> Join as Member
+                </a>
+                <a href="mailto:digitalclub@kiut.ac.tz" class="btn-secondary">
+                    <i class="fas fa-handshake"></i> Partnership Inquiry
+                </a>
             </div>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize AOS animations
+    AOS.init({
+        duration: 1000,
+        once: true,
+        offset: 100
+    });
+
+    // Form submission feedback
+    const contactForm = document.querySelector('form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            // Show loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            submitBtn.disabled = true;
+            
+            // Simulate form submission (remove this in production)
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                // Show success message (in production, this would come from server)
+                alert('Message sent successfully! We\'ll get back to you soon.');
+                contactForm.reset();
+            }, 1500);
+            
+            // Prevent actual submission for demo (remove in production)
+            e.preventDefault();
+        });
+    }
+
+    // Add smooth scrolling to form
+    const formInputs = document.querySelectorAll('.form-control');
+    formInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 10px 25px var(--shadow-hover)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+
+    // Social card hover effects
+    const socialCards = document.querySelectorAll('.social-card');
+    socialCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px) scale(1.05)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+
+    // Contact item hover effects
+    const contactItems = document.querySelectorAll('.contact-item');
+    contactItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            const icon = this.querySelector('.contact-icon');
+            icon.style.transform = 'scale(1.2) rotate(5deg)';
+            icon.style.boxShadow = '0 5px 15px var(--shadow-color)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            const icon = this.querySelector('.contact-icon');
+            icon.style.transform = 'scale(1) rotate(0)';
+            icon.style.boxShadow = 'none';
+        });
+    });
+</script>
 {% endblock %}

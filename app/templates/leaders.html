@@ -1,71 +1,579 @@
 {% extends "base.html" %}
 
-{% block title %}Leaders - Digital Club{% endblock %}
+{% block title %}Leadership - Digital Club - KIUT{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Hero Section */
+    .leaders-hero {
+        min-height: 40vh;
+        padding: 8rem 0 5rem;
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .leaders-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%);
+    }
+    
+    .leaders-hero h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+    }
+    
+    .leaders-hero p {
+        font-size: 1.3rem;
+        color: var(--text-secondary);
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+    
+    /* Content Section */
+    .leaders-section {
+        padding: 6rem 0;
+        position: relative;
+    }
+    
+    .section-title {
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .section-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 4rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Leadership Structure */
+    .structure-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+    
+    .structure-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2rem;
+        text-align: center;
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .structure-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+    }
+    
+    .structure-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+        box-shadow: 0 15px 35px var(--shadow-color);
+    }
+    
+    .structure-card:hover::before {
+        opacity: 1;
+    }
+    
+    .structure-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 80px;
+    }
+    
+    .structure-title {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .structure-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        font-size: 1.05rem;
+    }
+    
+    /* Leadership Grid */
+    .leaders-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 4rem;
+    }
+    
+    .leader-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2rem;
+        text-align: center;
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .leader-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transition: transform var(--transition-normal);
+    }
+    
+    .leader-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-color);
+        box-shadow: 0 20px 40px var(--shadow-color);
+    }
+    
+    .leader-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .leader-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 1.5rem;
+        border: 3px solid var(--primary-color);
+        display: block;
+    }
+    
+    .leader-avatar.placeholder {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        font-size: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .leader-name {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .leader-position {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .leader-info {
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+    
+    .info-item i {
+        color: var(--primary-color);
+        width: 16px;
+    }
+    
+    .leader-bio {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+        font-size: 0.95rem;
+        min-height: 6.5rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+        -webkit-box-orient: vertical;
+    }
+    
+    .leader-social {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .social-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: rgba(var(--particle-color), 0.12);
+        border: 1px solid var(--border-color);
+        border-radius: 50%;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .social-link:hover {
+        background: var(--primary-color);
+        color: var(--bg-primary);
+        transform: translateY(-2px);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-state h3 {
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+        background: linear-gradient(135deg, rgba(var(--particle-color), 0.12) 0%, rgba(var(--particle-color), 0.06) 100%);
+        padding: 5rem 0;
+        text-align: center;
+        border-radius: var(--border-radius-md);
+        margin-top: 3rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .cta-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .cta-text {
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 2.5rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .leaders-hero {
+            padding: 6rem 0 4rem;
+            min-height: 30vh;
+        }
+        
+        .leaders-section {
+            padding: 4rem 0;
+        }
+        
+        .structure-grid,
+        .leaders-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .structure-card,
+        .leader-card {
+            padding: 1.5rem;
+        }
+        
+        .leader-avatar {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .structure-icon {
+            font-size: 2.5rem;
+            height: 60px;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<section style="padding: 5rem 0;">
+<!-- Hero Section -->
+<section class="leaders-hero">
     <div class="container">
-        <h1 style="text-align: center; font-size: 3rem; margin-bottom: 3rem; color: var(--primary-color);" data-aos="fade-up">
-            Our Leadership Team
-        </h1>
+        <h1 data-aos="fade-up">Our Leadership Team</h1>
+        <p data-aos="fade-up" data-aos-delay="200">
+            Meet the dedicated students leading Digital Club and driving innovation at KIUT
+        </p>
+    </div>
+</section>
+
+<!-- Leadership Structure -->
+<section class="leaders-section">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Leadership Structure</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Our organized approach to student leadership and club management
+        </p>
+        
+        <div class="structure-grid" data-aos="fade-up" data-aos-delay="400">
+            <div class="structure-card">
+                <div class="structure-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <h3 class="structure-title">Executive Board</h3>
+                <p class="structure-description">
+                    Overall leadership and strategic direction of the club, 
+                    responsible for major decisions and external relations.
+                </p>
+            </div>
+            
+            <div class="structure-card">
+                <div class="structure-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h3 class="structure-title">Technical Leads</h3>
+                <p class="structure-description">
+                    Subject matter experts who lead workshops, mentor members, 
+                    and oversee technical projects and competitions.
+                </p>
+            </div>
+            
+            <div class="structure-card">
+                <div class="structure-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="structure-title">Department Heads</h3>
+                <p class="structure-description">
+                    Manage specific departments like events, marketing, 
+                    partnerships, and community outreach.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Leadership Team -->
+<section class="leaders-section" style="background: var(--surface-5);">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Meet Our Leaders</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Passionate students committed to advancing technology education
+        </p>
         
         {% if leaders %}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem;">
+        <div class="leaders-grid" data-aos="fade-up" data-aos-delay="400">
             {% for leader in leaders %}
-            <div class="card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-                <div style="text-align: center;">
-                    {% if leader.member and leader.member.profile_image %}
+            <div class="leader-card">
+                {% if leader.member and leader.member.profile_image %}
                     <img src="{{ url_for('static', filename='uploads/profiles/' + leader.member.profile_image) }}" 
-                         alt="{{ leader.member.full_name }}" 
-                         loading="lazy" decoding="async"
-                         style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; margin-bottom: 1.5rem; border: 3px solid var(--primary-color);">
-                    {% else %}
-                    <div style="width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user" style="font-size: 3rem; color: var(--bg-primary);"></i>
+                         alt="{{ leader.member.full_name }}" class="leader-avatar">
+                {% else %}
+                    <div class="leader-avatar placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                
+                <h3 class="leader-name">{{ leader.member.full_name if leader.member else leader.user.email }}</h3>
+                <div class="leader-position">{{ leader.position }}</div>
+                
+                <div class="leader-info">
+                    {% if leader.member and leader.member.course %}
+                    <div class="info-item">
+                        <i class="fas fa-book"></i>
+                        <span>{{ leader.member.course }}</span>
                     </div>
                     {% endif %}
                     
-                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">{{ leader.member.full_name if leader.member else leader.user.email }}</h3>
-                    <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem;">{{ leader.position }}</p>
-                    
-                    {% if leader.member and leader.member.title %}
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ leader.member.title }}</p>
-                    {% endif %}
-                    
-                    {% if leader.member and leader.member.bio %}
-                    <p class="leader-bio" style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
-                        {{ leader.member.bio }}
-                    </p>
-                    {% endif %}
-                    
-                    <div style="display: flex; gap: 1rem; justify-content: center;">
-                        {% if leader.member and leader.member.github %}
-                        <a href="{{ leader.member.github }}" target="_blank" class="social-link">
-                            <i class="fab fa-github"></i>
-                        </a>
-                        {% endif %}
-                        {% if leader.member and leader.member.linkedin %}
-                        <a href="{{ leader.member.linkedin }}" target="_blank" class="social-link">
-                            <i class="fab fa-linkedin"></i>
-                        </a>
-                        {% endif %}
-                        {% if leader.member and leader.member.phone %}
-                        <a href="tel:{{ leader.member.phone }}" class="social-link">
-                            <i class="fas fa-phone"></i>
-                        </a>
-                        {% endif %}
+                    {% if leader.member and leader.member.year %}
+                    <div class="info-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Year {{ leader.member.year }}</span>
                     </div>
+                    {% endif %}
+                </div>
+                
+                {% if leader.member and leader.member.bio %}
+                <div class="leader-bio">
+                    {{ leader.member.bio[:150] }}{% if leader.member.bio|length > 150 %}...{% endif %}
+                </div>
+                {% endif %}
+                
+                <div class="leader-social">
+                    {% if leader.member and leader.member.github %}
+                    <a href="{{ leader.member.github }}" target="_blank" class="social-link">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    {% endif %}
+                    
+                    {% if leader.member and leader.member.linkedin %}
+                    <a href="{{ leader.member.linkedin }}" target="_blank" class="social-link">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    {% endif %}
+                    
+                    {% if leader.member and leader.member.email %}
+                    <a href="mailto:{{ leader.member.email }}" class="social-link">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div style="text-align: center; padding: 3rem;">
-            <i class="fas fa-users" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
-            <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">Leadership Team Coming Soon</h3>
-            <p style="color: var(--text-muted);">Our leadership positions are currently being filled. Check back soon!</p>
+        <div class="empty-state" data-aos="fade-up">
+            <i class="fas fa-users"></i>
+            <h3>Leadership Team Coming Soon</h3>
+            <p>Our leadership positions are currently being filled. Check back soon to meet our team!</p>
+            <a href="{{ url_for('main.contact') }}" class="btn-primary">
+                <i class="fas fa-envelope"></i> Contact for Leadership Roles
+            </a>
         </div>
         {% endif %}
     </div>
 </section>
+
+<!-- Election Process -->
+<section class="leaders-section">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Leadership Elections</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Transparent and democratic process for selecting club leadership
+        </p>
+        
+        <div class="structure-grid" data-aos="fade-up" data-aos-delay="400">
+            <div class="structure-card">
+                <div class="structure-icon">
+                    <i class="fas fa-vote-yea"></i>
+                </div>
+                <h3 class="structure-title">Democratic Process</h3>
+                <p class="structure-description">
+                    All leadership positions are elected democratically by club 
+                    members through transparent voting processes.
+                </p>
+            </div>
+            
+            <div class="structure-card">
+                <div class="structure-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <h3 class="structure-title">Annual Elections</h3>
+                <p class="structure-description">
+                    Elections are held annually, giving every member the 
+                    opportunity to participate and contribute to club leadership.
+                </p>
+            </div>
+            
+            <div class="structure-card">
+                <div class="structure-icon">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <h3 class="structure-title">Mentorship Program</h3>
+                <p class="structure-description">
+                    New leaders receive mentorship from outgoing executives 
+                    to ensure smooth transitions and continuity.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="leaders-section" style="background: var(--surface-5);">
+    <div class="container">
+        <div class="cta-section" data-aos="fade-up">
+            <h2 class="cta-title">Become a Leader</h2>
+            <p class="cta-text">
+                Develop leadership skills, make an impact, and help shape the future 
+                of technology education at KIUT.
+            </p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('auth.register') }}" class="btn-primary">
+                    <i class="fas fa-rocket"></i> Join the Club
+                </a>
+                <a href="{{ url_for('main.contact') }}" class="btn-secondary">
+                    <i class="fas fa-question-circle"></i> Learn About Leadership Roles
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize AOS animations
+    AOS.init({
+        duration: 1000,
+        once: true,
+        offset: 100
+    });
+</script>
 {% endblock %}

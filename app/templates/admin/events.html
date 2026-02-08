@@ -5,7 +5,7 @@
 {% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Events Management</span>{% endblock %}
 
 {% block admin_content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="admin-page-header mb-4">
     <div>
         <h2 class="mb-1">Events Management</h2>
         <p class="text-muted mb-0">Manage club events and activities</p>
@@ -17,7 +17,7 @@
 
 <!-- Filter Tabs -->
 <div class="mb-4">
-    <div class="d-flex gap-2 mb-3">
+    <div class="d-flex gap-2 mb-3 flex-wrap">
         <a href="{{ url_for('admin.events', status='all') }}" 
            class="admin-btn admin-btn-sm {% if current_status == 'all' %}admin-btn-primary{% else %}admin-btn-outline{% endif %}">
             <i class="fas fa-calendar"></i> All Events ({{ upcoming_count + past_count }})
@@ -33,7 +33,7 @@
     </div>
     
     <!-- Category Filter -->
-    <form method="GET" class="d-flex gap-2" style="max-width: 400px;">
+    <form method="GET" class="d-flex gap-2 flex-wrap" style="max-width: 400px;">
         <input type="hidden" name="status" value="{{ current_status }}">
         <select name="category" class="admin-form-control" onchange="this.form.submit()">
             <option value="">All Categories</option>
@@ -91,13 +91,13 @@
                     </td>
                     <td>
                         {% if event.category == 'hackathon' %}
-                            <span class="admin-badge" style="background-color: rgba(255, 0, 255, 0.2); color: #ff00ff;">Hackathon</span>
+                            <span class="admin-badge admin-badge-magenta">Hackathon</span>
                         {% elif event.category == 'workshop' %}
-                            <span class="admin-badge" style="background-color: rgba(0, 255, 255, 0.2); color: #00ffff;">Workshop</span>
+                            <span class="admin-badge admin-badge-cyan">Workshop</span>
                         {% elif event.category == 'tech_talk' %}
-                            <span class="admin-badge" style="background-color: rgba(255, 255, 0, 0.2); color: #ffff00;">Tech Talk</span>
+                            <span class="admin-badge admin-badge-yellow">Tech Talk</span>
                         {% elif event.category == 'social_event' %}
-                            <span class="admin-badge" style="background-color: rgba(0, 255, 0, 0.2); color: #00ff00;">Social Event</span>
+                            <span class="admin-badge admin-badge-green">Social Event</span>
                         {% else %}
                             <span class="admin-badge admin-badge-secondary">{{ event.category|title }}</span>
                         {% endif %}

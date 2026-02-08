@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Digital Club - KIUT{% endblock %}</title>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('theme');
+                var theme = (stored === 'light' || stored === 'dark') ? stored : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -22,27 +33,34 @@
     
     <!-- Admin CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <style>
+        .main-content {
+            margin-top: 0;
+            min-height: 100vh;
+        }
+    </style>
     
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <!--
     <a class="visually-hidden-focusable" href="#admin-main">Skip to main content</a>
-    <!-- Navigation -->
+    
     <nav class="navbar">
         <div class="nav-container">
-            <!-- <div class="nav-logo">
+            <div class="nav-logo">
                 <a href="{{ url_for('main.index') }}">
                     <img src="{{ url_for('static', filename='DigitalClub_LOGO copy.svg') }}" alt="Digital Club Logo" class="logo-img">
                    
                 </a>
             </div>
-             -->
+            
             <div class="nav-menu" id="nav-menu">
-                <!-- Main Navigation -->
+               
                 <div class="nav-main">
                     <a href="{{ url_for('main.index') }}" class="nav-link">Home</a>
                     
-                    <!-- About Dropdown -->
+                   
                     <div class="nav-dropdown">
                         <a href="#" class="nav-link dropdown-toggle">
                             <span>About</span>
@@ -72,7 +90,7 @@
                         </div>
                     </div>
                     
-                    <!-- Activities Dropdown -->
+                    
                     <div class="nav-dropdown">
                         <a href="#" class="nav-link dropdown-toggle">
                             <span>Activities</span>
@@ -94,7 +112,7 @@
                         </div>
                     </div>
                     
-                    <!-- Content Dropdown -->
+                    
                     <div class="nav-dropdown">
                         <a href="#" class="nav-link dropdown-toggle">
                             <span>Content</span>
@@ -119,10 +137,10 @@
                     <a href="{{ url_for('main.contact') }}" class="nav-link">Contact</a>
                 </div>
                 
-                <!-- User Actions -->
+                
                 <div class="nav-user">
                     {% if current_user.is_authenticated %}
-                        <!-- User Profile Dropdown -->
+                        
                         <div class="nav-dropdown user-dropdown">
                             <a href="#" class="nav-link user-action dropdown-toggle">
                                 <i class="fas fa-user-circle"></i>
@@ -172,7 +190,7 @@
             </div>
         </div>
     </nav>
-
+    -->
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}

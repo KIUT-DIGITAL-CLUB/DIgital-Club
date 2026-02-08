@@ -2,7 +2,7 @@
 
 /* Enhanced CSS Variables */
 :root {
-    --primary-color: #00ffff;
+    --primary-color: #1b9191;
     --secondary-color: #ff00ff;
     --accent-color: #ffff00;
     --success-color: #00ff00;
@@ -29,6 +29,68 @@
     --border-radius-md: 15px;
     --border-radius-lg: 25px;
     --border-radius-xl: 50px;
+    --surface-1: rgba(255, 255, 255, 0.05);
+    --surface-2: rgba(255, 255, 255, 0.08);
+    --surface-3: rgba(0, 0, 0, 0.35);
+    --surface-4: rgba(0, 0, 0, 0.6);
+    --surface-5: rgba(255, 255, 255, 0.02);
+    --nav-bg: rgba(10, 10, 10, 0.95);
+    --nav-bg-scrolled: rgba(10, 10, 10, 0.98);
+    --dropdown-bg: rgba(10, 10, 10, 0.98);
+    --dropdown-arrow: rgba(10, 10, 10, 0.98);
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --card-bg-hover: rgba(255, 255, 255, 0.08);
+    --dropdown-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --input-bg: rgba(0, 0, 0, 0.3);
+    --input-bg-strong: rgba(0, 0, 0, 0.6);
+    --footer-bg: var(--nav-bg);
+    --menu-bg: linear-gradient(135deg, rgba(10, 10, 10, 0.98) 0%, rgba(26, 26, 46, 0.98) 100%);
+    --menu-backdrop: rgba(0, 0, 0, 0.7);
+    --toggle-bg: rgba(0, 255, 255, 0.08);
+    --toggle-border: rgba(0, 255, 255, 0.25);
+    --toggle-hover: rgba(0, 255, 255, 0.18);
+    --toggle-icon: var(--primary-color);
+    --particle-color: 0, 255, 255;
+    --particle-line: 0, 255, 255;
+    color-scheme: dark;
+}
+
+[data-theme="light"] {
+    --bg-primary: #f6f7fb;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #eef2ff;
+    --bg-quaternary: #e5eaf6;
+    --text-primary: #0b1220;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: rgba(15, 23, 42, 0.12);
+    --shadow-color: rgba(10, 102, 129, 0.2);
+    --shadow-hover: rgba(10, 102, 129, 0.35);
+    --gradient-secondary: linear-gradient(135deg, #ffffff, #e9effc);
+    --surface-1: rgba(11, 18, 32, 0.04);
+    --surface-2: rgba(11, 18, 32, 0.08);
+    --surface-3: rgba(255, 255, 255, 0.9);
+    --surface-4: rgba(15, 23, 42, 0.08);
+    --surface-5: rgba(11, 18, 32, 0.03);
+    --nav-bg: rgba(255, 255, 255, 0.92);
+    --nav-bg-scrolled: rgba(255, 255, 255, 0.98);
+    --dropdown-bg: rgba(255, 255, 255, 0.98);
+    --dropdown-arrow: rgba(255, 255, 255, 0.98);
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --card-bg-hover: rgba(255, 255, 255, 0.95);
+    --dropdown-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --input-bg-strong: rgba(255, 255, 255, 0.98);
+    --footer-bg: var(--nav-bg);
+    --menu-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(237, 243, 255, 0.98) 100%);
+    --menu-backdrop: rgba(15, 23, 42, 0.2);
+    --toggle-bg: rgba(0, 0, 0, 0.04);
+    --toggle-border: rgba(15, 23, 42, 0.12);
+    --toggle-hover: rgba(0, 0, 0, 0.08);
+    --toggle-icon: #0ea5b7;
+    --particle-color: 12, 116, 144;
+    --particle-line: 12, 116, 144;
+    color-scheme: light;
 }
 
 /* Reset and Base Styles */
@@ -56,6 +118,33 @@ html {
 
 * {
     box-sizing: border-box;
+}
+
+/* Custom scrollbars */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--particle-color), 0.45) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(var(--particle-color), 0.35);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--particle-color), 0.55);
+    background-clip: content-box;
 }
 
 img, video, iframe {
@@ -164,13 +253,17 @@ p {
     position: fixed;
     top: 0;
     width: 100%;
-    background: rgba(10, 10, 10, 0.95);
+    background: var(--nav-bg);
     backdrop-filter: blur(15px);
     border-bottom: 1px solid var(--border-color);
     z-index: 10000;
     transition: all 0.3s ease;
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
     overflow: visible;
+}
+
+.navbar.scrolled {
+    background: var(--nav-bg-scrolled);
 }
 
 /* Focus styles for accessibility */
@@ -295,11 +388,11 @@ p {
     top: 100%;
     left: 0;
     min-width: 220px;
-    background: rgba(10, 10, 10, 0.98);
+    background: var(--dropdown-bg);
     backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--dropdown-shadow);
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -345,7 +438,7 @@ p {
     height: 0;
     border-left: 7px solid transparent;
     border-right: 7px solid transparent;
-    border-bottom: 7px solid rgba(10, 10, 10, 0.98);
+    border-bottom: 7px solid var(--dropdown-arrow);
 }
 
 .dropdown-item {
@@ -820,8 +913,8 @@ a:hover, .nav-link:hover { color: var(--primary-color); }
 }
 
 .btn-ghost {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     color: var(--text-primary);
     backdrop-filter: blur(10px);
 }
@@ -890,7 +983,7 @@ a:hover, .nav-link:hover { color: var(--primary-color); }
 
 /* Enhanced Cards */
 .card {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--card-bg);
     border-radius: var(--border-radius-md);
     padding: 2rem;
     border: 1px solid var(--border-color);
@@ -951,9 +1044,9 @@ a:hover, .nav-link:hover { color: var(--primary-color); }
 }
 
 .card-glass {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--surface-2);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-color);
 }
 
 .card-gradient {
@@ -967,7 +1060,7 @@ a:hover, .nav-link:hover { color: var(--primary-color); }
 }
 
 .card-outlined:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--card-bg-hover);
     border-color: var(--primary-color);
 }
 
@@ -988,7 +1081,7 @@ a:hover, .nav-link:hover { color: var(--primary-color); }
     padding: 1rem;
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    background: rgba(0, 0, 0, 0.3);
+    background-color: transparent;
     color: var(--text-primary);
     font-size: 1rem;
     transition: all 0.3s ease;
@@ -1024,7 +1117,7 @@ select {
     padding: 1rem;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: var(--input-bg);
     color: var(--text-primary);
     font-size: 1rem;
     font-weight: 500;
@@ -1044,7 +1137,7 @@ select {
 select:hover {
     border-color: var(--primary-color);
     box-shadow: 0 0 15px var(--shadow-color);
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: var(--input-bg);
 }
 
 .form-select:focus,
@@ -1052,7 +1145,7 @@ select:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 20px var(--shadow-color);
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: var(--input-bg);
 }
 
 .form-select option,
@@ -1100,7 +1193,7 @@ select.form-control-sm {
 /* Disabled state */
 .form-select:disabled,
 select:disabled {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--surface-4);
     color: var(--text-muted);
     cursor: not-allowed;
     opacity: 0.6;
@@ -1176,7 +1269,7 @@ select.is-valid:focus {
 /* Ensure readable inputs across themes and autofill */
 input, select, textarea {
     color: var(--text-primary);
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: var(--input-bg);
     caret-color: var(--primary-color);
 }
 
@@ -1190,8 +1283,8 @@ textarea:-webkit-autofill,
 select:-webkit-autofill {
     /* Force dark background + bright text for browser autofill */
     -webkit-text-fill-color: var(--text-primary) !important;
-    box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.6) inset !important;
-    background-color: rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 0 0px 1000px var(--input-bg-strong) inset !important;
+    background-color: var(--input-bg-strong) !important;
     border-color: var(--primary-color) !important;
     transition: background-color 99999s ease-in-out 0s;
 }
@@ -1221,7 +1314,7 @@ select:-webkit-autofill {
 }
 
 .table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--surface-5);
 }
 
 /* Ensure badge/text contrast on warnings */
@@ -1243,7 +1336,7 @@ select:-webkit-autofill {
 
 .membership-page .status-card {
     border: 1px solid var(--border-color);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--surface-1);
 }
 
 .membership-page .status-icon {
@@ -1302,7 +1395,7 @@ select:-webkit-autofill {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1rem;
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--surface-1);
 }
 
 .membership-page .callout-title { font-weight: 700; color: var(--text-primary); }
@@ -1329,7 +1422,7 @@ select:-webkit-autofill {
 
 .membership-page .table {
     margin-bottom: 0;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-1);
 }
 
 .membership-page .table thead th {
@@ -1351,19 +1444,19 @@ select:-webkit-autofill {
 }
 
 .membership-page .table tbody tr {
-    background-color: rgba(255, 255, 255, 0.03) !important;
+    background-color: var(--surface-5) !important;
 }
 
 .membership-page .table.table-striped > tbody > tr:nth-of-type(odd) {
-    background-color: rgba(255, 255, 255, 0.06) !important;
+    background-color: var(--surface-2) !important;
 }
 
 .membership-page .table.table-striped > tbody > tr:nth-of-type(even) {
-    background-color: rgba(255, 255, 255, 0.03) !important;
+    background-color: var(--surface-5) !important;
 }
 
 .membership-page .table tbody tr:hover {
-    background: rgba(0, 255, 255, 0.05);
+    background: var(--surface-1);
 }
 
 .membership-page .table tbody tr:last-child td {
@@ -1391,10 +1484,11 @@ select:-webkit-autofill {
 
 /* Footer */
 .footer {
-    background: var(--bg-secondary);
+    background: var(--footer-bg);
     border-top: 1px solid var(--border-color);
     padding: 3rem 0 1rem;
     margin-top: 5rem;
+    backdrop-filter: blur(12px);
 }
 
 .footer-container {
@@ -1465,7 +1559,7 @@ select:-webkit-autofill {
     justify-content: center;
     width: 40px;
     height: 40px;
-    background: rgba(0, 255, 255, 0.1);
+    background: var(--surface-2);
     border: 1px solid var(--border-color);
     border-radius: 50%;
     color: var(--primary-color);
@@ -1499,7 +1593,7 @@ select:-webkit-autofill {
     padding: 0.8rem;
     border: 1px solid var(--border-color);
     border-radius: 25px;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--input-bg);
     color: var(--text-primary);
     outline: none;
 }
@@ -1560,7 +1654,7 @@ select:-webkit-autofill {
         height: 100vh;
         display: flex;
         flex-direction: column;
-        background: linear-gradient(135deg, rgba(10, 10, 10, 0.98) 0%, rgba(26, 26, 46, 0.98) 100%);
+        background: var(--menu-bg);
         backdrop-filter: blur(20px);
         border-left: 1px solid var(--border-color);
         box-shadow: -10px 0 50px rgba(0, 0, 0, 0.5);
@@ -1588,21 +1682,20 @@ select:-webkit-autofill {
     
     .nav-main {
         border-bottom: 1px solid var(--border-color);
-        padding: 1.5rem;
-        padding-top: 4rem;
+        padding: 1.25rem;
+        padding-top: 3.5rem;
         margin-bottom: 0;
-        flex: 1;
-        overflow-y: auto;
-        min-height: 0;
+        flex: 0 0 auto;
+        overflow: visible;
     }
     
     .nav-user {
         margin-left: 0;
-        gap: 0.8rem;
-        padding: 1.5rem;
+        gap: 0.6rem;
+        padding: 1.25rem;
         border-top: 1px solid var(--border-color);
-        margin-top: auto;
-        flex-shrink: 0;
+        margin-top: 0;
+        flex-shrink: 1;
     }
 
     .nav-list {
@@ -1622,8 +1715,8 @@ select:-webkit-autofill {
     .nav-link {
         width: 100%;
         justify-content: flex-start;
-        padding: 1rem 1.25rem;
-        font-size: 1rem;
+        padding: 0.85rem 1.1rem;
+        font-size: 0.95rem;
         border-radius: 12px;
         margin: 0.25rem 0;
         min-height: 44px;
@@ -1667,8 +1760,8 @@ select:-webkit-autofill {
     }
     
     .nav-link.user-action {
-        font-size: 1rem;
-        padding: 1rem 1.25rem;
+        font-size: 0.95rem;
+        padding: 0.85rem 1.1rem;
         justify-content: center;
         min-height: 44px;
         margin: 0.5rem 0;
@@ -1786,10 +1879,10 @@ select:-webkit-autofill {
 
     .nav-dropdown .dropdown-menu {
         position: static;
-        opacity: 1;
+        opacity: 0;
         visibility: visible;
-        transform: none;
-        background: rgba(0, 0, 0, 0.3);
+        transform: translateY(-6px);
+        background: var(--surface-3);
         border: none;
         border-radius: 0;
         box-shadow: none;
@@ -1798,14 +1891,23 @@ select:-webkit-autofill {
         width: 100%;
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition:
+            max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+            padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.25s ease,
+            transform 0.25s ease;
         list-style: none;
+        pointer-events: none;
+        will-change: max-height;
     }
 
     .nav-dropdown.active .dropdown-menu {
-        max-height: 600px;
+        max-height: var(--dropdown-height, 600px);
         padding: 0.5rem 0;
         margin-top: 0.5rem;
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
     }
 
     .dropdown-menu::before,
@@ -1892,7 +1994,7 @@ select:-webkit-autofill {
         right: 1rem;
         width: 44px;
         height: 44px;
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--surface-2);
         border: 1px solid var(--border-color);
         border-radius: 12px;
         color: var(--text-primary);
@@ -1934,7 +2036,7 @@ select:-webkit-autofill {
         left: 0;
         width: 100%;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.7);
+        background: var(--menu-backdrop);
         backdrop-filter: blur(8px);
         z-index: 10000;
         animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2015,7 +2117,7 @@ select:-webkit-autofill {
     .nav-main,
     .nav-secondary,
     .nav-user {
-        padding: 0 1rem;
+        padding: 1rem;
     }
     
     .nav-link {
@@ -2075,6 +2177,48 @@ select:-webkit-autofill {
     list-style: none;
     margin: 0;
     padding: 0.5rem 0;
+}
+
+/* Theme toggle */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 44px;
+    height: 40px;
+    padding: 0 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--toggle-border);
+    background: var(--toggle-bg);
+    color: var(--text-primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.theme-toggle i {
+    color: var(--toggle-icon);
+    font-size: 0.95rem;
+}
+
+.theme-toggle:hover {
+    background: var(--toggle-hover);
+    transform: translateY(-1px);
+}
+
+.theme-toggle:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+    .theme-toggle {
+        width: 100%;
+        justify-content: center;
+        height: 44px;
+        border-radius: 12px;
+    }
 }
 
 /* Desktop dropdown motion */

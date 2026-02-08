@@ -180,13 +180,13 @@ The app reads configuration mainly from:
 Create a `.env` file in the **project root**:
 
 ```bash
-cp config_example.py config.py  # (Linux/macOS)
+cp config_example.1env config.py  # (Linux/macOS)
 ```
 
 On **Windows** (PowerShell), just copy the file using Explorer or:
 
 ```powershell
-Copy-Item config_example.py config.py
+Copy-Item config_example.1env config.py
 ```
 
 Then, create a `.env` file (using any editor) with at least:

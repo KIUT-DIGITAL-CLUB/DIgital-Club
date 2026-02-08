@@ -1,260 +1,260 @@
 {% extends "admin/admin_base.html" %}
 
-{% block title %}RSVP Management - Admin Dashboard{% endblock %}
+{% block admin_title %}RSVP Management{% endblock %}
+{% block page_title %}RSVP Management{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>RSVPs</span>{% endblock %}
+{% block extra_head %}
+<style>
+.modal-lg { max-width: 800px; }
+</style>
+{% endblock %}
 
 {% block admin_content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-header">
-                <h1 class="page-title">
-                    <i class="fas fa-calendar-check me-2"></i>
-                    RSVP Management
-                </h1>
-                <p class="page-subtitle">Manage event RSVPs and approvals</p>
-            </div>
+<div class="admin-page-header mb-4">
+    <div>
+        <h2 class="mb-1">RSVP Management</h2>
+        <p class="text-muted mb-0">Manage event RSVPs and approvals</p>
+    </div>
+</div>
 
-            <!-- Filters -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form method="GET" class="row g-3">
-                        <div class="col-md-4">
-                            <label for="event_id" class="form-label">Filter by Event</label>
-                            <select class="form-select" id="event_id" name="event_id">
-                                <option value="">All Events</option>
-                                {% for event in events %}
-                                <option value="{{ event.id }}" {% if current_event_id == event.id %}selected{% endif %}>
-                                    {{ event.title }} - {{ event.event_date.strftime('%B %d, %Y') }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="status" class="form-label">Filter by Status</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="">All Statuses</option>
-                                <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
-                                <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
-                                <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Rejected</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">
-                                <i class="fas fa-filter me-1"></i>
-                                Apply Filters
-                            </button>
-                            <a href="{{ url_for('admin.rsvps') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-1"></i>
-                                Clear
-                            </a>
-                        </div>
-                    </form>
+<!-- Filters -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="event_id" class="form-label">Filter by Event</label>
+                <select class="admin-form-control" id="event_id" name="event_id">
+                    <option value="">All Events</option>
+                    {% for event in events %}
+                    <option value="{{ event.id }}" {% if current_event_id == event.id %}selected{% endif %}>
+                        {{ event.title }} - {{ event.event_date.strftime('%B %d, %Y') }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="status" class="form-label">Filter by Status</label>
+                <select class="admin-form-control" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end gap-2">
+                <button type="submit" class="admin-btn admin-btn-primary">
+                    <i class="fas fa-filter"></i>
+                    Apply
+                </button>
+                <a href="{{ url_for('admin.rsvps') }}" class="admin-btn admin-btn-outline">
+                    <i class="fas fa-times"></i>
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="admin-card mb-4" id="bulk-actions" style="display: none;">
+    <div class="admin-card-body">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <span class="text-muted">
+                    <span id="selected-count">0</span> RSVP(s) selected
+                </span>
+            </div>
+            <div class="col-md-8 text-end">
+                <button class="admin-btn admin-btn-success me-2" id="bulk-approve-btn">
+                    <i class="fas fa-check me-1"></i>
+                    Approve
+                </button>
+                <button class="admin-btn admin-btn-danger me-2" id="bulk-reject-btn">
+                    <i class="fas fa-times me-1"></i>
+                    Reject
+                </button>
+                <button class="admin-btn admin-btn-warning me-2" id="bulk-disapprove-btn">
+                    <i class="fas fa-undo me-1"></i>
+                    Disapprove
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Process First N Actions -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <label for="process-limit" class="form-label">
+                    <i class="fas fa-list-ol me-1"></i>
+                    Process First N RSVPs
+                </label>
+                <div class="input-group">
+                    <input type="number" class="admin-form-control" id="process-limit" 
+                           value="100" min="1" max="1000" 
+                           placeholder="Enter number">
+                    <span class="input-group-text">RSVPs</span>
                 </div>
+                <small class="form-text text-muted">
+                    Process the first N RSVPs from the current filtered list without selecting them individually.
+                </small>
             </div>
-
-            <!-- Bulk Actions -->
-            <div class="card mb-4" id="bulk-actions" style="display: none;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-4">
-                            <span class="text-muted">
-                                <span id="selected-count">0</span> RSVP(s) selected
-                            </span>
-                        </div>
-                        <div class="col-md-8 text-end">
-                            <button class="btn btn-success me-2" id="bulk-approve-btn">
-                                <i class="fas fa-check me-1"></i>
-                                Approve Selected
-                            </button>
-                            <button class="btn btn-danger me-2" id="bulk-reject-btn">
-                                <i class="fas fa-times me-1"></i>
-                                Reject Selected
-                            </button>
-                            <button class="btn btn-warning me-2" id="bulk-disapprove-btn">
-                                <i class="fas fa-undo me-1"></i>
-                                Disapprove Selected
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Process First N Actions -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <label for="process-limit" class="form-label">
-                                <i class="fas fa-list-ol me-1"></i>
-                                Process First N RSVPs
-                            </label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="process-limit" 
-                                       value="100" min="1" max="1000" 
-                                       placeholder="Enter number">
-                                <span class="input-group-text">RSVPs</span>
-                            </div>
-                            <small class="form-text text-muted">
-                                Process the first N RSVPs from the current filtered list without selecting them individually.
-                            </small>
-                        </div>
-                        <div class="col-md-6 text-end d-flex align-items-end">
-                            <div class="btn-group">
-                                <button class="btn btn-success" id="process-approve-btn">
-                                    <i class="fas fa-check me-1"></i>
-                                    Approve First N
-                                </button>
-                                <button class="btn btn-danger" id="process-reject-btn">
-                                    <i class="fas fa-times me-1"></i>
-                                    Reject First N
-                                </button>
-                                <button class="btn btn-warning" id="process-disapprove-btn">
-                                    <i class="fas fa-undo me-1"></i>
-                                    Disapprove First N
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RSVPs Table -->
-            <div class="card">
-                <div class="card-body">
-                    {% if rsvps %}
-                    <div class="table-responsive">
-                        <table class="table table-hover" style="background-color: #1a1a2e !important; color: #ffffff !important;">
-                            <thead style="background-color: #16213e !important;">
-                                <tr>
-                                    <th>
-                                        <input type="checkbox" id="select-all" class="form-check-input">
-                                    </th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Event</th>
-                                    <th>Status</th>
-                                    <th>Submitted</th>
-                                    <th>Acceptance Code</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for rsvp in rsvps %}
-                                <tr>
-                                    <td>
-                                        <input type="checkbox" class="form-check-input rsvp-checkbox" value="{{ rsvp.id }}" 
-                                               data-status="{{ rsvp.status }}">
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
-                                                {{ rsvp.full_name[0].upper() }}
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold">{{ rsvp.full_name }}</div>
-                                                {% if rsvp.phone %}
-                                                <small class="text-muted">{{ rsvp.phone }}</small>
-                                                {% endif %}
-                                                {% if not rsvp.member_id or rsvp.member_id == 0 %}
-                                                <small class="badge bg-secondary ms-1">Non-Member</small>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>{{ rsvp.email }}</td>
-                                    <td>
-                                        <div>
-                                            <div class="fw-bold">{{ rsvp.event.title }}</div>
-                                            <small class="text-muted">
-                                                {{ rsvp.event.event_date.strftime('%B %d, %Y at %I:%M %p') }}
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {% if rsvp.status == 'pending' %}
-                                            <span class="badge bg-warning">Pending</span>
-                                        {% elif rsvp.status == 'approved' %}
-                                            <span class="badge bg-success">Approved</span>
-                                        {% elif rsvp.status == 'rejected' %}
-                                            <span class="badge bg-danger">Rejected</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <div>{{ rsvp.submitted_at.strftime('%B %d, %Y') }}</div>
-                                            <small class="text-muted">{{ rsvp.submitted_at.strftime('%I:%M %p') }}</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {% if rsvp.acceptance_code %}
-                                            <code class="bg-light px-2 py-1 rounded">{{ rsvp.acceptance_code }}</code>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            {% if rsvp.status == 'pending' %}
-                                                <a href="{{ url_for('admin.approve_rsvp', rsvp_id=rsvp.id) }}" 
-                                                   class="btn btn-sm btn-success" 
-                                                   onclick="return confirm('Approve this RSVP?')">
-                                                    <i class="fas fa-check"></i>
-                                                </a>
-                                                <a href="{{ url_for('admin.reject_rsvp', rsvp_id=rsvp.id) }}" 
-                                                   class="btn btn-sm btn-danger" 
-                                                   onclick="return confirm('Reject this RSVP?')">
-                                                    <i class="fas fa-times"></i>
-                                                </a>
-                                            {% elif rsvp.status in ['approved', 'rejected'] %}
-                                                <a href="{{ url_for('admin.disapprove_rsvp', rsvp_id=rsvp.id) }}" 
-                                                   class="btn btn-sm btn-warning" 
-                                                   onclick="return confirm('Reset this RSVP to pending status?')"
-                                                   title="Reset to Pending">
-                                                    <i class="fas fa-undo"></i>
-                                                </a>
-                                            {% endif %}
-                                            <button type="button" class="btn btn-sm btn-info" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#rsvpModal{{ rsvp.id }}">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                        <h4 class="text-muted">No RSVPs Found</h4>
-                        <p class="text-muted">No RSVPs match your current filters.</p>
-                    </div>
-                    {% endif %}
+            <div class="col-md-6 text-end d-flex align-items-end">
+                <div class="btn-group">
+                    <button class="admin-btn admin-btn-success" id="process-approve-btn">
+                        <i class="fas fa-check me-1"></i>
+                        Approve First N
+                    </button>
+                    <button class="admin-btn admin-btn-danger" id="process-reject-btn">
+                        <i class="fas fa-times me-1"></i>
+                        Reject First N
+                    </button>
+                    <button class="admin-btn admin-btn-warning" id="process-disapprove-btn">
+                        <i class="fas fa-undo me-1"></i>
+                        Disapprove First N
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- RSVPs Table -->
+<div class="admin-card">
+    <div class="admin-card-body">
+        {% if rsvps %}
+        <div class="admin-table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="select-all" class="form-check-input">
+                        </th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Event</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Code</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rsvp in rsvps %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input rsvp-checkbox" value="{{ rsvp.id }}" 
+                                   data-status="{{ rsvp.status }}">
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="admin-avatar me-2">
+                                    {{ rsvp.full_name[0].upper() }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ rsvp.full_name }}</div>
+                                    {% if rsvp.phone %}
+                                    <small class="text-muted">{{ rsvp.phone }}</small>
+                                    {% endif %}
+                                    {% if not rsvp.member_id or rsvp.member_id == 0 %}
+                                    <small class="admin-badge admin-badge-secondary ms-1">Non-Member</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ rsvp.email }}</td>
+                        <td>
+                            <div>
+                                <div class="fw-bold">{{ rsvp.event.title }}</div>
+                                <small class="text-muted">
+                                    {{ rsvp.event.event_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if rsvp.status == 'pending' %}
+                                <span class="admin-badge admin-badge-warning">Pending</span>
+                            {% elif rsvp.status == 'approved' %}
+                                <span class="admin-badge admin-badge-success">Approved</span>
+                            {% elif rsvp.status == 'rejected' %}
+                                <span class="admin-badge admin-badge-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>
+                                <div>{{ rsvp.submitted_at.strftime('%B %d, %Y') }}</div>
+                                <small class="text-muted">{{ rsvp.submitted_at.strftime('%I:%M %p') }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if rsvp.acceptance_code %}
+                                <code class="admin-code">{{ rsvp.acceptance_code }}</code>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                {% if rsvp.status == 'pending' %}
+                                    <a href="{{ url_for('admin.approve_rsvp', rsvp_id=rsvp.id) }}" 
+                                       class="admin-btn admin-btn-sm admin-btn-success" 
+                                       onclick="return confirm('Approve this RSVP?')">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin.reject_rsvp', rsvp_id=rsvp.id) }}" 
+                                       class="admin-btn admin-btn-sm admin-btn-danger" 
+                                       onclick="return confirm('Reject this RSVP?')">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                {% elif rsvp.status in ['approved', 'rejected'] %}
+                                    <a href="{{ url_for('admin.disapprove_rsvp', rsvp_id=rsvp.id) }}" 
+                                       class="admin-btn admin-btn-sm admin-btn-warning" 
+                                       onclick="return confirm('Reset this RSVP to pending status?')"
+                                       title="Reset to Pending">
+                                        <i class="fas fa-undo"></i>
+                                    </a>
+                                {% endif %}
+                                <button type="button" class="admin-btn admin-btn-sm admin-btn-outline" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#rsvpModal{{ rsvp.id }}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="admin-empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h5>No RSVPs Found</h5>
+            <p>No RSVPs match your current filters.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <!-- RSVP Detail Modals -->
 {% for rsvp in rsvps %}
-<div class="modal fade" id="rsvpModal{{ rsvp.id }}" tabindex="-1">
+<div class="modal fade admin-modal" id="rsvpModal{{ rsvp.id }}" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="background-color: #1a1a2e !important; color: #ffffff !important; border-color: rgba(0, 255, 255, 0.2) !important;">
-            <div class="modal-header" style="background-color: #16213e !important; border-color: rgba(0, 255, 255, 0.2) !important;">
-                <h5 class="modal-title" style="color: #ffffff !important;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
                     <i class="fas fa-user me-2"></i>
                     RSVP Details - {{ rsvp.full_name }}
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" style="background-color: #1a1a2e !important; color: #ffffff !important;">
+            <div class="modal-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <h6 class="text-primary" style="color: #00ffff !important;">Personal Information</h6>
-                        <table class="table table-sm" style="background-color: #1a1a2e !important; color: #ffffff !important;">
+                        <h6 class="text-primary">Personal Information</h6>
+                        <table class="table table-sm">
                             <tr>
                                 <td><strong>Name:</strong></td>
                                 <td>{{ rsvp.full_name }}</td>
@@ -284,8 +284,8 @@
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <h6 class="text-primary" style="color: #00ffff !important;">Event Information</h6>
-                        <table class="table table-sm" style="background-color: #1a1a2e !important; color: #ffffff !important;">
+                        <h6 class="text-primary">Event Information</h6>
+                        <table class="table table-sm">
                             <tr>
                                 <td><strong>Event:</strong></td>
                                 <td>{{ rsvp.event.title }}</td>
@@ -304,18 +304,18 @@
                                 <td><strong>Status:</strong></td>
                                 <td>
                                     {% if rsvp.status == 'pending' %}
-                                        <span class="badge bg-warning">Pending</span>
+                                        <span class="admin-badge admin-badge-warning">Pending</span>
                                     {% elif rsvp.status == 'approved' %}
-                                        <span class="badge bg-success">Approved</span>
+                                        <span class="admin-badge admin-badge-success">Approved</span>
                                     {% elif rsvp.status == 'rejected' %}
-                                        <span class="badge bg-danger">Rejected</span>
+                                        <span class="admin-badge admin-badge-danger">Rejected</span>
                                     {% endif %}
                                 </td>
                             </tr>
                             {% if rsvp.acceptance_code %}
                             <tr>
                                 <td><strong>Acceptance Code:</strong></td>
-                                <td><code class="px-2 py-1 rounded" style="background-color: #16213e !important; color: #00ffff !important; border: 1px solid rgba(0, 255, 255, 0.2) !important;">{{ rsvp.acceptance_code }}</code></td>
+                                <td><code class="admin-code">{{ rsvp.acceptance_code }}</code></td>
                             </tr>
                             {% endif %}
                         </table>
@@ -324,7 +324,7 @@
                 
                 {% if rsvp.dietary_requirements or rsvp.emergency_contact or rsvp.additional_notes %}
                 <div class="mt-4">
-                    <h6 class="text-primary" style="color: #00ffff !important;">Additional Information</h6>
+                    <h6 class="text-primary">Additional Information</h6>
                     <div class="row">
                         {% if rsvp.dietary_requirements %}
                         <div class="col-md-6 mb-3">
@@ -349,29 +349,29 @@
                 </div>
                 {% endif %}
             </div>
-            <div class="modal-footer" style="background-color: #16213e !important; border-color: rgba(0, 255, 255, 0.2) !important;">
+            <div class="modal-footer">
                 {% if rsvp.status == 'pending' %}
                     <a href="{{ url_for('admin.approve_rsvp', rsvp_id=rsvp.id) }}" 
-                       class="btn btn-success" 
+                       class="admin-btn admin-btn-success" 
                        onclick="return confirm('Approve this RSVP?')">
                         <i class="fas fa-check me-1"></i>
                         Approve
                     </a>
                     <a href="{{ url_for('admin.reject_rsvp', rsvp_id=rsvp.id) }}" 
-                       class="btn btn-danger" 
+                       class="admin-btn admin-btn-danger" 
                        onclick="return confirm('Reject this RSVP?')">
                         <i class="fas fa-times me-1"></i>
                         Reject
                     </a>
                 {% elif rsvp.status in ['approved', 'rejected'] %}
                     <a href="{{ url_for('admin.disapprove_rsvp', rsvp_id=rsvp.id) }}" 
-                       class="btn btn-warning" 
+                       class="admin-btn admin-btn-warning" 
                        onclick="return confirm('Reset this RSVP to pending status?')">
                         <i class="fas fa-undo me-1"></i>
                         Disapprove
                     </a>
                 {% endif %}
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="admin-btn admin-btn-outline" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -641,92 +641,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<style>
-.avatar-sm {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-}
-
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: #ffffff !important;
-    background-color: #16213e !important;
-    border-color: rgba(0, 255, 255, 0.2) !important;
-}
-
-.table td {
-    vertical-align: middle;
-    background-color: #1a1a2e !important;
-    color: #cccccc !important;
-    border-color: rgba(0, 255, 255, 0.2) !important;
-}
-
-.btn-group .btn {
-    margin-right: 2px;
-}
-
-.btn-group .btn:last-child {
-    margin-right: 0;
-}
-
-.modal-lg {
-    max-width: 800px;
-}
-
-.badge {
-    font-size: 0.75em;
-}
-
-code {
-    font-size: 0.9em;
-}
-
-/* Dark theme modal styling */
-.modal-content {
-    background-color: #1a1a2e !important;
-    color: #ffffff !important;
-    border-color: rgba(0, 255, 255, 0.2) !important;
-}
-
-.modal-header {
-    background-color: #16213e !important;
-    border-color: rgba(0, 255, 255, 0.2) !important;
-}
-
-.modal-body {
-    background-color: #1a1a2e !important;
-    color: #ffffff !important;
-}
-
-.modal-footer {
-    background-color: #16213e !important;
-    border-color: rgba(0, 255, 255, 0.2) !important;
-}
-
-/* Table styling for dark theme */
-.table {
-    background-color: #1a1a2e !important;
-    color: #ffffff !important;
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(0, 255, 255, 0.1) !important;
-}
-
-/* Form styling */
-.form-control, .form-select {
-    background-color: #16213e !important;
-    color: #ffffff !important;
-    border-color: rgba(0, 255, 255, 0.2) !important;
-}
-
-.form-control:focus, .form-select:focus {
-    background-color: #0f1419 !important;
-    color: #ffffff !important;
-    border-color: #00ffff !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 255, 255, 0.25) !important;
-}
-</style>
 {% endblock %}

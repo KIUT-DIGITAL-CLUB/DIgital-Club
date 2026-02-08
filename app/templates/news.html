@@ -1,122 +1,824 @@
 {% extends "base.html" %}
 
-{% block title %}News & Updates - Digital Club{% endblock %}
+{% block title %}News & Updates - Digital Club - KIUT{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Hero Section */
+    .news-hero {
+        min-height: 40vh;
+        padding: 8rem 0 5rem;
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .news-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%);
+    }
+    
+    .news-hero h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+    }
+    
+    .news-hero p {
+        font-size: 1.3rem;
+        color: var(--text-secondary);
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+    
+    /* Content Section */
+    .news-section {
+        padding: 6rem 0;
+        position: relative;
+    }
+    
+    .section-title {
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .section-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 4rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Category Filter */
+    .filter-section {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 3rem;
+    }
+    
+    .filter-tabs {
+        display: inline-flex;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-xl);
+        padding: 0.5rem;
+        gap: 0.5rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .filter-tab {
+        padding: 0.8rem 1.5rem;
+        border-radius: var(--border-radius-lg);
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all var(--transition-normal);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+    
+    .filter-tab:hover {
+        color: var(--primary-color);
+        background: rgba(var(--particle-color), 0.08);
+    }
+    
+    .filter-tab.active {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        box-shadow: 0 4px 15px var(--shadow-color);
+    }
+    
+    .filter-tab i {
+        font-size: 1rem;
+    }
+    
+    /* News Grid */
+    .news-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 4rem;
+    }
+    
+    .news-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2rem;
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .news-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+    }
+    
+    .news-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-color);
+        box-shadow: 0 20px 40px var(--shadow-color);
+    }
+    
+    .news-card:hover::before {
+        opacity: 1;
+    }
+    
+    .news-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .news-category {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .news-date {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .news-title {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 1.2rem;
+        line-height: 1.4;
+        font-weight: 600;
+        flex-grow: 0;
+    }
+    
+    .news-title a {
+        color: inherit;
+        text-decoration: none;
+        transition: color var(--transition-normal);
+    }
+    
+    .news-title a:hover {
+        color: var(--primary-color);
+    }
+    
+    .news-excerpt {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 2rem;
+        flex-grow: 1;
+        font-size: 1.05rem;
+    }
+    
+    .news-footer {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .news-author {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .author-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--bg-primary);
+        font-size: 1rem;
+    }
+    
+    .author-info h4 {
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        margin-bottom: 0.2rem;
+    }
+    
+    .author-info span {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    
+    /* Featured News */
+    .featured-news {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        background: linear-gradient(135deg, rgba(var(--particle-color), 0.12) 0%, rgba(var(--particle-color), 0.04) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 3rem;
+        margin-bottom: 3rem;
+        align-items: center;
+    }
+    
+    .featured-content {
+        padding-right: 2rem;
+    }
+    
+    .featured-badge {
+        display: inline-block;
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .featured-title {
+        font-size: 2rem;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        line-height: 1.3;
+        font-weight: 700;
+    }
+    
+    .featured-excerpt {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+    
+    .featured-image {
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        position: relative;
+        height: 300px;
+    }
+    
+    .featured-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform var(--transition-slow);
+    }
+    
+    .featured-image:hover img {
+        transform: scale(1.05);
+    }
+    
+    /* Category Colors */
+    .category-hackathon {
+        background: linear-gradient(45deg, var(--primary-color), #ff00ff);
+    }
+    
+    .category-workshop {
+        background: linear-gradient(45deg, var(--primary-color), #00ff00);
+    }
+    
+    .category-achievement {
+        background: linear-gradient(45deg, var(--primary-color), #ffff00);
+    }
+    
+    .category-announcement {
+        background: linear-gradient(45deg, var(--primary-color), #00aaff);
+    }
+    
+    /* Pagination */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 3rem;
+    }
+    
+    .pagination {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .pagination a,
+    .pagination span {
+        padding: 0.7rem 1.2rem;
+        border-radius: var(--border-radius-sm);
+        text-decoration: none;
+        transition: all var(--transition-normal);
+        min-width: 44px;
+        min-height: 44px;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .pagination a {
+        background: var(--surface-2);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    .pagination a:hover {
+        background: var(--primary-color);
+        color: var(--bg-primary);
+        transform: translateY(-2px);
+    }
+    
+    .pagination span.active {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        border: none;
+    }
+    
+    .pagination .disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-state h3 {
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Subscribe Section */
+    .subscribe-section {
+        background: linear-gradient(135deg, rgba(var(--particle-color), 0.12) 0%, rgba(var(--particle-color), 0.04) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 3rem;
+        margin-top: 4rem;
+        text-align: center;
+    }
+    
+    .subscribe-title {
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+    
+    .subscribe-text {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    .subscribe-form {
+        display: flex;
+        gap: 1rem;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .subscribe-form input {
+        flex: 1;
+        padding: 0.875rem 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-xl);
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all var(--transition-normal);
+    }
+    
+    .subscribe-form input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 20px var(--shadow-color);
+    }
+    
+    .subscribe-form button {
+        padding: 0.875rem 2rem;
+        border-radius: var(--border-radius-xl);
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        white-space: nowrap;
+    }
+    
+    .subscribe-form button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px var(--shadow-color);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .news-hero {
+            padding: 6rem 0 4rem;
+            min-height: 30vh;
+        }
+        
+        .news-section {
+            padding: 4rem 0;
+        }
+        
+        .filter-tabs {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .filter-tab {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+        }
+        
+        .news-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .news-card {
+            padding: 1.5rem;
+        }
+        
+        .featured-news {
+            grid-template-columns: 1fr;
+            padding: 1.5rem;
+            gap: 2rem;
+        }
+        
+        .featured-content {
+            padding-right: 0;
+        }
+        
+        .featured-title {
+            font-size: 1.5rem;
+        }
+        
+        .featured-image {
+            height: 200px;
+            order: -1;
+        }
+        
+        .subscribe-section {
+            padding: 2rem;
+        }
+        
+        .subscribe-form {
+            flex-direction: column;
+        }
+        
+        .subscribe-form input,
+        .subscribe-form button {
+            width: 100%;
+        }
+        
+        .pagination a,
+        .pagination span {
+            padding: 0.6rem 1rem;
+            min-width: 40px;
+            min-height: 40px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<section style="padding: 5rem 0;">
+<!-- Hero Section -->
+<section class="news-hero">
     <div class="container">
-        <h1 style="text-align: center; font-size: 3rem; margin-bottom: 3rem; color: var(--primary-color);" data-aos="fade-up">
-            News & Updates
-        </h1>
-        
+        <h1 data-aos="fade-up">News & Updates</h1>
+        <p data-aos="fade-up" data-aos-delay="200">
+            Stay informed with the latest announcements, events, and achievements from Digital Club
+        </p>
+    </div>
+</section>
+
+<!-- News Section -->
+<section class="news-section">
+    <div class="container">
         <!-- Category Filter -->
-        <div style="text-align: center; margin-bottom: 3rem;" data-aos="fade-up">
-            <div style="display: inline-flex; gap: 1rem; background: rgba(255, 255, 255, 0.05); padding: 0.5rem; border-radius: 25px; border: 1px solid var(--border-color);">
+        <div class="filter-section" data-aos="fade-up">
+            <div class="filter-tabs">
                 <a href="{{ url_for('main.news') }}" 
-                   class="{% if not request.args.get('category') %}active{% endif %}" 
-                   style="padding: 0.8rem 1.5rem; border-radius: 20px; text-decoration: none; color: var(--text-secondary); transition: all 0.3s ease;">
-                    All
+                   class="filter-tab {% if not request.args.get('category') %}active{% endif %}">
+                    <i class="fas fa-globe"></i>
+                    <span>All News</span>
                 </a>
                 <a href="{{ url_for('main.news', category='hackathon') }}" 
-                   class="{% if request.args.get('category') == 'hackathon' %}active{% endif %}" 
-                   style="padding: 0.8rem 1.5rem; border-radius: 20px; text-decoration: none; color: var(--text-secondary); transition: all 0.3s ease;">
-                    Hackathons
+                   class="filter-tab {% if request.args.get('category') == 'hackathon' %}active{% endif %}">
+                    <i class="fas fa-code"></i>
+                    <span>Hackathons</span>
                 </a>
                 <a href="{{ url_for('main.news', category='workshop') }}" 
-                   class="{% if request.args.get('category') == 'workshop' %}active{% endif %}" 
-                   style="padding: 0.8rem 1.5rem; border-radius: 20px; text-decoration: none; color: var(--text-secondary); transition: all 0.3s ease;">
-                    Workshops
+                   class="filter-tab {% if request.args.get('category') == 'workshop' %}active{% endif %}">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Workshops</span>
                 </a>
                 <a href="{{ url_for('main.news', category='achievement') }}" 
-                   class="{% if request.args.get('category') == 'achievement' %}active{% endif %}" 
-                   style="padding: 0.8rem 1.5rem; border-radius: 20px; text-decoration: none; color: var(--text-secondary); transition: all 0.3s ease;">
-                    Achievements
+                   class="filter-tab {% if request.args.get('category') == 'achievement' %}active{% endif %}">
+                    <i class="fas fa-trophy"></i>
+                    <span>Achievements</span>
+                </a>
+                <a href="{{ url_for('main.news', category='announcement') }}" 
+                   class="filter-tab {% if request.args.get('category') == 'announcement' %}active{% endif %}">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Announcements</span>
                 </a>
             </div>
         </div>
-        
+
         {% if news_items and news_items.items %}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-            {% for news in news_items.items %}
-            <div class="card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-                <div style="margin-bottom: 1rem;">
-                    <span style="background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); color: var(--bg-primary); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
-                        {{ news.category.title() }}
+            <!-- Featured News (First item if it exists) -->
+            {% if news_items.items[0].featured %}
+            <div class="featured-news" data-aos="fade-up">
+                <div class="featured-content">
+                    <span class="featured-badge category-{{ news_items.items[0].category }}">
+                        Featured • {{ news_items.items[0].category.title() }}
                     </span>
-                    <span style="color: var(--text-muted); font-size: 0.9rem; margin-left: 1rem;">
-                        {{ news.published_date.strftime('%B %d, %Y') }}
-                    </span>
-                </div>
-                
-                <h3 style="color: var(--text-primary); margin-bottom: 1rem; line-height: 1.4;">
-                    <a href="{{ url_for('main.news_detail', news_id=news.id) }}" 
-                       style="color: inherit; text-decoration: none; transition: color 0.3s ease;">
-                        {{ news.title }}
+                    <h2 class="featured-title">
+                        <a href="{{ url_for('main.news_detail', news_id=news_items.items[0].id) }}">
+                            {{ news_items.items[0].title }}
+                        </a>
+                    </h2>
+                    <p class="featured-excerpt">
+                        {{ news_items.items[0].content[:200] }}{% if news_items.items[0].content|length > 200 %}...{% endif %}
+                    </p>
+                    <a href="{{ url_for('main.news_detail', news_id=news_items.items[0].id) }}" 
+                       class="btn-primary">
+                        Read Full Story <i class="fas fa-arrow-right"></i>
                     </a>
-                </h3>
-                
-                <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
-                    {{ news.content[:200] }}{% if news.content|length > 200 %}...{% endif %}
-                </p>
-                
-                <a href="{{ url_for('main.news_detail', news_id=news.id) }}" 
-                   class="btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-                    Read More <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <!-- Pagination -->
-        {% if news_items.pages > 1 %}
-        <div style="display: flex; justify-content: center; margin-top: 3rem;">
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                {% if news_items.has_prev %}
-                <a href="{{ url_for('main.news', page=news_items.prev_num, category=request.args.get('category')) }}" 
-                   class="btn-secondary">
-                    <i class="fas fa-chevron-left"></i>
-                </a>
-                {% endif %}
-                
-                {% for page_num in news_items.iter_pages() %}
-                    {% if page_num %}
-                        {% if page_num != news_items.page %}
-                        <a href="{{ url_for('main.news', page=page_num, category=request.args.get('category')) }}" 
-                           class="btn-secondary">{{ page_num }}</a>
-                        {% else %}
-                        <span class="btn-primary">{{ page_num }}</span>
-                        {% endif %}
+                </div>
+                <div class="featured-image">
+                    {% if news_items.items[0].image %}
+                    <img src="{{ url_for('static', filename='uploads/news/' + news_items.items[0].image) }}" 
+                         alt="{{ news_items.items[0].title }}">
                     {% else %}
-                    <span style="color: var(--text-muted);">...</span>
+                    <img src="{{ url_for('static', filename='images/news-placeholder.jpg') }}" 
+                         alt="News Image">
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- News Grid -->
+            <div class="news-grid" data-aos="fade-up" data-aos-delay="200">
+                {% for news in news_items.items %}
+                    {% if not (loop.first and news.featured) %}
+                    <div class="news-card">
+                        <div class="news-header">
+                            <span class="news-category category-{{ news.category }}">
+                                {{ news.category.title() }}
+                            </span>
+                            <span class="news-date">
+                                <i class="fas fa-calendar"></i>
+                                {{ news.published_date.strftime('%B %d, %Y') }}
+                            </span>
+                        </div>
+                        
+                        <h3 class="news-title">
+                            <a href="{{ url_for('main.news_detail', news_id=news.id) }}">
+                                {{ news.title }}
+                            </a>
+                        </h3>
+                        
+                        <p class="news-excerpt">
+                            {{ news.content[:150] }}{% if news.content|length > 150 %}...{% endif %}
+                        </p>
+                        
+                        <div class="news-footer">
+                            <div class="news-author">
+                                <div class="author-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="author-info">
+                                    <h4>Digital Club</h4>
+                                    <span>Admin Team</span>
+                                </div>
+                            </div>
+                            
+                            <a href="{{ url_for('main.news_detail', news_id=news.id) }}" 
+                               class="btn-secondary">
+                                Read More <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
                     {% endif %}
                 {% endfor %}
-                
-                {% if news_items.has_next %}
-                <a href="{{ url_for('main.news', page=news_items.next_num, category=request.args.get('category')) }}" 
-                   class="btn-secondary">
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-                {% endif %}
             </div>
-        </div>
-        {% endif %}
-        
+
+            <!-- Pagination -->
+            {% if news_items.pages > 1 %}
+            <div class="pagination-wrapper" data-aos="fade-up">
+                <div class="pagination">
+                    {% if news_items.has_prev %}
+                    <a href="{{ url_for('main.news', page=news_items.prev_num, category=request.args.get('category')) }}" 
+                       class="btn-secondary" aria-label="Previous page">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% else %}
+                    <span class="disabled btn-secondary">
+                        <i class="fas fa-chevron-left"></i>
+                    </span>
+                    {% endif %}
+                    
+                    {% for page_num in news_items.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num != news_items.page %}
+                            <a href="{{ url_for('main.news', page=page_num, category=request.args.get('category')) }}">
+                                {{ page_num }}
+                            </a>
+                            {% else %}
+                            <span class="active">{{ page_num }}</span>
+                            {% endif %}
+                        {% else %}
+                        <span style="color: var(--text-muted); padding: 0.7rem 0.5rem;">...</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if news_items.has_next %}
+                    <a href="{{ url_for('main.news', page=news_items.next_num, category=request.args.get('category')) }}" 
+                       class="btn-secondary" aria-label="Next page">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% else %}
+                    <span class="disabled btn-secondary">
+                        <i class="fas fa-chevron-right"></i>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
         {% else %}
-        <div style="text-align: center; padding: 3rem;">
-            <i class="fas fa-newspaper" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
-            <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">No News Found</h3>
-            <p style="color: var(--text-muted);">Check back later for updates and announcements.</p>
+        <div class="empty-state" data-aos="fade-up">
+            <i class="fas fa-newspaper"></i>
+            <h3>No News Found</h3>
+            <p>Check back later for updates, announcements, and exciting news from Digital Club.</p>
+            <a href="{{ url_for('main.events') }}" class="btn-primary">
+                <i class="fas fa-calendar"></i> View Upcoming Events
+            </a>
         </div>
         {% endif %}
+
+        <!-- Subscribe Section -->
+        <div class="subscribe-section" data-aos="fade-up" data-aos-delay="400">
+            <h3 class="subscribe-title">Stay Updated</h3>
+            <p class="subscribe-text">
+                Subscribe to our newsletter and be the first to know about upcoming events, 
+                workshops, hackathons, and club announcements.
+            </p>
+            <form class="subscribe-form" id="newsletter-form">
+                <input type="email" placeholder="Enter your email address" required>
+                <button type="submit">
+                    <i class="fas fa-paper-plane"></i> Subscribe
+                </button>
+            </form>
+        </div>
     </div>
 </section>
 {% endblock %}
 
-{% block extra_head %}
-<style>
-    .nav-link.active {
-        background: var(--primary-color) !important;
-        color: var(--bg-primary) !important;
+{% block extra_scripts %}
+<script>
+    // Initialize AOS animations
+    AOS.init({
+        duration: 1000,
+        once: true,
+        offset: 100
+    });
+
+    // Newsletter form handling
+    const newsletterForm = document.getElementById('newsletter-form');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const emailInput = this.querySelector('input[type="email"]');
+            const email = emailInput.value;
+            
+            // Simple email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+            
+            // Here you would typically send the email to your backend
+            // For now, we'll show a success message
+            emailInput.value = '';
+            alert('Thank you for subscribing to our newsletter!');
+            
+            // In a real implementation, you would use fetch API to send to backend
+            /*
+            try {
+                const response = await fetch('{{ url_for("main.newsletter_subscribe") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Successfully subscribed to newsletter!');
+                    emailInput.value = '';
+                } else {
+                    alert(result.message || 'Subscription failed. Please try again.');
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+            }
+            */
+        });
     }
-</style>
+
+    // Add smooth scroll to top when changing pages
+    document.querySelectorAll('.pagination a').forEach(link => {
+        link.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+
+    // Add animation to news cards on hover
+    document.querySelectorAll('.news-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-8px)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+        });
+    });
+</script>
 {% endblock %}

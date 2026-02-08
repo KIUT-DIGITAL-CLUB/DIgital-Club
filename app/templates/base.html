@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Digital Club - KIUT{% endblock %}</title>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('theme');
+                var theme = (stored === 'light' || stored === 'dark') ? stored : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                // If storage is blocked, fall back to system preference
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -92,6 +104,10 @@
                 </div>
 
                 <div class="nav-user" role="menubar">
+                    <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Toggle color theme">
+                        <i class="fas fa-sun" aria-hidden="true"></i>
+                        <span class="theme-label">Light</span>
+                    </button>
                     {% if current_user.is_authenticated %}
                         <div class="nav-item nav-dropdown user-dropdown">
                             <button class="dropdown-toggle user-action" type="button" aria-haspopup="true" aria-expanded="false">

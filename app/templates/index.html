@@ -8,7 +8,7 @@
         /* Use flexible height so the hero fits better on smaller / zoomed screens */
         min-height: calc(100vh - 70px);
         padding: 5rem 1.5rem 4rem;
-        background: radial-gradient(ellipse at top, #1a1a2e 0%, #0f0f1e 50%, #050510 100%);
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -25,9 +25,9 @@
         width: 100%;
         height: 100%;
         background: 
-            radial-gradient(circle at 20% 50%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 40% 20%, rgba(255, 0, 255, 0.08) 0%, transparent 50%);
+            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 40% 20%, rgba(var(--particle-color), 0.06) 0%, transparent 50%);
         animation: pulse-bg 8s ease-in-out infinite;
     }
     
@@ -50,7 +50,7 @@
     .orbit-icon {
         position: absolute;
         font-size: 2rem;
-        color: rgba(0, 255, 255, 0.4);
+        color: rgba(var(--particle-color), 0.45);
         animation: orbit 20s linear infinite;
         filter: drop-shadow(0 0 10px currentColor);
     }
@@ -78,8 +78,8 @@
         width: 100%;
         height: 100%;
         background-image: 
-            linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+            linear-gradient(rgba(var(--particle-color), 0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(var(--particle-color), 0.06) 1px, transparent 1px);
         background-size: 50px 50px;
         animation: grid-flow 20s linear infinite;
         z-index: 0;
@@ -106,7 +106,7 @@
         top: -100%;
         font-family: 'Fira Code', monospace;
         font-size: 14px;
-        color: rgba(0, 255, 255, 0.5);
+        color: rgba(var(--particle-color), 0.55);
         white-space: nowrap;
         animation: rain 15s linear infinite;
     }
@@ -125,7 +125,7 @@
         margin: 0 auto 2rem;
         position: relative;
         animation: float-logo 4s ease-in-out infinite;
-        filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.5));
+        filter: drop-shadow(0 0 30px rgba(var(--particle-color), 0.45));
     }
     
     .hero-logo img {
@@ -141,8 +141,8 @@
     }
     
     @keyframes rotate-glow {
-        0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.6)) brightness(1); }
-        50% { filter: drop-shadow(0 0 40px rgba(138, 43, 226, 0.8)) brightness(1.2); }
+        0%, 100% { filter: drop-shadow(0 0 20px rgba(var(--particle-color), 0.6)) brightness(1); }
+        50% { filter: drop-shadow(0 0 40px rgba(var(--particle-color), 0.4)) brightness(1.2); }
     }
     
     /* Content styling */
@@ -158,7 +158,7 @@
         font-size: 5rem;
         font-weight: 800;
         margin-bottom: 1rem;
-        background: linear-gradient(135deg, #00ffff 0%, #ff00ff 50%, #00ffff 100%);
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 50%, var(--primary-color) 100%);
         background-size: 300% 300%;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -166,7 +166,7 @@
         animation: gradient-flow 4s ease infinite;
         text-transform: uppercase;
         letter-spacing: 5px;
-        filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.3));
+        filter: drop-shadow(0 0 30px rgba(var(--particle-color), 0.3));
     }
     
     @keyframes gradient-flow {
@@ -177,7 +177,7 @@
     
     .hero-tagline {
         font-size: 1.3rem;
-        color: rgba(0, 255, 255, 0.9);
+        color: rgba(var(--particle-color), 0.95);
         margin-bottom: 0.5rem;
         font-weight: 600;
         text-transform: uppercase;
@@ -187,7 +187,7 @@
     
     .hero-subtitle {
         font-size: 1.4rem;
-        color: #cccccc;
+        color: var(--text-secondary);
         margin-bottom: 3rem;
         font-family: 'Inter', sans-serif;
         line-height: 1.6;
@@ -215,13 +215,13 @@
     .hero-stat-number {
         font-size: 2rem;
         font-weight: 700;
-        color: #00ffff;
+        color: var(--primary-color);
         font-family: 'Fira Code', monospace;
     }
     
     .hero-stat-label {
         font-size: 0.9rem;
-        color: #999;
+        color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 1px;
     }
@@ -236,18 +236,18 @@
     }
     
     .btn-primary {
-        background: linear-gradient(135deg, #00ffff, #8a2be2);
+        background: var(--gradient-primary);
         border: none;
         padding: 1.2rem 2.5rem;
         border-radius: 50px;
-        color: #000;
+        color: var(--bg-primary);
         font-weight: 700;
         font-size: 1.1rem;
         text-decoration: none;
         transition: all 0.4s ease;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 5px 30px rgba(0, 255, 255, 0.3);
+        box-shadow: 0 5px 30px var(--shadow-color);
     }
     
     .btn-primary::before {
@@ -267,15 +267,15 @@
     
     .btn-primary:hover {
         transform: translateY(-3px) scale(1.05);
-        box-shadow: 0 10px 40px rgba(0, 255, 255, 0.5);
+        box-shadow: 0 10px 40px var(--shadow-hover);
     }
     
     .btn-secondary {
-        background: rgba(0, 0, 0, 0.5);
-        border: 2px solid #00ffff;
+        background: var(--surface-4);
+        border: 2px solid var(--primary-color);
         padding: 1.2rem 2.5rem;
         border-radius: 50px;
-        color: #00ffff;
+        color: var(--primary-color);
         font-weight: 700;
         font-size: 1.1rem;
         text-decoration: none;
@@ -292,7 +292,7 @@
         left: 50%;
         width: 0;
         height: 0;
-        background: #00ffff;
+        background: var(--primary-color);
         border-radius: 50%;
         transform: translate(-50%, -50%);
         transition: width 0.5s, height 0.5s;
@@ -305,10 +305,10 @@
     }
     
     .btn-secondary:hover {
-        color: #000;
-        border-color: #00ffff;
+        color: var(--bg-primary);
+        border-color: var(--primary-color);
         transform: translateY(-3px) scale(1.05);
-        box-shadow: 0 10px 40px rgba(0, 255, 255, 0.3);
+        box-shadow: 0 10px 40px var(--shadow-color);
     }
     
     /* Scroll indicator */
@@ -323,7 +323,7 @@
     
     .scroll-indicator i {
         font-size: 2rem;
-        color: rgba(0, 255, 255, 0.6);
+        color: rgba(var(--particle-color), 0.6);
     }
     
     @keyframes bounce {
@@ -446,7 +446,7 @@
         text-align: center;
         font-size: 2.5rem;
         margin-bottom: 3rem;
-        color: #ffffff;
+        color: var(--text-primary);
     }
     
     .news-grid {
@@ -493,24 +493,24 @@
     }
     
     .news-card {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 2rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
         backdrop-filter: blur(10px);
     }
     
     .news-card:hover {
         transform: translateY(-5px);
-        border-color: #00ffff;
-        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        border-color: var(--primary-color);
+        box-shadow: 0 10px 30px var(--shadow-color);
     }
     
     .news-category {
         display: inline-block;
-        background: linear-gradient(45deg, #ff00ff, #00ffff);
-        color: #000;
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
         padding: 0.5rem 1rem;
         border-radius: 20px;
         font-size: 0.8rem;
@@ -521,20 +521,20 @@
     .news-title {
         font-size: 1.3rem;
         margin-bottom: 1rem;
-        color: #ffffff;
+        color: var(--text-primary);
     }
     
     .news-excerpt {
-        color: #cccccc;
+        color: var(--text-secondary);
         line-height: 1.6;
     }
     
     .events-preview {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 2rem;
         margin-top: 3rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
     }
     
     .event-item {
@@ -550,12 +550,12 @@
     }
     
     .event-date {
-        color: #00ffff;
+        color: var(--primary-color);
         font-weight: 600;
     }
     
     .event-title {
-        color: #ffffff;
+        color: var(--text-primary);
         font-weight: 500;
     }
     
@@ -603,33 +603,33 @@
     }
     
     .project-card {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 1.5rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
         text-align: center;
     }
     
     .project-card:hover {
         transform: translateY(-5px);
-        border-color: #00ffff;
+        border-color: var(--primary-color);
     }
     
     .project-icon {
         font-size: 3rem;
-        color: #00ffff;
+        color: var(--primary-color);
         margin-bottom: 1rem;
     }
     
     .project-title {
         font-size: 1.2rem;
-        color: #ffffff;
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
     }
     
     .project-description {
-        color: #cccccc;
+        color: var(--text-secondary);
         font-size: 0.9rem;
     }
     
@@ -688,16 +688,16 @@
     .stat-card {
         text-align: center;
         padding: 2rem;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
     }
     
     .stat-card:hover {
         transform: translateY(-5px);
         border-color: var(--primary-color);
-        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        box-shadow: 0 10px 30px var(--shadow-color);
     }
     
     .stat-icon {
@@ -736,8 +736,8 @@
     .testimonial-card {
         display: none;
         padding: 3rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
         border-radius: 15px;
         text-align: center;
     }
@@ -807,7 +807,7 @@
         height: 12px;
         border-radius: 50%;
         border: none;
-        background: rgba(255, 255, 255, 0.3);
+        background: var(--surface-2);
         cursor: pointer;
         transition: all 0.3s ease;
     }
@@ -846,16 +846,16 @@
     .partner-card {
         text-align: center;
         padding: 2rem;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
     }
     
     .partner-card:hover {
         transform: translateY(-5px);
         border-color: var(--primary-color);
-        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        box-shadow: 0 10px 30px var(--shadow-color);
     }
     
     .partner-logo {
@@ -905,16 +905,16 @@
         align-items: center;
         gap: 1.5rem;
         padding: 2rem;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
     }
     
     .achievement-card:hover {
         transform: translateY(-5px);
         border-color: var(--primary-color);
-        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        box-shadow: 0 10px 30px var(--shadow-color);
     }
     
     .achievement-icon {
@@ -979,11 +979,11 @@
     }
 
     .tech-item {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 1.5rem;
         text-align: center;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
@@ -996,7 +996,7 @@
         left: -50%;
         width: 200%;
         height: 200%;
-        background: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(var(--particle-color), 0.1) 0%, transparent 70%);
         opacity: 0;
         transition: opacity 0.3s ease;
     }
@@ -1007,19 +1007,19 @@
 
     .tech-item:hover {
         transform: translateY(-10px) scale(1.05);
-        border-color: #00ffff;
-        box-shadow: 0 15px 40px rgba(0, 255, 255, 0.3);
+        border-color: var(--primary-color);
+        box-shadow: 0 15px 40px var(--shadow-hover);
     }
 
     .tech-icon {
         font-size: 3rem;
-        color: #00ffff;
+        color: var(--primary-color);
         margin-bottom: 0.5rem;
         display: block;
     }
 
     .tech-name {
-        color: #ffffff;
+        color: var(--text-primary);
         font-size: 0.9rem;
         font-weight: 600;
     }
@@ -1051,10 +1051,10 @@
     }
 
     .path-card {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 2rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
@@ -1067,7 +1067,7 @@
         left: 0;
         width: 100%;
         height: 4px;
-        background: linear-gradient(90deg, #00ffff, #ff00ff);
+        background: var(--gradient-primary);
         transform: scaleX(0);
         transition: transform 0.3s ease;
     }
@@ -1078,8 +1078,8 @@
 
     .path-card:hover {
         transform: translateY(-5px);
-        border-color: #00ffff;
-        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        border-color: var(--primary-color);
+        box-shadow: 0 10px 30px var(--shadow-color);
     }
 
     .path-header {
@@ -1091,18 +1091,18 @@
 
     .path-icon {
         font-size: 2.5rem;
-        color: #00ffff;
+        color: var(--primary-color);
         min-width: 60px;
     }
 
     .path-title {
-        color: #ffffff;
+        color: var(--text-primary);
         font-size: 1.3rem;
         margin: 0;
     }
 
     .path-description {
-        color: #cccccc;
+        color: var(--text-secondary);
         line-height: 1.6;
         margin-bottom: 1rem;
     }
@@ -1115,12 +1115,12 @@
     }
 
     .skill-badge {
-        background: rgba(0, 255, 255, 0.1);
-        color: #00ffff;
+        background: rgba(var(--particle-color), 0.12);
+        color: var(--primary-color);
         padding: 0.3rem 0.8rem;
         border-radius: 20px;
         font-size: 0.8rem;
-        border: 1px solid rgba(0, 255, 255, 0.3);
+        border: 1px solid var(--border-color);
     }
 
     /* Hackathons Section */
@@ -1150,26 +1150,26 @@
     }
 
     .hackathon-card {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 2rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
         position: relative;
     }
 
     .hackathon-card:hover {
         transform: translateY(-5px);
-        border-color: #00ffff;
-        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        border-color: var(--primary-color);
+        box-shadow: 0 10px 30px var(--shadow-color);
     }
 
     .hackathon-badge {
         position: absolute;
         top: 1rem;
         right: 1rem;
-        background: linear-gradient(45deg, #ff00ff, #00ffff);
-        color: #000;
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
         padding: 0.5rem 1rem;
         border-radius: 20px;
         font-size: 0.8rem;
@@ -1177,19 +1177,19 @@
     }
 
     .hackathon-title {
-        color: #ffffff;
+        color: var(--text-primary);
         font-size: 1.3rem;
         margin-bottom: 0.5rem;
     }
 
     .hackathon-date {
-        color: #00ffff;
+        color: var(--primary-color);
         font-weight: 600;
         margin-bottom: 1rem;
     }
 
     .hackathon-description {
-        color: #cccccc;
+        color: var(--text-secondary);
         line-height: 1.6;
         margin-bottom: 1rem;
     }
@@ -1198,10 +1198,10 @@
     .mentorship-container {
         max-width: 1000px;
         margin: 0 auto;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 20px;
         padding: 3rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         margin-top: 3rem;
     }
 
@@ -1237,17 +1237,17 @@
 
     .mentorship-icon {
         font-size: 3rem;
-        color: #00ffff;
+        color: var(--primary-color);
         margin-bottom: 1rem;
     }
 
     .mentorship-item h4 {
-        color: #ffffff;
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
     }
 
     .mentorship-item p {
-        color: #cccccc;
+        color: var(--text-secondary);
         font-size: 0.9rem;
     }
 
@@ -1278,46 +1278,46 @@
     }
 
     .resource-card {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 2rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
         text-align: center;
     }
 
     .resource-card:hover {
         transform: translateY(-5px);
-        border-color: #00ffff;
-        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        border-color: var(--primary-color);
+        box-shadow: 0 10px 30px var(--shadow-color);
     }
 
     .resource-icon {
         font-size: 3rem;
-        color: #00ffff;
+        color: var(--primary-color);
         margin-bottom: 1rem;
     }
 
     .resource-card h4 {
-        color: #ffffff;
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
     }
 
     .resource-card p {
-        color: #cccccc;
+        color: var(--text-secondary);
         font-size: 0.9rem;
         margin-bottom: 1rem;
     }
 
     .resource-link {
-        color: #00ffff;
+        color: var(--primary-color);
         text-decoration: none;
         font-weight: 600;
         transition: all 0.3s ease;
     }
 
     .resource-link:hover {
-        color: #ff00ff;
+        color: var(--secondary-color);
     }
 
     /* Why Join Section */
@@ -1347,33 +1347,33 @@
     }
 
     .why-item {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 2rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
         text-align: center;
     }
 
     .why-item:hover {
         transform: translateY(-5px);
-        border-color: #00ffff;
-        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        border-color: var(--primary-color);
+        box-shadow: 0 10px 30px var(--shadow-color);
     }
 
     .why-icon {
         font-size: 3rem;
-        color: #00ffff;
+        color: var(--primary-color);
         margin-bottom: 1rem;
     }
 
     .why-item h4 {
-        color: #ffffff;
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
     }
 
     .why-item p {
-        color: #cccccc;
+        color: var(--text-secondary);
         font-size: 0.9rem;
         line-height: 1.6;
     }
@@ -1479,7 +1479,7 @@
                     <div class="event-title">{{ event.title }}</div>
                 </div>
                 <div>
-                    <i class="fas fa-calendar-alt" style="color: #00ffff;"></i>
+                    <i class="fas fa-calendar-alt" style="color: var(--primary-color);"></i>
                 </div>
             </div>
             {% endfor %}
@@ -1544,7 +1544,7 @@
 </section>
 
 <!-- Tech Stack Section -->
-<section class="section" style="background: rgba(255, 255, 255, 0.02);">
+<section class="section" style="background: var(--surface-5);">
     <div class="container">
         <h2 class="section-title" data-aos="fade-up">Technologies We Work With</h2>
         <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem; font-size: 1.1rem;" data-aos="fade-up" data-aos-delay="200">
@@ -1707,7 +1707,7 @@
 </section>
 
 <!-- Featured Projects Section -->
-<section class="section" style="background: rgba(255, 255, 255, 0.02);">
+<section class="section" style="background: var(--surface-5);">
     <div class="container">
         <h2 class="section-title" data-aos="fade-up">Featured Projects</h2>
         <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem; font-size: 1.1rem;" data-aos="fade-up" data-aos-delay="200">
@@ -1772,7 +1772,7 @@
 </section>
 
 <!-- Mentorship Program Section -->
-<section class="section" style="background: rgba(255, 255, 255, 0.02);">
+<section class="section" style="background: var(--surface-5);">
     <div class="container">
         <h2 class="section-title" data-aos="fade-up">Mentorship Program</h2>
         <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem;" data-aos="fade-up" data-aos-delay="200">
@@ -1859,7 +1859,7 @@
 </section>
 
 <!-- Resources Section -->
-<section class="section" style="background: rgba(255, 255, 255, 0.02);">
+<section class="section" style="background: var(--surface-5);">
     <div class="container">
         <h2 class="section-title" data-aos="fade-up">Learning Resources</h2>
         <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem; font-size: 1.1rem;" data-aos="fade-up" data-aos-delay="200">
@@ -1998,7 +1998,7 @@
 </section>
 
 <!-- Partners & Sponsors Section -->
-<section class="section" style="background: rgba(255, 255, 255, 0.02);">
+<section class="section" style="background: var(--surface-5);">
     <div class="container">
         <h2 class="section-title" data-aos="fade-up">Our Partners & Sponsors</h2>
         <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem; font-size: 1.1rem;" data-aos="fade-up" data-aos-delay="200">
@@ -2091,13 +2091,13 @@
 </section>
 
 <!-- Call to Action Section -->
-<section class="section" style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);">
+<section class="section" style="background: linear-gradient(135deg, rgba(var(--particle-color), 0.12) 0%, rgba(var(--particle-color), 0.06) 100%);">
     <div class="container">
-        <div style="text-align: center; background: rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 4rem 2rem; border: 1px solid rgba(0, 255, 255, 0.3); backdrop-filter: blur(10px);" data-aos="fade-up">
-            <h2 style="color: #ffffff; font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, #00ffff, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        <div style="text-align: center; background: var(--card-bg); border-radius: 20px; padding: 4rem 2rem; border: 1px solid var(--border-color); backdrop-filter: blur(10px);" data-aos="fade-up">
+            <h2 style="color: var(--text-primary); font-size: 2.5rem; margin-bottom: 1rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
                 Ready to Start Your Tech Journey?
             </h2>
-            <p style="color: #cccccc; font-size: 1.2rem; margin-bottom: 2.5rem; max-width: 700px; margin-left: auto; margin-right: auto;">
+            <p style="color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 2.5rem; max-width: 700px; margin-left: auto; margin-right: auto;">
                 Join hundreds of IT and CS students building the future. Whether you're a beginner or advanced coder, there's a place for you here.
             </p>
             <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
@@ -2113,14 +2113,14 @@
 </section>
 
 <!-- Newsletter Signup Section -->
-<section class="section" style="background: rgba(255, 255, 255, 0.02);">
+<section class="section" style="background: var(--surface-5);">
     <div class="container">
-        <div style="text-align: center; background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 3rem; border: 1px solid rgba(0, 255, 255, 0.2);" data-aos="fade-up">
-            <h2 style="color: #ffffff; margin-bottom: 1rem;">Stay Updated</h2>
-            <p style="color: #cccccc; margin-bottom: 2rem;">Subscribe to our newsletter for the latest updates on events, workshops, hackathons, and tech opportunities.</p>
+        <div style="text-align: center; background: var(--card-bg); border-radius: 15px; padding: 3rem; border: 1px solid var(--border-color);" data-aos="fade-up">
+            <h2 style="color: var(--text-primary); margin-bottom: 1rem;">Stay Updated</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Subscribe to our newsletter for the latest updates on events, workshops, hackathons, and tech opportunities.</p>
             <form class="newsletter-form" id="homepage-newsletter-form" style="max-width: 400px; margin: 0 auto;">
                 <div style="display: flex; gap: 1rem;">
-                    <input type="email" placeholder="Enter your email" name="email" required style="flex: 1; padding: 1rem; border: 1px solid #00ffff; border-radius: 50px; background: rgba(0, 0, 0, 0.3); color: #ffffff; outline: none;">
+                    <input type="email" placeholder="Enter your email" name="email" required style="flex: 1; padding: 1rem; border: 1px solid var(--border-color); border-radius: 50px; background: var(--input-bg); color: var(--text-primary); outline: none;">
                     <button type="submit" class="btn-primary">
                         <i class="fas fa-paper-plane"></i>
                     </button>

@@ -1,139 +1,246 @@
 {% extends "base.html" %}
 
-{% block title %}Students - Digital Club{% endblock %}
+{% block title %}Students - Digital Club - KIUT{% endblock %}
 
 {% block extra_head %}
 <style>
-    .students-page {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-        min-height: 100vh;
-        padding: 2rem 0;
-    }
-    
-    .students-header {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-        color: var(--bg-primary);
-        padding: 4rem 0;
+    /* Hero Section */
+    .students-hero {
+        min-height: 40vh;
+        padding: 8rem 0 5rem;
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
         text-align: center;
-        margin-bottom: 3rem;
+        border-bottom: 1px solid var(--border-color);
     }
     
-    .students-header h1 {
-        font-size: 3rem;
+    .students-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%);
+    }
+    
+    .students-hero h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+    }
+    
+    .students-hero p {
+        font-size: 1.3rem;
+        color: var(--text-secondary);
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+    
+    /* Content Section */
+    .students-section {
+        padding: 6rem 0;
+        position: relative;
+    }
+    
+    .section-title {
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .section-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 4rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        transition: transform var(--transition-normal);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
         margin-bottom: 1rem;
     }
     
-    .students-header p {
-        font-size: 1.2rem;
-        opacity: 0.9;
-        max-width: 600px;
-        margin: 0 auto;
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-family: 'Fira Code', monospace;
     }
     
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+    
+    /* Filter Section */
     .filter-section {
-        background: rgba(0, 0, 0, 0.3);
+        background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: 15px;
+        border-radius: var(--border-radius-md);
         padding: 2rem;
         margin-bottom: 3rem;
+        backdrop-filter: blur(10px);
     }
     
-    .filter-row {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-    
-    .filter-input {
-        flex: 1;
-        min-width: 300px;
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: 25px;
-        background: rgba(0, 0, 0, 0.3);
+    .filter-title {
         color: var(--text-primary);
-        outline: none;
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        font-weight: 600;
     }
     
-    .filter-input:focus {
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all var(--transition-normal);
+    }
+    
+    .form-control:focus {
+        outline: none;
         border-color: var(--primary-color);
         box-shadow: 0 0 20px var(--shadow-color);
     }
     
-    .filter-select {
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: 25px;
-        background: rgba(0, 0, 0, 0.3);
-        color: var(--text-primary);
-        outline: none;
-        min-width: 150px;
+    .filter-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
     }
     
-    .filter-select:focus {
-        border-color: var(--primary-color);
-    }
-    
+    /* Students Grid */
     .students-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 2rem;
-        margin-bottom: 3rem;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 4rem;
     }
     
     .student-card {
-        background: rgba(0, 0, 0, 0.3);
+        background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: 15px;
+        border-radius: var(--border-radius-md);
         padding: 2rem;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal);
         position: relative;
         overflow: hidden;
+        text-align: center;
     }
     
     .student-card::before {
         content: '';
         position: absolute;
         top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        transition: left 0.5s;
-    }
-    
-    .student-card:hover::before {
-        left: 100%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
     }
     
     .student-card:hover {
+        transform: translateY(-8px);
         border-color: var(--primary-color);
-        box-shadow: 0 0 20px var(--shadow-color);
-        transform: translateY(-5px);
+        box-shadow: 0 20px 40px var(--shadow-color);
+    }
+    
+    .student-card:hover::before {
+        opacity: 1;
     }
     
     .student-avatar {
-        width: 100px;
-        height: 100px;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid var(--primary-color);
         margin: 0 auto 1.5rem;
+        border: 3px solid var(--primary-color);
         display: block;
+    }
+    
+    .student-avatar.placeholder {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .student-name {
         font-size: 1.5rem;
-        font-weight: 600;
         color: var(--text-primary);
-        text-align: center;
         margin-bottom: 0.5rem;
+        font-weight: 600;
     }
     
     .student-title {
         color: var(--primary-color);
-        text-align: center;
+        font-weight: 600;
         margin-bottom: 1rem;
         font-size: 1.1rem;
     }
@@ -145,169 +252,413 @@
     .info-item {
         display: flex;
         align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
         margin-bottom: 0.5rem;
         color: var(--text-secondary);
+        font-size: 0.95rem;
     }
     
     .info-item i {
-        width: 20px;
-        margin-right: 0.5rem;
         color: var(--primary-color);
+        width: 16px;
     }
     
     .student-bio {
         color: var(--text-secondary);
         font-style: italic;
         margin-bottom: 1.5rem;
-        text-align: center;
+        line-height: 1.6;
+        font-size: 0.95rem;
     }
     
     .student-areas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
         margin-bottom: 1.5rem;
     }
     
     .area-tag {
-        display: inline-block;
-        background: rgba(0, 255, 255, 0.1);
+        background: rgba(var(--particle-color), 0.12);
         color: var(--primary-color);
         padding: 0.3rem 0.8rem;
-        border-radius: 15px;
-        font-size: 0.8rem;
-        margin: 0.2rem;
-        border: 1px solid rgba(0, 255, 255, 0.2);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        border: 1px solid rgba(var(--particle-color), 0.3);
     }
     
-    .social-links {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
+    .student-achievements {
+        background: linear-gradient(135deg, rgba(var(--particle-color), 0.18) 0%, rgba(var(--particle-color), 0.08) 100%);
+        border: 1px solid rgba(var(--particle-color), 0.3);
+        border-radius: var(--border-radius-sm);
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
     }
     
-    .social-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        background: rgba(0, 255, 255, 0.1);
-        border: 1px solid var(--border-color);
-        border-radius: 50%;
+    .points-display {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .points-number {
+        font-size: 2.2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #fbbf24, #f97316);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.3rem;
+    }
+    
+    .points-label {
+        font-size: 0.9rem;
         color: var(--text-primary);
-        text-decoration: none;
-        transition: all 0.3s ease;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
     
-    .social-link:hover {
-        background: var(--primary-color);
-        color: var(--bg-primary);
-        transform: translateY(-2px);
+    .trophies-section {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 1rem;
     }
     
+    .trophies-title {
+        text-align: center;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.8rem;
+        letter-spacing: 1px;
+    }
+    
+    .trophies-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        justify-content: center;
+    }
+    
+    .trophy-item {
+        text-align: center;
+        min-width: 70px;
+    }
+    
+    .trophy-icon {
+        font-size: 2rem;
+        margin-bottom: 0.4rem;
+        filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+        color: #fbbf24;
+    }
+    
+    .trophy-name {
+        color: var(--text-primary);
+        font-size: 0.7rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+    
+    .student-actions {
+        text-align: center;
+    }
+    
+    /* Student Categories */
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+    
+    .category-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2rem;
+        text-align: center;
+        transition: all var(--transition-normal);
+    }
+    
+    .category-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+    }
+    
+    .category-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .category-title {
+        font-size: 1.3rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .category-count {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .category-description {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+    
+    /* Empty State */
     .empty-state {
         text-align: center;
         padding: 4rem 2rem;
-        color: var(--text-secondary);
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
     }
     
     .empty-state i {
         font-size: 4rem;
         color: var(--text-muted);
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
     
-    .stats-section {
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid var(--border-color);
-        border-radius: 15px;
-        padding: 2rem;
-        margin-bottom: 3rem;
-        text-align: center;
-    }
-    
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
-    }
-    
-    .stat-item {
-        text-align: center;
-    }
-    
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        display: block;
-    }
-    
-    .stat-label {
+    .empty-state h3 {
         color: var(--text-secondary);
-        font-size: 1rem;
-        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+        background: linear-gradient(135deg, rgba(var(--particle-color), 0.12) 0%, rgba(var(--particle-color), 0.06) 100%);
+        padding: 5rem 0;
+        text-align: center;
+        border-radius: var(--border-radius-md);
+        margin-top: 3rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .cta-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .cta-text {
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 2.5rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .students-hero {
+            padding: 6rem 0 4rem;
+            min-height: 30vh;
+        }
+        
+        .students-section {
+            padding: 4rem 0;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .students-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .student-card {
+            padding: 1.5rem;
+        }
+        
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .categories-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="students-page">
-    <!-- Students Header -->
-    <section class="students-header">
-        <div class="container">
-            <h1 data-aos="fade-up">
-                <i class="fas fa-user-graduate"></i> Students
-            </h1>
-            <p data-aos="fade-up" data-aos-delay="200">
-                Meet our current student members who are building the future of technology
-            </p>
-        </div>
-    </section>
-
+<!-- Hero Section -->
+<section class="students-hero">
     <div class="container">
-        <!-- Students Statistics -->
-        <div class="stats-section" data-aos="fade-up">
-            <h3 class="text-primary mb-3">Student Statistics</h3>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-number">{{ students.total if students else 0 }}</span>
-                    <span class="stat-label">Total Students</span>
+        <h1 data-aos="fade-up">Our Students</h1>
+        <p data-aos="fade-up" data-aos-delay="200">
+            Meet the next generation of tech innovators and leaders at KIUT
+        </p>
+    </div>
+</section>
+
+<!-- Students Section -->
+<section class="students-section">
+    <div class="container">
+        <!-- Stats Section -->
+        <div class="section-title" data-aos="fade-up">Student Community</div>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            A vibrant community of tech enthusiasts building their skills and careers
+        </p>
+        
+        <div class="stats-grid" data-aos="fade-up" data-aos-delay="400">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-graduate"></i>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">{{ courses|length }}</span>
-                    <span class="stat-label">Courses</span>
+                <div class="stat-number">{{ students.total if students else 0 }}</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-book"></i>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">{{ years|length }}</span>
-                    <span class="stat-label">Year Levels</span>
+                <div class="stat-number">{{ courses|length }}</div>
+                <div class="stat-label">Courses</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar"></i>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">{{ current_year }}</span>
-                    <span class="stat-label">Current Year</span>
+                <div class="stat-number">{{ years|length }}</div>
+                <div class="stat-label">Year Levels</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-code"></i>
                 </div>
+                <div class="stat-number">{{ active_projects }}</div>
+                <div class="stat-label">Active Projects</div>
             </div>
         </div>
-
+        
+        <!-- Student Categories -->
+        <div class="categories-grid" data-aos="fade-up">
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-laptop-code"></i>
+                </div>
+                <h3 class="category-title">Web Developers</h3>
+                <div class="category-count">{{ web_dev_count }}</div>
+                <p class="category-description">
+                    Students specializing in frontend and backend web development
+                </p>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3 class="category-title">Mobile Developers</h3>
+                <div class="category-count">{{ mobile_dev_count }}</div>
+                <p class="category-description">
+                    Building iOS and Android applications with modern frameworks
+                </p>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3 class="category-title">AI Enthusiasts</h3>
+                <div class="category-count">{{ ai_count }}</div>
+                <p class="category-description">
+                    Exploring machine learning, data science, and artificial intelligence
+                </p>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="category-title">Cybersecurity</h3>
+                <div class="category-count">{{ security_count }}</div>
+                <p class="category-description">
+                    Focused on network security, ethical hacking, and digital protection
+                </p>
+            </div>
+        </div>
+        
         <!-- Filter Section -->
         <div class="filter-section" data-aos="fade-up">
-            <h4 class="text-primary mb-3">Filter Students</h4>
-            <div class="filter-row">
-                <input type="text" class="filter-input" placeholder="Search students by name, title, or course..." id="search-input">
-                <select class="filter-select" id="course-filter">
-                    <option value="">All Courses</option>
-                    {% for course in courses %}
-                    <option value="{{ course }}">{{ course }}</option>
-                    {% endfor %}
-                </select>
-                <select class="filter-select" id="year-filter">
-                    <option value="">All Years</option>
-                    {% for year in years %}
-                    <option value="{{ year }}">{{ year }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+            <h3 class="filter-title">Find Students</h3>
+            <form method="GET" id="students-filters">
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="search">Search</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               placeholder="Search by name, skills, or interests" 
+                               value="{{ search_query if search_query else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="course">Course</label>
+                        <select class="form-control" id="course" name="course">
+                            <option value="">All Courses</option>
+                            {% for course in courses %}
+                            <option value="{{ course }}" {% if request.args.get('course') == course %}selected{% endif %}>{{ course }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="year">Year</label>
+                        <select class="form-control" id="year" name="year">
+                            <option value="">All Years</option>
+                            {% for year in years %}
+                            <option value="{{ year }}" {% if request.args.get('year') == year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-search"></i> Search Students
+                    </button>
+                    <a href="{{ url_for('main.students') }}" class="btn-secondary">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </a>
+                </div>
+            </form>
         </div>
-
+        
         <!-- Students Grid -->
         {% if students %}
         <div class="students-grid" id="students-grid">
@@ -317,13 +668,13 @@
                     <img src="{{ url_for('static', filename='uploads/profiles/' + student.profile_image) }}" 
                          alt="{{ student.full_name }}" class="student-avatar">
                 {% else %}
-                    <div class="student-avatar d-flex align-items-center justify-content-center" 
-                         style="background: var(--primary-color); color: var(--bg-primary); font-size: 2rem;">
-                        <i class="fas fa-user"></i>
+                    <div class="student-avatar placeholder">
+                        <i class="fas fa-user-graduate"></i>
                     </div>
                 {% endif %}
                 
                 <h3 class="student-name">{{ student.full_name }}</h3>
+                
                 {% if student.title %}
                     <div class="student-title">{{ student.title }}</div>
                 {% endif %}
@@ -335,17 +686,18 @@
                         <span>{{ student.course }}</span>
                     </div>
                     {% endif %}
+                    
                     {% if student.year %}
                     <div class="info-item">
                         <i class="fas fa-calendar"></i>
-                        <span>{{ student.year }}</span>
+                        <span>Year {{ student.year }}</span>
                     </div>
                     {% endif %}
                 </div>
                 
                 {% if student.bio %}
                 <div class="student-bio">
-                    "{{ student.bio[:100] }}{% if student.bio|length > 100 %}...{% endif %}"
+                    "{{ student.bio[:120] }}{% if student.bio|length > 120 %}...{% endif %}"
                 </div>
                 {% endif %}
                 
@@ -360,43 +712,29 @@
                 </div>
                 {% endif %}
                 
-                <!-- Always show achievements section if student has trophies or points -->
                 {% if student.trophies or student.get_total_points() > 0 %}
-                <div class="student-achievements" style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.15) 0%, rgba(255, 0, 255, 0.15) 100%); border: 2px solid rgba(0, 255, 255, 0.4); border-radius: 15px; padding: 1.2rem; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);">
-                    <!-- Points Display - Only show if student has points -->
+                <div class="student-achievements">
                     {% if student.get_total_points() > 0 %}
-                    <div style="text-align: center; margin-bottom: 1rem;">
-                        <div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); margin-bottom: 0.3rem;">
-                            {{ student.get_total_points() }}
-                        </div>
-                        <div style="font-size: 1rem; color: white; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;">
-                            Total Points
-                        </div>
+                    <div class="points-display">
+                        <div class="points-number">{{ student.get_total_points() }}</div>
+                        <div class="points-label">Total Points</div>
                     </div>
                     {% endif %}
                     
-                    <!-- Trophies Display - Always show if student has trophies -->
                     {% if student.trophies %}
-                    <div class="trophies-section" style="{% if student.get_total_points() > 0 %}border-top: 2px solid rgba(255, 255, 255, 0.2); padding-top: 1rem;{% endif %}">
-                        <div style="text-align: center; color: white; font-weight: 700; font-size: 1rem; margin-bottom: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase;">
-                            🏆 Achievements
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 1rem; justify-items: center;">
-                            {% for trophy in student.trophies %}
-                            <div style="text-align: center;">
-                                <div style="font-size: 2.5rem; margin-bottom: 0.4rem; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.7)); transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2) rotate(5deg)'" onmouseout="this.style.transform='scale(1) rotate(0deg)'">
+                    <div class="trophies-section">
+                        <div class="trophies-title">🏆 Achievements</div>
+                        <div class="trophies-grid">
+                            {% for trophy in student.trophies[:3] %}
+                            <div class="trophy-item">
+                                <div class="trophy-icon">
                                     {% if trophy.icon.startswith('fa') %}
                                     <i class="{{ trophy.icon }}"></i>
                                     {% else %}
                                     {{ trophy.icon }}
                                     {% endif %}
                                 </div>
-                                <div style="color: white; font-size: 0.75rem; font-weight: 700; line-height: 1.3; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                                    {{ trophy.name }}
-                                </div>
-                                <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.65rem; margin-top: 0.2rem;">
-                                    {{ trophy.points_required }} pts
-                                </div>
+                                <div class="trophy-name">{{ trophy.name }}</div>
                             </div>
                             {% endfor %}
                         </div>
@@ -405,13 +743,10 @@
                 </div>
                 {% endif %}
                 
-                <!-- View More Button -->
-                <div style="text-align: center; margin-top: 1rem;">
+                <div class="student-actions">
                     <a href="{{ url_for('main.member_public_profile', member_id=student.id) }}" 
-                       class="btn-primary" 
-                       style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border-radius: 25px; text-decoration: none; transition: all 0.3s ease;">
-                        <i class="fas fa-eye"></i>
-                        View More
+                       class="btn-primary view-more">
+                        <i class="fas fa-eye"></i> View Profile
                     </a>
                 </div>
             </div>
@@ -422,10 +757,34 @@
             <i class="fas fa-user-graduate"></i>
             <h3>No Students Found</h3>
             <p>Student profiles will appear here once they are approved and complete their profiles.</p>
+            <a href="{{ url_for('auth.register') }}" class="btn-primary">
+                <i class="fas fa-user-plus"></i> Become a Member
+            </a>
         </div>
         {% endif %}
     </div>
-</div>
+</section>
+
+<!-- CTA Section -->
+<section class="students-section" style="background: var(--surface-5);">
+    <div class="container">
+        <div class="cta-section" data-aos="fade-up">
+            <h2 class="cta-title">Start Your Tech Journey</h2>
+            <p class="cta-text">
+                Join hundreds of KIUT students building their skills, working on real projects, 
+                and preparing for successful careers in technology.
+            </p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('auth.register') }}" class="btn-primary">
+                    <i class="fas fa-rocket"></i> Join Digital Club
+                </a>
+                <a href="{{ url_for('main.events') }}" class="btn-secondary">
+                    <i class="fas fa-calendar"></i> View Upcoming Events
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -438,9 +797,9 @@
     });
 
     // Filter functionality
-    const searchInput = document.getElementById('search-input');
-    const courseFilter = document.getElementById('course-filter');
-    const yearFilter = document.getElementById('year-filter');
+    const searchInput = document.getElementById('search');
+    const courseFilter = document.getElementById('course');
+    const yearFilter = document.getElementById('year');
     const studentsGrid = document.getElementById('students-grid');
 
     function filterStudents() {

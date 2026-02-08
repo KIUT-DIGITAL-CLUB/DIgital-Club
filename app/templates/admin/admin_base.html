@@ -2,100 +2,34 @@
 
 {% block title %}{% block admin_title %}Admin Panel{% endblock %} - Digital Club{% endblock %}
 
-{% block extra_head %}
-<style>
-    html, body {
-        background-color: #0a0a0a !important;
-        color: #ffffff !important;
-        margin: 0;
-        padding: 0;
-    }
-    
-    /* Ensure admin layout takes full height */
-    .admin-layout {
-        min-height: 100vh;
-        background-color: #0a0a0a !important;
-        color: #ffffff !important;
-    }
-    
-    /* Override any light mode styles */
-    .admin-layout * {
-        color: inherit !important;
-    }
-    
-    /* Force dark mode on all admin elements */
-    .admin-sidebar {
-        background-color: #1a1a2e !important;
-        color: #ffffff !important;
-    }
-    
-    .admin-header {
-        background-color: #1a1a2e !important;
-        color: #ffffff !important;
-    }
-    
-    .admin-content {
-        background-color: #0a0a0a !important;
-        color: #ffffff !important;
-    }
-    
-    /* Override Bootstrap defaults */
-    .card {
-        background-color: #1a1a2e !important;
-        color: #ffffff !important;
-        border-color: rgba(0, 255, 255, 0.2) !important;
-    }
-    
-    .table {
-        background-color: #1a1a2e !important;
-        color: #ffffff !important;
-    }
-    
-    .table thead th {
-        background-color: #16213e !important;
-        color: #ffffff !important;
-        border-color: rgba(0, 255, 255, 0.2) !important;
-    }
-    
-    .table tbody td {
-        background-color: #1a1a2e !important;
-        color: #cccccc !important;
-        border-color: rgba(0, 255, 255, 0.2) !important;
-    }
-    
-    .form-control {
-        background-color: #16213e !important;
-        color: #ffffff !important;
-        border-color: rgba(0, 255, 255, 0.2) !important;
-    }
-    
-    .form-control:focus {
-        background-color: #0f1419 !important;
-        color: #ffffff !important;
-        border-color: #00ffff !important;
-        box-shadow: 0 0 0 0.2rem rgba(0, 255, 255, 0.25) !important;
-    }
-    
-    .btn-outline-secondary {
-        background-color: transparent !important;
-        color: #cccccc !important;
-        border-color: rgba(0, 255, 255, 0.2) !important;
-    }
-    
-    .btn-outline-secondary:hover {
-        background-color: rgba(0, 255, 255, 0.1) !important;
-        color: #00ffff !important;
-        border-color: #00ffff !important;
-    }
-</style>
-{% endblock %}
+{% block extra_head %}{% endblock %}
 
 {% block content %}
 <div class="admin-layout">
     <!-- Admin Sidebar -->
     <div class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-header">
-            <h3><i class="fas fa-cog"></i> Admin Panel</h3>
+            <a href="{{ url_for('main.index') }}" class="admin-logo" aria-label="Digital Club Home">
+                <img src="{{ url_for('static', filename='DigitalClub_LOGO copy.svg') }}" alt="Digital Club Logo">
+                <div class="admin-logo-text">
+                    <span>Digital Club</span>
+                    <small>Admin</small>
+                </div>
+            </a>
+            <button class="admin-sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <div class="admin-sidebar-actions">
+            <a href="{{ url_for('main.index') }}" class="admin-home-link" title="Back to site">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Home</span>
+            </a>
+            <button class="theme-toggle admin-theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Toggle color theme">
+                <i class="fas fa-sun" aria-hidden="true"></i>
+                <span class="theme-label">Light</span>
+            </button>
         </div>
         
         <nav class="admin-sidebar-nav">
@@ -109,13 +43,13 @@
             <div class="admin-nav-dropdown">
                 <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="members-users">
                     <i class="fas fa-users"></i>
-                    <span>Members & Users</span>
+                    <span>Members</span>
                     <i class="fas fa-chevron-down admin-dropdown-icon"></i>
                 </a>
                 <div class="admin-nav-dropdown-menu" id="dropdown-members-users">
                     <a href="{{ url_for('admin.users') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.users' %}active{% endif %}">
                         <i class="fas fa-users-cog"></i>
-                        <span>User Management</span>
+                        <span>Users</span>
                     </a>
                     <a href="{{ url_for('admin.members') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.members', 'admin.member_detail'] %}active{% endif %}">
                         <i class="fas fa-id-card"></i>
@@ -123,7 +57,7 @@
                     </a>
                     <a href="{{ url_for('admin.scan_id') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.scan_id' %}active{% endif %}">
                         <i class="fas fa-qrcode"></i>
-                        <span>Scan Member ID</span>
+                        <span>Scan ID</span>
                     </a>
                 </div>
             </div>
@@ -132,7 +66,7 @@
             <div class="admin-nav-dropdown">
                 <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="financial">
                     <i class="fas fa-money-bill-wave"></i>
-                    <span>Financial</span>
+                    <span>Finance</span>
                     <i class="fas fa-chevron-down admin-dropdown-icon"></i>
                 </a>
                 <div class="admin-nav-dropdown-menu" id="dropdown-financial">
@@ -142,7 +76,7 @@
                     </a>
                     <a href="{{ url_for('admin.financial') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.financial', 'admin.create_financial_period', 'admin.financial_period_detail', 'admin.add_transaction', 'admin.edit_transaction', 'admin.financial_categories', 'admin.add_financial_category', 'admin.edit_financial_category', 'admin.financial_reports', 'admin.export_financial_period'] %}active{% endif %}">
                         <i class="fas fa-chart-line"></i>
-                        <span>Financial Management</span>
+                        <span>Management</span>
                     </a>
                 </div>
             </div>
@@ -151,13 +85,13 @@
             <div class="admin-nav-dropdown">
                 <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="rewards">
                     <i class="fas fa-award"></i>
-                    <span>Rewards & Recognition</span>
+                    <span>Rewards</span>
                     <i class="fas fa-chevron-down admin-dropdown-icon"></i>
                 </a>
                 <div class="admin-nav-dropdown-menu" id="dropdown-rewards">
                     <a href="{{ url_for('admin.rewards_history') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.rewards_history', 'admin.add_points'] %}active{% endif %}">
                         <i class="fas fa-coins"></i>
-                        <span>Reward Points</span>
+                    <span>Points</span>
                     </a>
                     <a href="{{ url_for('admin.trophies') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.trophies', 'admin.add_trophy', 'admin.edit_trophy'] %}active{% endif %}">
                         <i class="fas fa-trophy"></i>
@@ -170,25 +104,25 @@
             <div class="admin-nav-dropdown">
                 <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="content">
                     <i class="fas fa-file-alt"></i>
-                    <span>Content Management</span>
+                    <span>Content</span>
                     <i class="fas fa-chevron-down admin-dropdown-icon"></i>
                 </a>
                 <div class="admin-nav-dropdown-menu" id="dropdown-content">
                     <a href="{{ url_for('admin.news') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.news', 'admin.add_news', 'admin.edit_news'] %}active{% endif %}">
                         <i class="fas fa-newspaper"></i>
-                        <span>News Management</span>
+                        <span>News</span>
                     </a>
                     <a href="{{ url_for('admin.blogs') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.blogs', 'admin.add_blog', 'admin.edit_blog'] %}active{% endif %}">
                         <i class="fas fa-blog"></i>
-                        <span>Blog Management</span>
+                        <span>Blogs</span>
                     </a>
                     <a href="{{ url_for('admin.leaders') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.leaders', 'admin.add_leader', 'admin.edit_leader'] %}active{% endif %}">
                         <i class="fas fa-crown"></i>
-                        <span>Leader Management</span>
+                        <span>Leaders</span>
                     </a>
                     <a href="{{ url_for('admin.gallery') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.gallery', 'admin.add_gallery_item', 'admin.edit_gallery_item'] %}active{% endif %}">
                         <i class="fas fa-images"></i>
-                        <span>Gallery Management</span>
+                        <span>Gallery</span>
                     </a>
                 </div>
             </div>
@@ -203,11 +137,11 @@
                 <div class="admin-nav-dropdown-menu" id="dropdown-events">
                     <a href="{{ url_for('admin.events') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.events', 'admin.add_event', 'admin.edit_event'] %}active{% endif %}">
                         <i class="fas fa-calendar"></i>
-                        <span>Events Management</span>
+                        <span>Manage Events</span>
                     </a>
                     <a href="{{ url_for('admin.rsvps') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.rsvps', 'admin.approve_rsvp', 'admin.reject_rsvp', 'admin.bulk_approve_rsvps', 'admin.bulk_reject_rsvps'] %}active{% endif %}">
                         <i class="fas fa-calendar-check"></i>
-                        <span>RSVP Management</span>
+                        <span>RSVPs</span>
                     </a>
                 </div>
             </div>
@@ -216,17 +150,17 @@
             <div class="admin-nav-dropdown">
                 <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="projects">
                     <i class="fas fa-laptop-code"></i>
-                    <span>Projects & Technology</span>
+                    <span>Projects</span>
                     <i class="fas fa-chevron-down admin-dropdown-icon"></i>
                 </a>
                 <div class="admin-nav-dropdown-menu" id="dropdown-projects">
                     <a href="{{ url_for('admin.projects') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.projects', 'admin.add_project', 'admin.edit_project'] %}active{% endif %}">
                         <i class="fas fa-project-diagram"></i>
-                        <span>Projects Management</span>
+                        <span>Projects</span>
                     </a>
                     <a href="{{ url_for('admin.technologies') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.technologies', 'admin.add_technology', 'admin.edit_technology'] %}active{% endif %}">
                         <i class="fas fa-code"></i>
-                        <span>Technology Management</span>
+                        <span>Technologies</span>
                     </a>
                 </div>
             </div>
@@ -235,7 +169,7 @@
             <div class="admin-nav-dropdown">
                 <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="communication">
                     <i class="fas fa-comments"></i>
-                    <span>Communication</span>
+                    <span>Comms</span>
                     <i class="fas fa-chevron-down admin-dropdown-icon"></i>
                 </a>
                 <div class="admin-nav-dropdown-menu" id="dropdown-communication">
@@ -260,9 +194,6 @@
         <div class="admin-header">
             <div class="admin-header-content">
                 <div class="admin-header-left">
-                    <button class="admin-sidebar-toggle" id="sidebarToggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
                     <div>
                         <h1 class="admin-page-title">{% block page_title %}Dashboard{% endblock %}</h1>
                         <nav class="admin-breadcrumb">
@@ -305,6 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('adminSidebar');
     const main = document.getElementById('adminMain');
     const toggle = document.getElementById('sidebarToggle');
+    const dropdownToggles = document.querySelectorAll('.admin-nav-dropdown-toggle');
     
     // Check for saved sidebar state
     const sidebarCollapsed = localStorage.getItem('adminSidebarCollapsed') === 'true';
@@ -345,8 +277,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Dropdown functionality
-    const dropdownToggles = document.querySelectorAll('.admin-nav-dropdown-toggle');
+    function setDropdownHeight(menu, open) {
+        if (!menu) return;
+        if (open) {
+            const height = menu.scrollHeight;
+            menu.style.maxHeight = `${height}px`;
+        } else {
+            menu.style.maxHeight = '0px';
+        }
+    }
     
     dropdownToggles.forEach(toggle => {
         toggle.addEventListener('click', function(e) {
@@ -364,12 +303,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     const id = t.getAttribute('data-dropdown');
                     localStorage.setItem('adminDropdown-' + id, 'false');
                 }
+                setDropdownHeight(d.querySelector('.admin-nav-dropdown-menu'), false);
             });
             
             // If the clicked dropdown was closed, open it
             if (!isCurrentlyOpen) {
                 dropdown.classList.add('open');
                 localStorage.setItem('adminDropdown-' + dropdownId, 'true');
+                setDropdownHeight(dropdown.querySelector('.admin-nav-dropdown-menu'), true);
             }
         });
     });
@@ -383,6 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (savedState === 'true') {
                 dropdown.classList.add('open');
+                setDropdownHeight(dropdown.querySelector('.admin-nav-dropdown-menu'), true);
             }
         });
     }
@@ -395,6 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const dropdown = subitem.closest('.admin-nav-dropdown');
             if (dropdown) {
                 dropdown.classList.add('open');
+                setDropdownHeight(dropdown.querySelector('.admin-nav-dropdown-menu'), true);
                 
                 // Save the auto-expanded state
                 const toggle = dropdown.querySelector('.admin-nav-dropdown-toggle');

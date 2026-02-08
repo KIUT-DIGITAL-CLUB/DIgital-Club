@@ -1,15 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Blog - Digital Club{% endblock %}
+{% block title %}Blog - Digital Club - KIUT{% endblock %}
 
 {% block extra_head %}
 <style>
     /* Hero Section */
     .blog-hero {
-        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-        padding: 8rem 0 4rem;
+        min-height: 50vh;
+        padding: 8rem 0 5rem;
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         position: relative;
         overflow: hidden;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
     }
     
     .blog-hero::before {
@@ -17,65 +23,84 @@
         position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
+        width: 100%;
+        height: 100%;
         background: 
-            radial-gradient(circle at 20% 50%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%);
-        animation: pulse 8s ease-in-out infinite;
+            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%);
+        animation: pulse-bg 8s ease-in-out infinite;
     }
     
-    @keyframes pulse {
+    @keyframes pulse-bg {
         0%, 100% { opacity: 0.5; }
         50% { opacity: 0.8; }
     }
     
-    .blog-hero-content {
-        position: relative;
-        z-index: 1;
-        text-align: center;
-    }
-    
     .blog-hero h1 {
-        font-size: 3.5rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #00ffff, #ff00ff);
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        background: var(--gradient-primary);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
     
     .blog-hero p {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         color: var(--text-secondary);
-        max-width: 600px;
-        margin: 0 auto 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+    
+    /* Content Section */
+    .blogs-section {
+        padding: 6rem 0;
+        position: relative;
+    }
+    
+    .section-title {
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .section-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 4rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
     }
     
     /* Search Bar */
     .search-container {
         max-width: 600px;
-        margin: 0 auto;
+        margin: 0 auto 2rem;
         position: relative;
     }
     
     .search-input {
         width: 100%;
-        padding: 1rem 3.5rem 1rem 1.5rem;
-        border-radius: 50px;
-        border: 2px solid rgba(0, 255, 255, 0.3);
-        background: rgba(0, 0, 0, 0.5);
+        padding: 1rem 3rem 1rem 1.5rem;
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius-xl);
+        background: var(--input-bg);
         color: var(--text-primary);
         font-size: 1rem;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal);
         backdrop-filter: blur(10px);
     }
     
     .search-input:focus {
         outline: none;
         border-color: var(--primary-color);
-        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        box-shadow: 0 0 20px var(--shadow-color);
     }
     
     .search-icon {
@@ -87,111 +112,123 @@
         font-size: 1.2rem;
     }
     
-    /* Category Filter Pills */
+    /* Category Filters */
     .category-filters {
         display: flex;
         gap: 1rem;
         justify-content: center;
         flex-wrap: wrap;
-        margin-top: 2rem;
+        margin-bottom: 3rem;
     }
     
     .category-pill {
-        padding: 0.6rem 1.5rem;
-        border-radius: 50px;
-        background: rgba(0, 255, 255, 0.1);
-        border: 2px solid rgba(0, 255, 255, 0.3);
+        padding: 0.7rem 1.5rem;
+        border-radius: var(--border-radius-xl);
+        background: var(--surface-2);
+        border: 2px solid var(--border-color);
         color: var(--text-primary);
         text-decoration: none;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal);
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
     }
     
     .category-pill:hover {
-        background: rgba(0, 255, 255, 0.2);
+        background: rgba(var(--particle-color), 0.15);
         border-color: var(--primary-color);
         transform: translateY(-2px);
         color: var(--primary-color);
     }
     
     .category-pill.active {
-        background: linear-gradient(135deg, #00ffff, #8a2be2);
+        background: var(--gradient-primary);
         border-color: transparent;
-        color: #000;
-        box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        color: var(--bg-primary);
+        box-shadow: 0 5px 20px var(--shadow-color);
     }
     
     /* Blog Grid */
-    .blogs-section {
-        padding: 4rem 0;
-        background: var(--bg-primary);
-    }
-    
     .blogs-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 3rem;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 4rem;
     }
     
     /* Blog Card */
     .blog-card {
         background: var(--card-bg);
-        border-radius: 15px;
-        overflow: hidden;
         border: 1px solid var(--border-color);
-        transition: all 0.4s ease;
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        transition: all var(--transition-normal);
         position: relative;
         display: flex;
         flex-direction: column;
         height: 100%;
     }
     
-    .blog-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 15px 40px rgba(0, 255, 255, 0.2);
-        border-color: var(--primary-color);
-    }
-    
-    .blog-image-link {
-        display: block;
-        width: 100%;
-        overflow: hidden;
-    }
-    
-    .blog-image {
-        width: 100%;
-        height: 220px;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        transition: transform 0.5s ease;
-        position: relative;
-    }
-    
-    .blog-image::after {
+    .blog-card::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        bottom: 0;
-        background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 100%);
-        transition: opacity 0.3s ease;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+    }
+    
+    .blog-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-color);
+        box-shadow: 0 20px 40px var(--shadow-color);
+    }
+    
+    .blog-card:hover::before {
+        opacity: 1;
+    }
+    
+    .blog-image-link {
+        display: block;
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .blog-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform var(--transition-slow);
     }
     
     .blog-card:hover .blog-image {
-        transform: scale(1.1);
+        transform: scale(1.05);
     }
     
-    .blog-card:hover .blog-image::after {
-        opacity: 0.5;
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 100%);
+        opacity: 0.7;
+        transition: opacity var(--transition-normal);
     }
     
-    .blog-card-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--border-color);
+    .blog-card:hover .image-overlay {
+        opacity: 0.4;
+    }
+    
+    .blog-content {
+        padding: 2rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
     }
     
     .blog-meta {
@@ -205,9 +242,9 @@
     .blog-category {
         padding: 0.4rem 1rem;
         border-radius: 20px;
-        background: linear-gradient(135deg, #00ffff, #8a2be2);
-        color: #000;
-        font-size: 0.75rem;
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        font-size: 0.8rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -215,35 +252,28 @@
     
     .blog-date {
         color: var(--text-muted);
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         display: flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.5rem;
     }
     
     .blog-title {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin: 0;
+        margin-bottom: 1rem;
         line-height: 1.4;
     }
     
     .blog-title a {
         color: inherit;
         text-decoration: none;
-        transition: color 0.3s ease;
+        transition: color var(--transition-normal);
     }
     
     .blog-title a:hover {
         color: var(--primary-color);
-    }
-    
-    .blog-card-body {
-        padding: 1.5rem;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
     }
     
     .blog-excerpt {
@@ -253,18 +283,50 @@
         flex-grow: 1;
     }
     
-    .blog-card-footer {
-        padding: 1rem 1.5rem;
+    .blog-footer {
+        padding: 1.5rem 2rem;
         border-top: 1px solid var(--border-color);
         display: flex;
         justify-content: space-between;
         align-items: center;
+        background: var(--surface-1);
     }
     
     .blog-author {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
+    }
+    
+    .author-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-color);
+    }
+    
+    .author-avatar.placeholder {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    
+    .author-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .author-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+    
+    .author-role {
         color: var(--text-muted);
         font-size: 0.85rem;
     }
@@ -273,57 +335,59 @@
         display: flex;
         gap: 1rem;
         color: var(--text-muted);
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
     
     .blog-stat {
         display: flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.5rem;
     }
     
     .read-more-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.7rem 1.5rem;
-        background: linear-gradient(135deg, #00ffff, #8a2be2);
-        color: #000;
-        border-radius: 50px;
+        padding: 0.8rem 1.8rem;
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        border-radius: var(--border-radius-xl);
         text-decoration: none;
         font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
+        font-size: 0.95rem;
+        transition: all var(--transition-normal);
         border: none;
         cursor: pointer;
     }
     
     .read-more-btn:hover {
         transform: translateX(5px);
-        box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
-        color: #000;
+        box-shadow: 0 5px 20px var(--shadow-color);
     }
     
     /* Empty State */
     .empty-state {
         text-align: center;
-        padding: 5rem 2rem;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
     }
     
     .empty-icon {
-        font-size: 5rem;
-        color: rgba(0, 255, 255, 0.3);
+        font-size: 4rem;
+        color: var(--text-muted);
         margin-bottom: 1.5rem;
         animation: float 3s ease-in-out infinite;
     }
     
     @keyframes float {
         0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-20px); }
+        50% { transform: translateY(-15px); }
     }
     
     .empty-title {
-        font-size: 2rem;
+        font-size: 1.8rem;
         color: var(--text-primary);
         margin-bottom: 1rem;
     }
@@ -331,6 +395,11 @@
     .empty-text {
         color: var(--text-secondary);
         font-size: 1.1rem;
+        margin-bottom: 2rem;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
     }
     
     /* Pagination */
@@ -339,30 +408,36 @@
         justify-content: center;
         gap: 0.5rem;
         margin-top: 3rem;
+        flex-wrap: wrap;
     }
     
     .page-btn {
-        padding: 0.7rem 1.2rem;
+        padding: 0.8rem 1.2rem;
         background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: 10px;
+        border-radius: var(--border-radius-md);
         color: var(--text-primary);
         text-decoration: none;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal);
         font-weight: 600;
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .page-btn:hover {
-        background: rgba(0, 255, 255, 0.1);
+        background: rgba(var(--particle-color), 0.15);
         border-color: var(--primary-color);
         color: var(--primary-color);
         transform: translateY(-2px);
     }
     
     .page-btn.active {
-        background: linear-gradient(135deg, #00ffff, #8a2be2);
+        background: var(--gradient-primary);
         border-color: transparent;
-        color: #000;
+        color: var(--bg-primary);
     }
     
     .page-btn.disabled {
@@ -371,14 +446,191 @@
         pointer-events: none;
     }
     
+    /* Featured Posts Section */
+    .featured-section {
+        margin-bottom: 4rem;
+    }
+    
+    .featured-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .featured-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        transition: all var(--transition-normal);
+        position: relative;
+    }
+    
+    .featured-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transition: transform var(--transition-normal);
+    }
+    
+    .featured-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+        box-shadow: 0 15px 35px var(--shadow-color);
+    }
+    
+    .featured-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .featured-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        z-index: 1;
+    }
+    
+    /* Popular Tags */
+    .tags-section {
+        background: var(--surface-5);
+        padding: 3rem 0;
+        margin-bottom: 4rem;
+    }
+    
+    .tags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .tag-pill {
+        padding: 0.6rem 1.2rem;
+        background: var(--surface-2);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-xl);
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all var(--transition-normal);
+        font-size: 0.9rem;
+    }
+    
+    .tag-pill:hover {
+        background: rgba(var(--particle-color), 0.15);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    /* Newsletter Section */
+    .newsletter-section {
+        background: linear-gradient(135deg, rgba(var(--particle-color), 0.12) 0%, rgba(var(--particle-color), 0.06) 100%);
+        padding: 4rem 0;
+        border-radius: var(--border-radius-md);
+        margin-top: 4rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .newsletter-form {
+        max-width: 500px;
+        margin: 0 auto;
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .newsletter-form input {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-xl);
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+    
+    .newsletter-form input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 20px var(--shadow-color);
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
-        .blog-hero h1 { font-size: 2.3rem; }
-        .blog-hero { padding: 5rem 0 3rem; }
-        .blogs-grid { grid-template-columns: 1fr; gap: 1.25rem; }
-        .category-filters { gap: 0.5rem; }
-        .category-pill { font-size: 0.85rem; padding: 0.5rem 1rem; }
-        .blog-image { height: 200px; }
+        .blog-hero {
+            padding: 6rem 0 4rem;
+            min-height: 40vh;
+        }
+        
+        .blogs-section {
+            padding: 4rem 0;
+        }
+        
+        .blogs-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .blog-content {
+            padding: 1.5rem;
+        }
+        
+        .blog-footer {
+            padding: 1rem 1.5rem;
+        }
+        
+        .category-filters {
+            gap: 0.5rem;
+        }
+        
+        .category-pill {
+            font-size: 0.85rem;
+            padding: 0.6rem 1rem;
+        }
+        
+        .newsletter-form {
+            flex-direction: column;
+        }
+        
+        .blog-image-link {
+            height: 180px;
+        }
+        
+        .blog-title {
+            font-size: 1.3rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .blog-hero h1 {
+            font-size: clamp(2rem, 5vw, 2.5rem);
+        }
+        
+        .blog-hero p {
+            font-size: 1.1rem;
+        }
+        
+        .blog-footer {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .blog-stats {
+            margin-top: 0.5rem;
+        }
     }
 </style>
 {% endblock %}
@@ -386,35 +638,31 @@
 {% block content %}
 <!-- Hero Section -->
 <section class="blog-hero">
-    <div class="blog-hero-content">
-        <div class="container">
-            <h1 data-aos="fade-down">
-                <i class="fas fa-blog"></i> Digital Club Blog
-            </h1>
-            <p data-aos="fade-up" data-aos-delay="200">
-                Explore tech insights, tutorials, and stories from our vibrant community of developers and innovators
-            </p>
-            
-            <!-- Search Bar -->
-            <div class="search-container" data-aos="fade-up" data-aos-delay="400">
-                <input type="text" class="search-input" id="blogSearch" 
-                       placeholder="Search for articles, topics, or authors...">
-                <i class="fas fa-search search-icon"></i>
-            </div>
-            
-            <!-- Category Filters -->
-            <div class="category-filters" data-aos="fade-up" data-aos-delay="600">
-                <a href="{{ url_for('main.blogs') }}" 
-                   class="category-pill {% if not current_category %}active{% endif %}">
-                    <i class="fas fa-th"></i> All Posts
-                </a>
-                {% for category in categories %}
-                <a href="{{ url_for('main.blogs', category=category) }}" 
-                   class="category-pill {% if current_category == category %}active{% endif %}">
-                    {{ category|title }}
-                </a>
-                {% endfor %}
-            </div>
+    <div class="container">
+        <h1 data-aos="fade-up">Digital Club Blog</h1>
+        <p data-aos="fade-up" data-aos-delay="200">
+            Explore tech insights, tutorials, and stories from our vibrant community of developers and innovators
+        </p>
+        
+        <!-- Search Bar -->
+        <div class="search-container" data-aos="fade-up" data-aos-delay="400">
+            <input type="text" class="search-input" id="blogSearch" 
+                   placeholder="Search for articles, topics, or authors...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        
+        <!-- Category Filters -->
+        <div class="category-filters" data-aos="fade-up" data-aos-delay="600">
+            <a href="{{ url_for('main.blogs') }}" 
+               class="category-pill {% if not current_category %}active{% endif %}">
+                <i class="fas fa-th"></i> All Posts
+            </a>
+            {% for category in categories %}
+            <a href="{{ url_for('main.blogs', category=category) }}" 
+               class="category-pill {% if current_category == category %}active{% endif %}">
+                {{ category|title }}
+            </a>
+            {% endfor %}
         </div>
     </div>
 </section>
@@ -422,22 +670,34 @@
 <!-- Blogs Section -->
 <section class="blogs-section">
     <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Latest Articles</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+            Stay updated with the latest technology trends, tutorials, and insights from our community
+        </p>
         
         {% if blogs.items %}
-        <div class="blogs-grid">
+        <div class="blogs-grid" id="blogs-grid">
             {% for blog in blogs.items %}
             <article class="blog-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
                 {% if blog.featured_image %}
                 <a href="{{ url_for('main.blog_post', slug=blog.slug) }}" class="blog-image-link">
                     {% if blog.featured_image.startswith('http://') or blog.featured_image.startswith('https://') %}
-                    <div class="blog-image" style="background-image: url('{{ blog.featured_image }}');"></div>
+                    <img src="{{ blog.featured_image }}" alt="{{ blog.title }}" class="blog-image">
                     {% else %}
-                    <div class="blog-image" style="background-image: url('{{ url_for('static', filename=blog.featured_image) }}');"></div>
+                    <img src="{{ url_for('static', filename=blog.featured_image) }}" alt="{{ blog.title }}" class="blog-image">
                     {% endif %}
+                    <div class="image-overlay"></div>
+                </a>
+                {% else %}
+                <a href="{{ url_for('main.blog_post', slug=blog.slug) }}" class="blog-image-link">
+                    <div class="blog-image" style="background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: var(--bg-primary); font-size: 2rem;">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <div class="image-overlay"></div>
                 </a>
                 {% endif %}
                 
-                <div class="blog-card-header">
+                <div class="blog-content">
                     <div class="blog-meta">
                         <span class="blog-category">{{ blog.category|title }}</span>
                         <span class="blog-date">
@@ -445,14 +705,13 @@
                             {{ blog.published_date.strftime('%b %d, %Y') }}
                         </span>
                     </div>
+                    
                     <h2 class="blog-title">
                         <a href="{{ url_for('main.blog_post', slug=blog.slug) }}">
                             {{ blog.title }}
                         </a>
                     </h2>
-                </div>
-                
-                <div class="blog-card-body">
+                    
                     {% if blog.excerpt %}
                     <p class="blog-excerpt">
                         {{ blog.excerpt[:180] }}{% if blog.excerpt|length > 180 %}...{% endif %}
@@ -464,16 +723,33 @@
                     </a>
                 </div>
                 
-                <div class="blog-card-footer">
+                <div class="blog-footer">
                     <div class="blog-author">
-                        <i class="fas fa-user-circle"></i>
-                        {{ blog.author.full_name or blog.author.email.split('@')[0] }}
+                        {% if blog.author.profile_image %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' + blog.author.profile_image) }}" 
+                             alt="{{ blog.author.full_name }}" class="author-avatar">
+                        {% else %}
+                        <div class="author-avatar placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        {% endif %}
+                        <div class="author-info">
+                            <span class="author-name">{{ blog.author.full_name or blog.author.email.split('@')[0] }}</span>
+                            <span class="author-role">Author</span>
+                        </div>
                     </div>
+                    
                     <div class="blog-stats">
                         <span class="blog-stat">
                             <i class="fas fa-eye"></i>
                             {{ blog.views }}
                         </span>
+                        {% if blog.comment_count %}
+                        <span class="blog-stat">
+                            <i class="fas fa-comment"></i>
+                            {{ blog.comment_count }}
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
             </article>
@@ -533,21 +809,77 @@
                 {% endif %}
             </p>
             {% if current_category %}
-            <a href="{{ url_for('main.blogs') }}" class="read-more-btn" style="margin-top: 2rem;">
+            <a href="{{ url_for('main.blogs') }}" class="read-more-btn">
                 <i class="fas fa-th"></i> View All Posts
             </a>
             {% endif %}
         </div>
         {% endif %}
+        
+        <!-- Popular Tags -->
+        <section class="tags-section">
+            <div class="container">
+                <h3 class="section-title" style="font-size: 1.8rem;" data-aos="fade-up">Popular Topics</h3>
+                <div class="tags-container" data-aos="fade-up" data-aos-delay="200">
+                    <a href="{{ url_for('main.blogs', category='programming') }}" class="tag-pill">
+                        <i class="fas fa-code"></i> Programming
+                    </a>
+                    <a href="{{ url_for('main.blogs', category='web-development') }}" class="tag-pill">
+                        <i class="fas fa-globe"></i> Web Development
+                    </a>
+                    <a href="{{ url_for('main.blogs', category='ai-ml') }}" class="tag-pill">
+                        <i class="fas fa-brain"></i> AI & Machine Learning
+                    </a>
+                    <a href="{{ url_for('main.blogs', category='cybersecurity') }}" class="tag-pill">
+                        <i class="fas fa-shield-alt"></i> Cybersecurity
+                    </a>
+                    <a href="{{ url_for('main.blogs', category='mobile-dev') }}" class="tag-pill">
+                        <i class="fas fa-mobile-alt"></i> Mobile Development
+                    </a>
+                    <a href="{{ url_for('main.blogs', category='career') }}" class="tag-pill">
+                        <i class="fas fa-briefcase"></i> Career Tips
+                    </a>
+                    <a href="{{ url_for('main.blogs', category='tutorials') }}" class="tag-pill">
+                        <i class="fas fa-graduation-cap"></i> Tutorials
+                    </a>
+                    <a href="{{ url_for('main.blogs', category='news') }}" class="tag-pill">
+                        <i class="fas fa-newspaper"></i> Tech News
+                    </a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Newsletter Section -->
+        <section class="newsletter-section" data-aos="fade-up">
+            <div class="container" style="text-align: center;">
+                <h3 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.8rem;">
+                    <i class="fas fa-newspaper"></i> Stay Updated
+                </h3>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Subscribe to our newsletter and never miss a post. Get weekly updates on tech trends, tutorials, and club activities.
+                </p>
+                
+                <form class="newsletter-form" id="blog-newsletter-form">
+                    <input type="email" placeholder="Enter your email" name="email" required>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i> Subscribe
+                    </button>
+                </form>
+                
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 1rem;">
+                    We respect your privacy. Unsubscribe at any time.
+                </p>
+            </div>
+        </section>
     </div>
 </section>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    // Initialize AOS
+    // Initialize AOS animations
     AOS.init({
-        duration: 800,
+        duration: 1000,
         once: true,
         offset: 100
     });
@@ -564,11 +896,14 @@
             blogCards.forEach(card => {
                 const title = card.querySelector('.blog-title').textContent.toLowerCase();
                 const excerpt = card.querySelector('.blog-excerpt')?.textContent.toLowerCase() || '';
-                const author = card.querySelector('.blog-author').textContent.toLowerCase();
+                const author = card.querySelector('.author-name').textContent.toLowerCase();
+                const category = card.querySelector('.blog-category').textContent.toLowerCase();
                 
-                if (title.includes(searchTerm) || excerpt.includes(searchTerm) || author.includes(searchTerm)) {
+                if (title.includes(searchTerm) || excerpt.includes(searchTerm) || 
+                    author.includes(searchTerm) || category.includes(searchTerm)) {
                     card.style.display = 'flex';
                     visibleCount++;
+                    card.style.animation = 'fadeIn 0.5s ease-in-out';
                 } else {
                     card.style.display = 'none';
                 }
@@ -587,8 +922,17 @@
                         <div class="empty-icon"><i class="fas fa-search"></i></div>
                         <h2 class="empty-title">No Results Found</h2>
                         <p class="empty-text">Try searching with different keywords</p>
+                        <button id="clearSearch" class="read-more-btn" style="margin-top: 1rem;">
+                            <i class="fas fa-times"></i> Clear Search
+                        </button>
                     `;
                     blogsGrid.parentNode.insertBefore(noResults, blogsGrid.nextSibling);
+                    
+                    // Add clear search functionality
+                    document.getElementById('clearSearch').addEventListener('click', function() {
+                        searchInput.value = '';
+                        filterBlogs();
+                    });
                 }
                 blogsGrid.style.display = 'none';
             } else {
@@ -598,7 +942,22 @@
         });
     }
     
-    // Add smooth scroll for pagination
+    // Add CSS animation for fade in effect
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .blog-card {
+            display: flex;
+            flex-direction: column;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Smooth scroll for pagination
     document.querySelectorAll('.page-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             if (!this.classList.contains('disabled') && !this.classList.contains('active')) {
@@ -606,5 +965,84 @@
             }
         });
     });
+    
+    // Newsletter form handling
+    const newsletterForm = document.getElementById('blog-newsletter-form');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('{{ url_for("main.newsletter_subscribe") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Successfully subscribed to newsletter!');
+                    this.reset();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
+    
+    // Filter blogs function
+    function filterBlogs() {
+        const searchTerm = searchInput.value.toLowerCase();
+        let visibleCount = 0;
+        
+        blogCards.forEach(card => {
+            const title = card.querySelector('.blog-title').textContent.toLowerCase();
+            const excerpt = card.querySelector('.blog-excerpt')?.textContent.toLowerCase() || '';
+            const author = card.querySelector('.author-name').textContent.toLowerCase();
+            const category = card.querySelector('.blog-category').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || excerpt.includes(searchTerm) || 
+                author.includes(searchTerm) || category.includes(searchTerm)) {
+                card.style.display = 'flex';
+                visibleCount++;
+                card.style.animation = 'fadeIn 0.5s ease-in-out';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show/hide empty message
+        const blogsGrid = document.querySelector('.blogs-grid');
+        let noResults = document.getElementById('noSearchResults');
+        
+        if (visibleCount === 0 && searchTerm) {
+            if (!noResults) {
+                noResults = document.createElement('div');
+                noResults.id = 'noSearchResults';
+                noResults.className = 'empty-state';
+                noResults.innerHTML = `
+                    <div class="empty-icon"><i class="fas fa-search"></i></div>
+                    <h2 class="empty-title">No Results Found</h2>
+                    <p class="empty-text">Try searching with different keywords</p>
+                    <button id="clearSearch" class="read-more-btn" style="margin-top: 1rem;">
+                        <i class="fas fa-times"></i> Clear Search
+                    </button>
+                `;
+                blogsGrid.parentNode.insertBefore(noResults, blogsGrid.nextSibling);
+                
+                document.getElementById('clearSearch').addEventListener('click', function() {
+                    searchInput.value = '';
+                    filterBlogs();
+                });
+            }
+            blogsGrid.style.display = 'none';
+        } else {
+            blogsGrid.style.display = 'grid';
+            if (noResults) noResults.remove();
+        }
+    }
 </script>
 {% endblock %}
