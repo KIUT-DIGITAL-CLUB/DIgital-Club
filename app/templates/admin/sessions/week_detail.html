@@ -1,0 +1,79 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Session Week{% endblock %}
+{% block page_title %}Weekly Timetable{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.sessions_index') }}">Sessions</a><span class="breadcrumb-separator">/</span> <span>{{ week.week_start.strftime('%b %d') }} - {{ week.week_end.strftime('%b %d, %Y') }}</span>{% endblock %}
+
+{% block admin_content %}
+<div class="admin-card mb-3">
+    <div class="admin-card-body d-flex flex-wrap gap-2 justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-1">{{ week.title or 'Weekly Sessions' }}</h5>
+            <div class="text-muted">Week of {{ week.week_start.strftime('%b %d') }} - {{ week.week_end.strftime('%b %d, %Y') }}</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.sessions_session_add', week_id=week.id) }}" class="admin-btn admin-btn-primary">
+                <i class="fas fa-plus"></i> Add Session
+            </a>
+            {% if week.status != 'published' %}
+            <form method="POST" action="{{ url_for('admin.sessions_week_publish', week_id=week.id) }}">
+                <button type="submit" class="admin-btn admin-btn-outline">Publish Week</button>
+            </form>
+            {% else %}
+            <form method="POST" action="{{ url_for('admin.sessions_week_archive', week_id=week.id) }}">
+                <button type="submit" class="admin-btn admin-btn-outline">Archive</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if day_list %}
+    {% for day, sessions in day_list %}
+    <div class="admin-card mb-3">
+        <div class="admin-card-header">
+            <h5>{{ day.strftime('%A, %b %d') }}</h5>
+        </div>
+        <div class="admin-card-body">
+            <div class="admin-table-responsive">
+                <table class="table admin-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Topic</th>
+                            <th>Category</th>
+                            <th>Mode</th>
+                            <th>Instructor</th>
+                            <th>Duration</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in sessions %}
+                        <tr>
+                            <td>{{ s.start_time.strftime('%H:%M') }}</td>
+                            <td>{{ s.topic }}</td>
+                            <td>{{ s.category }}</td>
+                            <td>{{ s.mode }}</td>
+                            <td>{{ s.instructor.member.full_name if s.instructor.member else s.instructor.email }}</td>
+                            <td>{{ s.teaching_minutes }} + {{ s.questions_minutes }} mins</td>
+                            <td class="text-end">
+                                <a href="{{ url_for('admin.sessions_session_edit', session_id=s.id) }}" class="admin-btn admin-btn-outline admin-btn-sm">Edit</a>
+                                <form method="POST" action="{{ url_for('admin.sessions_session_delete', session_id=s.id) }}" class="d-inline">
+                                    <button type="submit" class="admin-btn admin-btn-outline admin-btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="admin-card">
+        <div class="admin-card-body">No sessions added yet.</div>
+    </div>
+{% endif %}
+{% endblock %}

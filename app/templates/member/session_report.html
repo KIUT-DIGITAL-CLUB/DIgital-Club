@@ -1,0 +1,50 @@
+{% extends "member/member_base.html" %}
+
+{% block title %}Session Report{% endblock %}
+{% block page_title %}Session Report{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('member.sessions_timetable') }}">Sessions</a><span class="breadcrumb-separator">/</span> <span>Report</span>{% endblock %}
+
+{% block member_content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5>Submit Session Report</h5>
+    </div>
+    <div class="admin-card-body">
+        <p class="mb-3">
+            Session: <strong>{{ session.topic }}</strong> • {{ session.session_date.strftime('%b %d, %Y') }} at {{ session.start_time.strftime('%H:%M') }}
+        </p>
+
+        {% if report and report.status == 'approved' %}
+            <div class="alert-card alert-success">
+                <div class="d-flex align-items-center">
+                    <div class="alert-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>Report already approved. Points have been awarded.</div>
+                </div>
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="mb-3">
+                <label class="admin-form-label">Winner Username (from exam system)</label>
+                <input type="text" name="winner_username" class="admin-form-control" value="{{ report.winner_username if report else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="admin-form-label">Highest Participants Count</label>
+                <input type="number" name="participant_count" class="admin-form-control" min="0" value="{{ report.participant_count if report else 0 }}">
+            </div>
+            <div class="mb-3">
+                <label class="admin-form-label">Notes (optional)</label>
+                <textarea name="notes" class="admin-form-control" rows="3">{{ report.notes if report else '' }}</textarea>
+            </div>
+            <button type="submit" class="admin-btn admin-btn-primary">
+                <i class="fas fa-paper-plane"></i> Submit Report
+            </button>
+            <a href="{{ url_for('member.sessions_timetable') }}" class="admin-btn admin-btn-outline ms-2">
+                Back
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

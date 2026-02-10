@@ -29,7 +29,7 @@
             </div>
             <div class="col-md-6">
                 <h3>{{ member.full_name }}</h3>
-                <p class="text-muted mb-2">{{ member.title or 'Member' }}</p>
+                <p class="mb-2">{{ member.title or 'Member' }}</p>
                 <div class="mb-2">
                     <strong>Member ID:</strong> {{ member.member_id_number }}<br>
                     <strong>Email:</strong> {{ member.user.email }}<br>
@@ -40,7 +40,7 @@
             <div class="col-md-4 text-end">
                 <div class="mb-3">
                     <h4 class="mb-0">{{ total_points }}</h4>
-                    <small class="text-muted">Total Points</small>
+                    <small >Total Points</small>
                 </div>
                 {% if membership_status == 'valid' %}
                 <span class="admin-badge admin-badge-success" style="font-size: 1rem; padding: 8px 16px;">
@@ -86,7 +86,7 @@
                         <i class="{{ trophy.icon }}"></i>
                     </div>
                     <h6 class="mt-2">{{ trophy.name }}</h6>
-                    <small class="text-muted">{{ trophy.points_required }} points</small>
+                    <small >{{ trophy.points_required }} points</small>
                 </div>
             </div>
             {% endfor %}

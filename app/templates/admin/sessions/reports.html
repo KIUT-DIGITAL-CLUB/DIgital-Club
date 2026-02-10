@@ -1,0 +1,66 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Session Reports{% endblock %}
+{% block page_title %}Session Reports{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.sessions_index') }}">Sessions</a><span class="breadcrumb-separator">/</span> <span>Reports</span>{% endblock %}
+
+{% block admin_content %}
+<div class="admin-card mb-3">
+    <div class="admin-card-body">
+        <h5 class="mb-1">Instructor Reports</h5>
+        <p class="mb-0">Approve winners and award points for sessions.</p>
+    </div>
+</div>
+
+<div class="admin-table-responsive">
+    <table class="table admin-table">
+        <thead>
+            <tr>
+                <th>Session</th>
+                <th>Instructor</th>
+                <th>Winner Username</th>
+                <th>Participants</th>
+                <th>Status</th>
+                <th>Award</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reports %}
+            <tr>
+                <td>
+                    <div>{{ r.session.topic }}</div>
+                    <small class="text-muted">{{ r.session.session_date.strftime('%b %d, %Y') }}</small>
+                </td>
+                <td>{{ r.instructor.member.full_name if r.instructor.member else r.instructor.email }}</td>
+                <td>{{ r.winner_username or '-' }}</td>
+                <td>{{ r.participant_count }}</td>
+                <td><span class="admin-badge admin-badge-{{ 'success' if r.status == 'approved' else 'danger' if r.status == 'rejected' else 'info' }}">{{ r.status }}</span></td>
+                <td>
+                    {% if r.status == 'pending' %}
+                    <form method="POST" action="{{ url_for('admin.sessions_report_approve', report_id=r.id) }}" class="d-flex gap-2 align-items-center">
+                        <select name="winner_user_id" class="form-select form-select-sm" required>
+                            <option value="">Select winner</option>
+                            {% for u in users %}
+                            <option value="{{ u.id }}">{{ u.member.full_name if u.member else u.email }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="admin-btn admin-btn-outline admin-btn-sm">Approve +5</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.sessions_report_reject', report_id=r.id) }}" class="mt-2">
+                        <button type="submit" class="admin-btn admin-btn-outline admin-btn-sm">Reject</button>
+                    </form>
+                    {% else %}
+                        {% if r.winner %}
+                        <div class="text-muted" style="font-size: 0.85rem;">Winner: {{ r.winner.member.full_name if r.winner.member else r.winner.email }}</div>
+                        {% endif %}
+                        <div class="text-muted" style="font-size: 0.85rem;">Points: {{ r.points_awarded }}</div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center">No reports submitted yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,1149 @@
+﻿{% extends "member/member_base.html" %}
+
+{% block title %}{{ competition.title }} - Digital Club{% endblock %}
+{% block page_title %}Competition Detail{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('member.competitions_' + competition.frequency) }}">Competitions</a><span class="breadcrumb-separator">/</span> <span>{{ competition.title }}</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Competition Detail Specific Styles */
+    .competition-detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .competition-detail-page {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    @media (max-width: 992px) {
+        .competition-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .competition-header-card {
+        background: var(--gradient-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+    }
+    
+    .competition-header-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .competition-title-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .competition-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .competition-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+    
+    .competition-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .competition-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.85rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border: 1px solid;
+        transition: all 0.2s ease;
+    }
+    
+    .tag-category {
+        background: rgba(var(--particle-color), 0.1);
+        color: var(--primary-color);
+        border-color: rgba(var(--particle-color), 0.3);
+    }
+    
+    .tag-frequency {
+        background: rgba(255, 0, 255, 0.1);
+        color: var(--secondary-color);
+        border-color: rgba(255, 0, 255, 0.3);
+    }
+    
+    .tag-level {
+        background: rgba(255, 255, 0, 0.014);
+        color: ar(--secondary-color);
+        border-color: rgba(255, 255, 0, 0.3);
+    }
+    
+    .tag-submission {
+        background: rgba(0, 255, 0, 0.1);
+        color: var(--success-color);
+        border-color: rgba(0, 255, 0, 0.3);
+    }
+    
+    .tag-status {
+        background: rgba(255, 170, 0, 0.1);
+        color: var(--warning-color);
+        border-color: rgba(255, 170, 0, 0.3);
+    }
+    
+    .competition-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 0.75rem;
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
+    }
+    
+    .stat-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        font-family: 'Fira Code', monospace;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .countdown-container {
+        background: var(--surface-2);
+        border-radius: var(--border-radius-md);
+        padding: 1.25rem;
+        border: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+        width: 100%;
+    }
+    
+    .countdown-title {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .countdown-timer {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    
+    .time-unit {
+        text-align: center;
+        min-width: 60px;
+    }
+    
+    .time-value {
+        display: block;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        font-family: 'Fira Code', monospace;
+        line-height: 1;
+    }
+    
+    .time-label {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+    }
+    
+    .countdown-progress {
+        height: 4px;
+        background: var(--surface-1);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+    
+    .countdown-progress-bar {
+        height: 100%;
+        background: var(--gradient-primary);
+        width: var(--progress-width, 50%);
+        transition: width 1s linear;
+    }
+    
+    .deadline-info {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-align: center;
+    }
+    
+    .section-card {
+        margin-bottom: 1.5rem;
+        width: 100%;
+    }
+    
+    .section-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 4px;
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--surface-1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .description-box {
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        padding: 1.25rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .info-icon {
+        color: var(--primary-color);
+        font-size: 1.1rem;
+        margin-top: 0.1rem;
+        min-width: 20px;
+    }
+    
+    .info-content {
+        flex: 1;
+    }
+    
+    .info-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.1rem;
+    }
+    
+    .info-value {
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .reward-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+    
+    .reward-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+    
+    .reward-item:hover {
+        border-color: var(--primary-color);
+        background: var(--surface-2);
+    }
+    
+    .reward-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-color);
+        font-size: 1rem;
+    }
+    
+    .reward-details {
+        flex: 1;
+    }
+    
+    .reward-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.1rem;
+    }
+    
+    .reward-description {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    
+    .reward-points {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .enrollment-card, .leaderboard-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .sponsor-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+    
+    .sponsor-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
+    }
+    
+    .sponsor-logo {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--border-radius-sm);
+        object-fit: contain;
+        border: 1px solid var(--border-color);
+        background: white;
+        padding: 0.25rem;
+    }
+    
+    .sponsor-details {
+        flex: 1;
+    }
+    
+    .sponsor-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.1rem;
+    }
+    
+    .sponsor-type {
+        font-size: 0.75rem;
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+    
+    .alert-card {
+        border-radius: var(--border-radius-sm);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid;
+    }
+    
+    .alert-success {
+        background: rgba(0, 255, 0, 0.1);
+        border-color: var(--success-color);
+        color: var(--success-color);
+    }
+    
+    .alert-warning {
+        background: rgba(255, 170, 0, 0.1);
+        border-color: var(--warning-color);
+        color: var(--warning-color);
+    }
+    
+    .alert-info {
+        background: rgba(0, 255, 255, 0.1);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+    
+    .alert-danger {
+        background: rgba(255, 0, 0, 0.1);
+        border-color: var(--error-color);
+        color: var(--error-color);
+    }
+    
+    .alert-icon {
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+    
+    .submission-form {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        padding: 1.25rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .form-upload-area {
+        border: 2px dashed var(--border-color);
+        border-radius: var(--border-radius-sm);
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .form-upload-area:hover {
+        border-color: var(--primary-color);
+        background: var(--surface-2);
+    }
+    
+    .upload-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .upload-text {
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .upload-hint {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .rank-card {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.25rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .rank-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .rank-highlight {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-color);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .rank-badge {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-family: 'Fira Code', monospace;
+        background: var(--surface-2);
+        border: 1px solid var(--border-color);
+    }
+
+    .rank-medal {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #111;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .rank-gold { background: linear-gradient(45deg, #FFD700, #FFA500); }
+    .rank-silver { background: linear-gradient(45deg, #C0C0C0, #A0A0A0); }
+    .rank-bronze { background: linear-gradient(45deg, #CD7F32, #A0522D); }
+
+    .rank-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+        .rank-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block member_content %}
+<div class="competition-detail-page">
+<div class="competition-header-card">
+    <div class="competition-title-section">
+        <h1 class="competition-title">{{ competition.title }}</h1>
+        <p class="competition-subtitle">{{ competition.category }} • {{ competition.frequency|title }} Competition</p>
+    </div>
+    
+    <div class="competition-tags">
+        <span class="competition-tag tag-category">
+            <i class="fas fa-tag"></i>{{ competition.category }}
+        </span>
+        <span class="competition-tag tag-frequency">
+            <i class="fas fa-calendar-alt"></i>{{ competition.frequency|title }}
+        </span>
+        <span class="competition-tag tag-level">
+            <i class="fas fa-chart-line"></i>Level {{ competition.level }}
+        </span>
+        <span class="competition-tag tag-submission">
+            <i class="fas fa-paper-plane"></i>{{ competition.submission_type|title }}
+        </span>
+        {% if competition.status == 'published' %}
+        <span class="competition-tag tag-status">
+            <i class="fas fa-circle"></i>Open
+        </span>
+        {% else %}
+        <span class="competition-tag tag-status">
+            <i class="fas fa-circle"></i>Closed
+        </span>
+        {% endif %}
+    </div>
+    
+    <div class="competition-stats">
+        <div class="stat-item">
+            <span class="stat-value">{{ competition.enrollments.count() }}</span>
+            <span class="stat-label">Participants</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">{{ competition.rewards.count() }}</span>
+            <span class="stat-label">Rewards</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">{{ competition.level }}</span>
+            <span class="stat-label">Difficulty</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">{{ competition.submission_max_mb }}MB</span>
+            <span class="stat-label">Max Size</span>
+        </div>
+    </div>
+    
+    <div class="countdown-container">
+        <div class="countdown-title">Time Remaining</div>
+        <div class="countdown-timer">
+            <div class="time-unit">
+                <span class="time-value" id="days">00</span>
+                <span class="time-label">Days</span>
+            </div>
+            <div class="time-unit">
+                <span class="time-value" id="hours">00</span>
+                <span class="time-label">Hours</span>
+            </div>
+            <div class="time-unit">
+                <span class="time-value" id="minutes">00</span>
+                <span class="time-label">Minutes</span>
+            </div>
+            <div class="time-unit">
+                <span class="time-value" id="seconds">00</span>
+                <span class="time-label">Seconds</span>
+            </div>
+        </div>
+        
+        <div class="countdown-progress">
+            <div class="countdown-progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="deadline-info">
+            <i class="fas fa-clock"></i>
+            Deadline: {{ competition.ends_at.strftime('%A, %b %d, %Y at %H:%M') }}
+        </div>
+    </div>
+</div>
+
+{% if competition.status == 'finalized' %}
+<div class="admin-card mb-4">
+    <div class="admin-card-header">
+        <h5>Final Ranking</h5>
+    </div>
+    <div class="admin-card-body">
+        {% if my_rank %}
+        <div class="rank-card">
+            <div class="rank-highlight">
+                Final Result
+            </div>
+            <div class="rank-row mt-3">
+                {% if my_rank == 1 %}
+                    <span class="rank-medal rank-gold" title="1st place">
+                        <i class="fas fa-medal"></i>
+                    </span>
+                {% elif my_rank == 2 %}
+                    <span class="rank-medal rank-silver" title="2nd place">
+                        <i class="fas fa-medal"></i>
+                    </span>
+                {% elif my_rank == 3 %}
+                    <span class="rank-medal rank-bronze" title="3rd place">
+                        <i class="fas fa-medal"></i>
+                    </span>
+                {% else %}
+                    <span class="rank-badge">#{{ my_rank }}</span>
+                {% endif %}
+                <div>
+                    <div><strong>Rank {{ my_rank }}</strong> out of {{ total_ranked }} participants</div>
+                    {% if my_award %}
+                        <div class="rank-meta">
+                            Award: {{ my_award[3] }}
+                            {% if my_award[1] %}• {{ my_award[1] }}{% endif %}
+                            • +{{ my_award[0] }} pts
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="rank-meta">You did not submit an entry for this competition.</div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div class="competition-detail-grid">
+    <!-- Left Column: Main Content -->
+    <div>
+        <!-- Challenge Brief -->
+        <div class="admin-card section-card">
+            <div class="section-card-header">
+                <div class="section-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h5 class="section-title">Challenge Brief</h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="description-box">
+                    {{ competition.description }}
+                </div>
+                
+                <div class="info-grid mt-3">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Submission Opens</div>
+                            <div class="info-value">{{ competition.starts_at.strftime('%b %d, %Y %H:%M') }}</div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-calendar-times"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Submission Closes</div>
+                            <div class="info-value">{{ competition.ends_at.strftime('%b %d, %Y %H:%M') }}</div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Submission Type</div>
+                            <div class="info-value">{{ competition.submission_type|title }}</div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Max File Size</div>
+                            <div class="info-value">{{ competition.submission_max_mb }} MB</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Assessment -->
+        <div class="admin-card section-card">
+            <div class="section-card-header">
+                <div class="section-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h5 class="section-title">Assessment Details</h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Assessment Mode</div>
+                            <div class="info-value">{{ competition.assessment_mode.title() }}</div>
+                        </div>
+                    </div>
+                    {% if competition.assessment_date %}
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Assessment Date</div>
+                            <div class="info-value">{{ competition.assessment_date.strftime('%b %d, %Y %H:%M') }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if competition.assessment_location %}
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Location</div>
+                            <div class="info-value">{{ competition.assessment_location }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if competition.assessment_link %}
+                <div class="alert-card alert-info mt-3">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <div>
+                            <strong>Assessment Link:</strong>
+                            <a href="{{ competition.assessment_link }}" target="_blank" class="ms-2">
+                                {{ competition.assessment_link }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if competition.assessment_instructions %}
+                <div class="mt-3">
+                    <div class="info-label mb-2">Instructions</div>
+                    <div class="description-box">
+                        {{ competition.assessment_instructions }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Scoring & Awards -->
+        <div class="admin-card section-card">
+            <div class="section-card-header">
+                <div class="section-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h5 class="section-title">Scoring & Awards</h5>
+            </div>
+            <div class="admin-card-body">
+                <p class="mb-3">Scores are weighted by criteria and averaged across judges. Final score = average + bonus (if any). Ranks are assigned by final score.</p>
+                
+                {% if rewards %}
+                <div class="reward-list">
+                    {% for r in rewards %}
+                    <div class="reward-item">
+                        <div class="reward-icon">
+                            <i class="fas fa-medal"></i>
+                        </div>
+                        <div class="reward-details">
+                            <div class="reward-title">
+                                {% if r.reward_type == 'percent' %}
+                                    Top {{ r.percent }}%
+                                {% else %}
+                                    Positions {{ r.rank_from }} - {{ r.rank_to }}
+                                {% endif %}
+                            </div>
+                            {% if r.prize_title %}
+                            <div class="reward-description">{{ r.prize_title }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="reward-points">+{{ r.points }} pts</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert-card alert-info">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div>No rewards announced yet. Check back soon!</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Submission -->
+        <div class="admin-card section-card">
+            <div class="section-card-header">
+                <div class="section-icon">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <h5 class="section-title">Your Submission</h5>
+            </div>
+            <div class="admin-card-body">
+                {% if enrollment and enrollment.status == 'disqualified' %}
+                <div class="alert-card alert-danger">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div>
+                            <strong>You have been disqualified.</strong>
+                            <div class="mt-1">{{ enrollment.disqualified_reason or 'Contact admin for details.' }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% elif submission %}
+                <div class="alert-card alert-success">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <strong>Submission received!</strong>
+                            <div class="mt-1">Submitted at {{ submission.submitted_at.strftime('%b %d, %Y %H:%M') }}</div>
+                            {% if submission.submission_type in ['video', 'report'] %}
+                            <div class="mt-2">
+                                <a href="{{ url_for('static', filename='uploads/competitions/' + submission.submission_value) }}" 
+                                   target="_blank" 
+                                   class="admin-btn admin-btn-outline admin-btn-sm">
+                                    <i class="fas fa-download"></i> Download Submission
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="mt-2">
+                                <a href="{{ submission.submission_value }}" 
+                                   target="_blank" 
+                                   class="admin-btn admin-btn-outline admin-btn-sm">
+                                    <i class="fas fa-external-link-alt"></i> View Submission
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% elif enrollment and eligible %}
+                <div class="submission-form">
+                    <form method="POST" action="{{ url_for('member.competition_submit', competition_id=competition.id) }}" enctype="multipart/form-data">
+                        {% if competition.submission_type in ['video', 'report'] %}
+                        <div class="form-upload-area" id="uploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="upload-text">Drag & drop your file here or click to browse</div>
+                            <div class="upload-hint">Maximum file size: {{ competition.submission_max_mb }}MB</div>
+                            <input type="file" name="submission_file" id="submissionFile" class="d-none" required>
+                            <div class="mt-2" id="fileName"></div>
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <label class="admin-form-label">Submission Link</label>
+                            <input type="text" 
+                                   name="submission_url" 
+                                   class="admin-form-control" 
+                                   placeholder="https://your-submission-link.com"
+                                   required>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <button type="submit" class="admin-btn admin-btn-primary w-100">
+                                <i class="fas fa-paper-plane"></i> Submit Entry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% elif not enrollment %}
+                <div class="alert-card alert-info">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                            <strong>Enroll first to unlock submissions.</strong>
+                            <div class="mt-1">Only one submission will be recorded per participant.</div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert-card alert-warning">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <strong>Not eligible to submit.</strong>
+                            <div class="mt-1">{{ reason }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Sidebar -->
+    <div>
+        <!-- Enrollment -->
+        <div class="admin-card enrollment-card">
+            <div class="admin-card-header">
+                <h5>Enrollment Status</h5>
+            </div>
+            <div class="admin-card-body">
+                <p class="mb-3">
+                    <i class="fas fa-info-circle me-1"></i>
+                    One submission only will be recorded. Ensure your contact info is up to date for notifications.
+                </p>
+                
+                {% if not enrollment %}
+                <form method="POST" action="{{ url_for('member.competition_enroll', competition_id=competition.id) }}">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="agree_terms" id="agree_terms" required>
+                        <label class="form-check-label" for="agree_terms" style="font-size: 0.85rem;">
+                            I agree to the competition rules, submission mode, assessment, and award terms.
+                        </label>
+                    </div>
+                    <button type="submit" class="admin-btn admin-btn-primary w-100">
+                        <i class="fas fa-user-check"></i> Enroll Now
+                    </button>
+                </form>
+                {% else %}
+                <div class="alert-card alert-success">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <strong>You are enrolled!</strong>
+                            <div class="mt-1">Ready to submit when the time comes.</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Leaderboard -->
+        <div class="admin-card leaderboard-card">
+            <div class="admin-card-header">
+                <h5>Leaderboard</h5>
+            </div>
+            <div class="admin-card-body">
+                <p class="mb-3">See current rankings and track your position.</p>
+                <a href="{{ url_for('member.competition_leaderboard', competition_id=competition.id) }}" class="admin-btn admin-btn-outline w-100">
+                    <i class="fas fa-list-ol"></i> View Leaderboard
+                </a>
+            </div>
+        </div>
+        
+        <!-- Judge Panel -->
+        {% if is_judge %}
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h5>Judge Panel</h5>
+            </div>
+            <div class="admin-card-body">
+                <p class="mb-3">Score submissions assigned to you.</p>
+                <a href="{{ url_for('member.competition_leaderboard', competition_id=competition.id) }}" class="admin-btn admin-btn-outline w-100">
+                    <i class="fas fa-pen"></i> Open Scoring Panel
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Sponsors -->
+        {% if sponsors %}
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h5>Sponsors</h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="sponsor-list">
+                    {% for link in sponsors %}
+                    <div class="sponsor-item">
+                        {% if link.sponsor.logo %}
+                        <img src="{{ link.sponsor.logo }}" alt="{{ link.sponsor.name }}" class="sponsor-logo">
+                        {% endif %}
+                        <div class="sponsor-details">
+                            <div class="sponsor-name">{{ link.sponsor.name }}</div>
+                            {% if link.is_primary %}
+                            <div class="sponsor-type">Main Sponsor</div>
+                            {% endif %}
+                            {% if link.sponsor.website %}
+                            <a href="{{ link.sponsor.website }}" target="_blank" style="font-size: 0.8rem;">
+                                Visit Website
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Countdown Timer
+    const endTime = new Date("{{ competition.ends_at.isoformat() }}");
+    const startTime = new Date("{{ competition.starts_at.isoformat() }}");
+    
+    function updateCountdown() {
+        const now = new Date();
+        const totalDuration = endTime - startTime;
+        const timePassed = now - startTime;
+        const timeLeft = endTime - now;
+        
+        // Update progress bar
+        const progress = Math.min(100, Math.max(0, (timePassed / totalDuration) * 100));
+        document.getElementById('progressBar').style.width = progress + '%';
+        
+        if (timeLeft <= 0) {
+            document.getElementById('days').textContent = '00';
+            document.getElementById('hours').textContent = '00';
+            document.getElementById('minutes').textContent = '00';
+            document.getElementById('seconds').textContent = '00';
+            return;
+        }
+        
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        
+        document.getElementById('days').textContent = days.toString().padStart(2, '0');
+        document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+        document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+        document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+    }
+    
+    // File upload handling
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('submissionFile');
+    const fileName = document.getElementById('fileName');
+    
+    if (uploadArea && fileInput) {
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                fileName.innerHTML = `
+                    <div class="alert-card alert-info">
+                        <i class="fas fa-file me-2"></i>
+                        ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)
+                    </div>
+                `;
+            }
+        });
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--primary-color)';
+            uploadArea.style.backgroundColor = 'var(--surface-2)';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = 'var(--border-color)';
+            uploadArea.style.backgroundColor = '';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--border-color)';
+            uploadArea.style.backgroundColor = '';
+            
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                const file = e.dataTransfer.files[0];
+                fileName.innerHTML = `
+                    <div class="alert-card alert-info">
+                        <i class="fas fa-file me-2"></i>
+                        ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)
+                    </div>
+                `;
+            }
+        });
+    }
+    
+    // Initialize countdown
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+</script>
+{% endblock %}

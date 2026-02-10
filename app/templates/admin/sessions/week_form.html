@@ -1,0 +1,26 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}New Week{% endblock %}
+{% block page_title %}Create Week{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.sessions_index') }}">Sessions</a><span class="breadcrumb-separator">/</span> <span>New Week</span>{% endblock %}
+
+{% block admin_content %}
+<div class="admin-card">
+    <div class="admin-card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="admin-form-label">Title</label>
+                <input type="text" name="title" class="admin-form-control" placeholder="Weekly Sessions">
+            </div>
+            <div class="mb-3">
+                <label class="admin-form-label">Week Start (Monday)</label>
+                <input type="date" name="week_start" class="admin-form-control" required>
+            </div>
+            <button type="submit" class="admin-btn admin-btn-primary">
+                <i class="fas fa-save"></i> Create Week
+            </button>
+            <a href="{{ url_for('admin.sessions_index') }}" class="admin-btn admin-btn-outline ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

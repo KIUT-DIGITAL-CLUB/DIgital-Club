@@ -8,7 +8,7 @@
 <div class="admin-page-header mb-4">
     <div>
         <h2 class="mb-1">Membership Payments</h2>
-        <p class="text-muted mb-0">Track all membership fee payments</p>
+        <p class="mb-0">Track all membership fee payments</p>
     </div>
     <div class="admin-page-header-actions">
         <a href="{{ url_for('admin.financial') }}" class="admin-btn admin-btn-outline">
@@ -31,7 +31,7 @@
             </div>
             <div class="flex-grow-1">
                 <h5 class="mb-1">Current Financial Period: {{ current_period.name }}</h5>
-                <p class="mb-0 text-muted">
+                <p >
                     {{ current_period.start_date.strftime('%B %d, %Y') }} - {{ current_period.end_date.strftime('%B %d, %Y') }}
                     {% if current_period.description %} | {{ current_period.description }}{% endif %}
                 </p>
@@ -54,7 +54,7 @@
             </div>
             <div class="flex-grow-1">
                 <h5 class="mb-1">No Active Financial Period</h5>
-                <p class="mb-0 text-muted">
+                <p >
                     Create a financial period so new payments are tied to a budget cycle.
                 </p>
             </div>
@@ -160,7 +160,7 @@
                         <a href="{{ url_for('admin.member_detail', member_id=payment.member.id) }}">
                             {{ payment.member.full_name }}
                         </a><br>
-                        <small class="text-muted">{{ payment.member.member_id_number }}</small>
+                        <small >{{ payment.member.member_id_number }}</small>
                     </td>
                     <td>
                         {% if payment.financial_period %}

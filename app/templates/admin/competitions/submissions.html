@@ -1,0 +1,397 @@
+﻿{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Submissions - {{ competition.title }}{% endblock %}
+{% block page_title %}Submissions{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.competitions_view', competition_id=competition.id) }}">{{ competition.title }}</a><span class="breadcrumb-separator">/</span> <span>Submissions</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Admin Submissions Specific Styles */
+    .submissions-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--admin-border);
+    }
+    
+    .submissions-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .submission-stat {
+        text-align: center;
+        padding: 0.75rem;
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--admin-border);
+    }
+    
+    .submission-value {
+        display: block;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--admin-primary);
+        font-family: 'Fira Code', monospace;
+        line-height: 1;
+    }
+    
+    .submission-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--admin-text-muted);
+        margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .submission-row {
+        display: grid;
+        grid-template-columns: 2fr repeat(7, 1fr) auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid var(--admin-border);
+        transition: all 0.2s ease;
+    }
+    
+    .submission-row:hover {
+        background: var(--surface-1);
+    }
+    
+    .submission-row:last-child {
+        border-bottom: none;
+    }
+    
+    .submission-member-cell {
+        min-width: 200px;
+    }
+    
+    .submission-member {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .member-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--admin-primary);
+        font-weight: 600;
+        border: 2px solid var(--admin-border);
+    }
+    
+    .member-details {
+        line-height: 1.3;
+    }
+    
+    .member-name {
+        font-weight: 600;
+        color: var(--admin-text-primary);
+        font-size: 0.9rem;
+    }
+    
+    .member-email {
+        font-size: 0.8rem;
+        color: var(--admin-text-muted);
+    }
+    
+    .submission-meta-cell {
+        text-align: center;
+        font-size: 0.85rem;
+    }
+    
+    .submission-actions-cell {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .status-submitted { background: rgba(0, 170, 255, 0.1); color: var(--admin-info); border: 1px solid rgba(0, 170, 255, 0.3); }
+    .status-reviewed { background: rgba(0, 255, 0, 0.1); color: var(--admin-success); border: 1px solid rgba(0, 255, 0, 0.3); }
+    .status-disqualified { background: rgba(255, 0, 0, 0.1); color: var(--admin-danger); border: 1px solid rgba(255, 0, 0, 0.3); }
+    
+    .bonus-form {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        max-width: 180px;
+    }
+    
+    .bonus-form input {
+        flex: 1;
+        font-size: 0.85rem;
+        padding: 0.375rem 0.5rem;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm);
+        background: var(--surface-1);
+        color: var(--admin-text-primary);
+    }
+    
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--admin-text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+        color: var(--admin-primary);
+    }
+    
+    .empty-state h5 {
+        color: var(--admin-text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    @media (max-width: 1200px) {
+        .submission-row {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+            padding: 1.25rem;
+            border: 1px solid var(--admin-border);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+        }
+        
+        .submission-meta-cell {
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .submission-meta-cell::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--admin-text-primary);
+            margin-right: 1rem;
+        }
+        
+        .submission-actions-cell {
+            justify-content: flex-start;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--admin-border);
+        }
+        
+        .bonus-form {
+            max-width: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="submissions-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h5 class="mb-1">Submissions - {{ competition.title }}</h5>
+            <p class="mb-0" style="font-size: 0.85rem; color: var(--admin-text-muted);">
+                Review and score participant submissions
+            </p>
+        </div>
+        <div>
+            {% if competition.status != 'finalized' %}
+            <span class="admin-badge admin-badge-success">Scoring Active</span>
+            {% else %}
+            <span class="admin-badge admin-badge-primary">Finalized</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% set submitted_count = submissions|selectattr('status', 'equalto', 'submitted')|list|length %}
+    {% set reviewed_count = submissions|selectattr('status', 'equalto', 'reviewed')|list|length %}
+    {% set disqualified_count = submissions|selectattr('status', 'equalto', 'disqualified')|list|length %}
+    
+    <div class="submissions-stats">
+        <div class="submission-stat">
+            <span class="submission-value">{{ submissions|length }}</span>
+            <span class="submission-label">Total</span>
+        </div>
+        <div class="submission-stat">
+            <span class="submission-value">{{ submitted_count }}</span>
+            <span class="submission-label">Pending</span>
+        </div>
+        <div class="submission-stat">
+            <span class="submission-value">{{ reviewed_count }}</span>
+            <span class="submission-label">Reviewed</span>
+        </div>
+        <div class="submission-stat">
+            <span class="submission-value">{{ disqualified_count }}</span>
+            <span class="submission-label">Disqualified</span>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        {% if submissions %}
+        <div class="admin-table-responsive">
+            <!-- Desktop Table Header -->
+            <div class="submission-row" style="background: var(--surface-2); font-weight: 600; border-bottom: 2px solid var(--admin-border);">
+                <div class="submission-member-cell">Participant</div>
+                <div class="submission-meta-cell">Status</div>
+                <div class="submission-meta-cell">Submitted</div>
+                <div class="submission-meta-cell">Type</div>
+                <div class="submission-meta-cell">Submission</div>
+                <div class="submission-meta-cell">Score</div>
+                <div class="submission-meta-cell">Bonus</div>
+                <div class="submission-meta-cell">Rank</div>
+                <div class="submission-actions-cell">Actions</div>
+            </div>
+            
+            <!-- Submission Rows -->
+            {% for s in submissions %}
+            <div class="submission-row">
+                <!-- Member Info -->
+                <div class="submission-member-cell">
+                    <div class="submission-member">
+                        <div class="member-avatar">
+                            {{ s.member.full_name[0]|upper }}
+                        </div>
+                        <div class="member-details">
+                            <div class="member-name">{{ s.member.full_name }}</div>
+                            <div class="member-email">{{ s.member.email }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="submission-meta-cell" data-label="Status">
+                    {% if s.status == 'submitted' %}
+                        <span class="status-badge status-submitted">Submitted</span>
+                    {% elif s.status == 'reviewed' %}
+                        <span class="status-badge status-reviewed">Reviewed</span>
+                    {% elif s.status == 'disqualified' %}
+                        <span class="status-badge status-disqualified">Disqualified</span>
+                    {% else %}
+                        <span class="status-badge" style="background: var(--surface-2); color: var(--admin-text-muted);">{{ s.status }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Submitted Date -->
+                <div class="submission-meta-cell" data-label="Submitted">
+                    <div style="font-size: 0.8rem; line-height: 1.3;">
+                        {{ s.submitted_at.strftime('%b %d, %Y') }}<br>
+                        <small>{{ s.submitted_at.strftime('%H:%M') }}</small>
+                    </div>
+                </div>
+                
+                <!-- Submission Type -->
+                <div class="submission-meta-cell" data-label="Type">
+                    <span style="font-size: 0.8rem; color: var(--admin-text-secondary);">
+                        {{ s.submission_type|title }}
+                    </span>
+                </div>
+                
+                <!-- Submission Link -->
+                <div class="submission-meta-cell" data-label="Submission">
+                    {% if s.submission_type in ['video', 'report'] %}
+                        <a href="{{ url_for('static', filename='uploads/competitions/' + s.submission_value) }}" 
+                           target="_blank" 
+                           style="font-size: 0.85rem; color: var(--admin-primary);">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    {% else %}
+                        <a href="{{ s.submission_value }}" 
+                           target="_blank" 
+                           style="font-size: 0.85rem; color: var(--admin-primary);">
+                            <i class="fas fa-external-link-alt"></i> View
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Score -->
+                <div class="submission-meta-cell" data-label="Score">
+                    <div style="font-size: 0.9rem; font-weight: 600; color: var(--admin-primary);">
+                        {{ s.final_score or '-' }}
+                    </div>
+                </div>
+                
+                <!-- Bonus Points -->
+                <div class="submission-meta-cell" data-label="Bonus">
+                    {% if is_chair and competition.status != 'finalized' %}
+                    <form method="POST" action="{{ url_for('admin.competitions_bonus', competition_id=competition.id, submission_id=s.id) }}" class="bonus-form">
+                        <input type="number" step="0.1" name="bonus_points" value="{{ s.bonus_points }}" class="form-control form-control-sm">
+                        <button type="submit" class="admin-btn admin-btn-outline admin-btn-sm">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </form>
+                    {% else %}
+                    <div style="font-size: 0.85rem; color: var(--admin-text-secondary);">
+                        {{ s.bonus_points or '0' }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Rank -->
+                <div class="submission-meta-cell" data-label="Rank">
+                    <div style="font-size: 0.9rem; font-weight: 600; color: var(--admin-text-primary);">
+                        {{ s.rank or '-' }}
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="submission-actions-cell">
+                    {% if is_judge and competition.status != 'finalized' %}
+                    <a href="{{ url_for('admin.competitions_score', competition_id=competition.id, submission_id=s.id) }}" class="admin-btn admin-btn-outline admin-btn-sm" title="Score Submission">
+                        <i class="fas fa-pen"></i> Score
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('admin.competitions_view', competition_id=competition.id) }}" class="admin-btn admin-btn-outline admin-btn-sm" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-3">
+            <a href="{{ url_for('admin.competitions_view', competition_id=competition.id) }}" class="admin-btn admin-btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Competition
+            </a>
+            {% if competition.status != 'finalized' %}
+            <a href="{{ url_for('admin.competitions_leaderboard', competition_id=competition.id) }}" class="admin-btn admin-btn-primary ms-2">
+                <i class="fas fa-trophy"></i> View Leaderboard
+            </a>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h5>No Submissions Yet</h5>
+            <p class="mb-0" style="font-size: 0.9rem;">
+                No participants have submitted their work for this competition yet.
+            </p>
+            <div class="mt-3">
+                <a href="{{ url_for('admin.competitions_view', competition_id=competition.id) }}" class="admin-btn admin-btn-outline">
+                    <i class="fas fa-arrow-left"></i> Back to Competition
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@
 <div class="admin-page-header mb-4">
     <div>
         <h2 class="mb-1">Events Management</h2>
-        <p class="text-muted mb-0">Manage club events and activities</p>
+        <p class="mb-0">Manage club events and activities</p>
     </div>
     <a href="{{ url_for('admin.add_event') }}" class="admin-btn admin-btn-primary">
         <i class="fas fa-plus"></i> Add Event
@@ -80,7 +80,7 @@
                             {% endif %}
                             <div>
                                 <h6 class="mb-1">{{ event.title }}</h6>
-                                <p class="text-muted mb-0 small">{{ event.description[:100] if event.description else '' }}{% if event.description and event.description|length > 100 %}...{% endif %}</p>
+                                <p class="mb-0 small">{{ event.description[:100] if event.description else '' }}{% if event.description and event.description|length > 100 %}...{% endif %}</p>
                                 {% if event.is_upcoming() %}
                                     <span class="admin-badge admin-badge-success">Upcoming</span>
                                 {% else %}
@@ -106,13 +106,13 @@
                         <div>
                             <strong>{{ event.event_date.strftime('%Y-%m-%d') }}</strong>
                             <br>
-                            <small class="text-muted">{{ event.event_date.strftime('%H:%M') }}</small>
+                            <small >{{ event.event_date.strftime('%H:%M') }}</small>
                         </div>
                     </td>
                     <td>
                         <span class="admin-badge admin-badge-secondary">{{ event.location or 'TBA' }}</span>
                         {% if event.max_attendees %}
-                        <br><small class="text-muted">Max: {{ event.max_attendees }}</small>
+                        <br><small >Max: {{ event.max_attendees }}</small>
                         {% endif %}
                     </td>
                     <td>

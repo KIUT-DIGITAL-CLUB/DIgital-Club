@@ -1,0 +1,274 @@
+﻿{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Enrollments - {{ competition.title }}{% endblock %}
+{% block page_title %}Enrollments{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.competitions_view', competition_id=competition.id) }}">{{ competition.title }}</a><span class="breadcrumb-separator">/</span> <span>Enrollments</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Admin Enrollments Specific Styles */
+    .enrollments-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--admin-border);
+    }
+    
+    .enrollments-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .enrollment-stat {
+        text-align: center;
+        padding: 0.75rem;
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--admin-border);
+    }
+    
+    .enrollment-value {
+        display: block;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--admin-primary);
+        font-family: 'Fira Code', monospace;
+        line-height: 1;
+    }
+    
+    .enrollment-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--admin-text-muted);
+        margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .status-enrolled { background: rgba(0, 255, 0, 0.1); color: var(--admin-success); border: 1px solid rgba(0, 255, 0, 0.3); }
+    .status-disqualified { background: rgba(255, 0, 0, 0.1); color: var(--admin-danger); border: 1px solid rgba(255, 0, 0, 0.3); }
+    .status-withdrawn { background: rgba(255, 170, 0, 0.1); color: var(--admin-warning); border: 1px solid rgba(255, 170, 0, 0.3); }
+    
+    .member-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .member-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--admin-primary);
+        font-weight: 600;
+        border: 2px solid var(--admin-border);
+    }
+    
+    .member-details {
+        line-height: 1.3;
+    }
+    
+    .member-name {
+        font-weight: 600;
+        color: var(--admin-text-primary);
+        font-size: 0.9rem;
+    }
+    
+    .member-email {
+        font-size: 0.8rem;
+        color: var(--admin-text-muted);
+    }
+    
+    .time-info {
+        font-size: 0.8rem;
+        color: var(--admin-text-muted);
+    }
+    
+    .disqualify-form {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    .disqualify-form input {
+        flex: 1;
+        min-width: 200px;
+        font-size: 0.85rem;
+        padding: 0.375rem 0.5rem;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm);
+        background: var(--surface-1);
+        color: var(--admin-text-primary);
+    }
+    
+    @media (max-width: 768px) {
+        .enrollments-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .disqualify-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .disqualify-form input {
+            min-width: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="enrollments-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h5 class="mb-1">Enrollments - {{ competition.title }}</h5>
+            <p class="mb-0" style="font-size: 0.85rem; color: var(--admin-text-muted);">
+                Manage participant enrollments and disqualifications
+            </p>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--admin-text-muted);">
+            <i class="fas fa-clock me-1"></i> Times shown in server local time
+        </div>
+    </div>
+    
+    {% set enrolled_count = enrollments|selectattr('status', 'equalto', 'enrolled')|list|length %}
+    {% set disqualified_count = enrollments|selectattr('status', 'equalto', 'disqualified')|list|length %}
+    
+    <div class="enrollments-stats">
+        <div class="enrollment-stat">
+            <span class="enrollment-value">{{ enrollments|length }}</span>
+            <span class="enrollment-label">Total</span>
+        </div>
+        <div class="enrollment-stat">
+            <span class="enrollment-value">{{ enrolled_count }}</span>
+            <span class="enrollment-label">Active</span>
+        </div>
+        <div class="enrollment-stat">
+            <span class="enrollment-value">{{ disqualified_count }}</span>
+            <span class="enrollment-label">Disqualified</span>
+        </div>
+        <div class="enrollment-stat">
+            <span class="enrollment-value">{{ enrollments|length - enrolled_count - disqualified_count }}</span>
+            <span class="enrollment-label">Other</span>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5>Enrollment List</h5>
+        <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">
+            Showing {{ enrollments|length }} enrollment(s)
+        </p>
+    </div>
+    <div class="admin-card-body">
+        <div class="admin-table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th style="min-width: 200px;">Participant</th>
+                        <th style="width: 120px;">Status</th>
+                        <th style="width: 150px;">Enrollment Date</th>
+                        <th style="min-width: 150px;">Disqualification Reason</th>
+                        <th style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in enrollments %}
+                    <tr>
+                        <td>
+                            <div class="member-info">
+                                <div class="member-avatar">
+                                    {{ e.member.full_name[0]|upper }}
+                                </div>
+                                <div class="member-details">
+                                    <div class="member-name">{{ e.member.full_name }}</div>
+                                    <div class="member-email">{{ e.member.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if e.status == 'enrolled' %}
+                                <span class="status-badge status-enrolled">Enrolled</span>
+                            {% elif e.status == 'disqualified' %}
+                                <span class="status-badge status-disqualified">Disqualified</span>
+                            {% elif e.status == 'withdrawn' %}
+                                <span class="status-badge status-withdrawn">Withdrawn</span>
+                            {% else %}
+                                <span class="status-badge" style="background: var(--surface-2); color: var(--admin-text-muted);">{{ e.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="time-info">
+                                {% if e.enrolled_at %}
+                                    {{ e.enrolled_at.strftime('%b %d, %Y') }}<br>
+                                    <small>{{ e.enrolled_at.strftime('%H:%M') }}</small>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if e.disqualified_reason %}
+                                <div style="font-size: 0.85rem; color: var(--admin-text-secondary);">
+                                    {{ e.disqualified_reason|truncate(50) }}
+                                </div>
+                            {% else %}
+                                <span style="color: var(--admin-text-muted); font-size: 0.85rem;">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if e.status != 'disqualified' %}
+                            <form method="POST" action="{{ url_for('admin.competitions_disqualify', competition_id=competition.id, enrollment_id=e.id) }}" class="disqualify-form">
+                                <input type="text" name="disqualified_reason" class="form-control form-control-sm" placeholder="Enter reason" required>
+                                <button type="submit" class="admin-btn admin-btn-outline admin-btn-sm">
+                                    <i class="fas fa-ban"></i> DQ
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="admin-badge admin-badge-danger" style="font-size: 0.75rem;">Disqualified</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-user-slash" style="font-size: 2rem; color: var(--admin-text-muted); margin-bottom: 1rem;"></i>
+                                <h6 style="color: var(--admin-text-primary);">No Enrollments Yet</h6>
+                                <p class="mb-0" style="font-size: 0.85rem; color: var(--admin-text-muted);">
+                                    No participants have enrolled in this competition yet.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-3">
+            <a href="{{ url_for('admin.competitions_view', competition_id=competition.id) }}" class="admin-btn admin-btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Competition
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

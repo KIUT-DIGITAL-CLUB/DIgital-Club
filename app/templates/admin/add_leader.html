@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h2 class="mb-1">Add New Leader</h2>
-                    <p class="text-muted mb-0">Assign a leadership position to a club member</p>
+                    <p class="mb-0">Assign a leadership position to a club member</p>
                 </div>
             </div>
             
@@ -31,7 +31,7 @@
                         {% endfor %}
                     </select>
                     {% if not members %}
-                    <small class="text-muted">No available members found. All approved members may already have leadership positions.</small>
+                    <small >No available members found. All approved members may already have leadership positions.</small>
                     {% endif %}
                 </div>
                 
@@ -45,7 +45,7 @@
                     <label for="display_order" class="admin-form-label">Display Order</label>
                     <input type="number" class="admin-form-control" id="display_order" name="display_order" 
                            value="0" min="0" max="100">
-                    <small class="text-muted">Lower numbers appear first on the leaders page (0 = highest priority)</small>
+                    <small >Lower numbers appear first on the leaders page (0 = highest priority)</small>
                 </div>
                 
                 <div class="d-flex gap-3">

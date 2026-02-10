@@ -1,6 +1,6 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from app import db
 
@@ -636,3 +636,301 @@ class FinancialTransaction(db.Model):
     
     def __repr__(self):
         return f'<FinancialTransaction {self.description}: Tsh {self.amount} ({self.transaction_type})>'
+
+
+# Competitions
+class CompetitionSponsor(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False, unique=True)
+    website = db.Column(db.String(200))
+    logo = db.Column(db.String(200))
+    description = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<CompetitionSponsor {self.name}>'
+
+
+class Competition(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(100), nullable=False)
+    frequency = db.Column(db.String(20), nullable=False)  # weekly, monthly
+    level = db.Column(db.Integer, nullable=False)  # 1, 2, 3
+    status = db.Column(db.String(20), default='draft')  # draft, published, judging, finalized, archived
+
+    eligibility_rule = db.Column(db.String(20), default='default')  # default, custom
+    eligibility_years = db.Column(db.String(100))  # comma-separated years for custom eligibility
+    requires_paid_membership = db.Column(db.Boolean, default=False)
+
+    submission_type = db.Column(db.String(20), nullable=False)  # video, github, report, link
+    submission_max_mb = db.Column(db.Integer, default=10)
+
+    starts_at = db.Column(db.DateTime, nullable=False)
+    ends_at = db.Column(db.DateTime, nullable=False)
+
+    assessment_mode = db.Column(db.String(20), default='online')  # online, physical
+    assessment_instructions = db.Column(db.Text)
+    assessment_link = db.Column(db.String(200))
+    assessment_location = db.Column(db.String(200))
+    assessment_date = db.Column(db.DateTime)
+
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    creator = db.relationship('User', backref='competitions_created')
+    judges = db.relationship('CompetitionJudge', backref='competition', lazy='dynamic')
+    criteria = db.relationship('CompetitionCriteria', backref='competition', lazy='dynamic')
+    submissions = db.relationship('CompetitionSubmission', backref='competition', lazy='dynamic')
+    rewards = db.relationship('CompetitionReward', backref='competition', lazy='dynamic')
+    sponsors = db.relationship('CompetitionSponsorLink', backref='competition', lazy='dynamic')
+    enrollments = db.relationship('CompetitionEnrollment', backref='competition', lazy='dynamic')
+
+    def is_open(self):
+        now = datetime.now()
+        return self.starts_at <= now <= self.ends_at and self.status in ['published', 'judging']
+
+    def get_default_years(self):
+        if self.level == 1:
+            return ['Year 1']
+        if self.level == 2:
+            return ['Year 1', 'Year 2']
+        return ['Year 1', 'Year 2', 'Year 3']
+
+    def get_allowed_years(self):
+        if self.eligibility_rule == 'custom' and self.eligibility_years:
+            return [y.strip() for y in self.eligibility_years.split(',') if y.strip()]
+        return self.get_default_years()
+
+    def __repr__(self):
+        return f'<Competition {self.title}>'
+
+
+class CompetitionSponsorLink(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('competition_sponsor.id'), nullable=False)
+    is_primary = db.Column(db.Boolean, default=False)
+    display_order = db.Column(db.Integer, default=0)
+
+    sponsor = db.relationship('CompetitionSponsor', backref='competition_links')
+
+    __table_args__ = (db.UniqueConstraint('competition_id', 'sponsor_id', name='_competition_sponsor_uc'),)
+
+
+class CompetitionJudge(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_chair = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    judge = db.relationship('User', backref='competition_judging')
+
+    __table_args__ = (db.UniqueConstraint('competition_id', 'user_id', name='_competition_judge_uc'),)
+
+
+class CompetitionCriteria(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.Text)
+    max_points = db.Column(db.Integer, default=10)
+    weight_percent = db.Column(db.Integer, default=0)  # total 100 across criteria
+
+    __table_args__ = (db.UniqueConstraint('competition_id', 'name', name='_competition_criteria_uc'),)
+
+
+class CompetitionSubmission(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    submission_type = db.Column(db.String(20), nullable=False)
+    submission_value = db.Column(db.String(255), nullable=False)  # file path or URL
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='submitted')  # submitted, reviewed, disqualified
+
+    total_score = db.Column(db.Float, default=0)
+    bonus_points = db.Column(db.Float, default=0)
+    final_score = db.Column(db.Float, default=0)
+    rank = db.Column(db.Integer)
+    points_awarded = db.Column(db.Integer, default=0)
+    is_winner = db.Column(db.Boolean, default=False)
+
+    member = db.relationship('Member', backref='competition_submissions')
+    scores = db.relationship('CompetitionScore', backref='submission', lazy='dynamic')
+
+    __table_args__ = (db.UniqueConstraint('competition_id', 'member_id', name='_competition_submission_uc'),)
+
+
+class CompetitionScore(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    submission_id = db.Column(db.Integer, db.ForeignKey('competition_submission.id'), nullable=False)
+    judge_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    criteria_id = db.Column(db.Integer, db.ForeignKey('competition_criteria.id'), nullable=False)
+    score = db.Column(db.Float, default=0)
+    comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    judge = db.relationship('User', backref='competition_scores')
+    criteria = db.relationship('CompetitionCriteria')
+
+    __table_args__ = (db.UniqueConstraint('submission_id', 'judge_id', 'criteria_id', name='_competition_score_uc'),)
+
+
+class CompetitionReward(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    reward_type = db.Column(db.String(20), default='position')  # position, percent
+    rank_from = db.Column(db.Integer)
+    rank_to = db.Column(db.Integer)
+    percent = db.Column(db.Integer)
+    points = db.Column(db.Integer, default=0)
+    prize_title = db.Column(db.String(150))
+    prize_description = db.Column(db.Text)
+
+
+class CompetitionWinner(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    level = db.Column(db.Integer, nullable=False)
+    rank = db.Column(db.Integer, nullable=False)
+    points_awarded = db.Column(db.Integer, default=0)
+    prize_title = db.Column(db.String(150))
+    prize_description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    member = db.relationship('Member', backref='competition_wins')
+    competition = db.relationship('Competition', backref='winners')
+
+
+class CompetitionGuard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    level = db.Column(db.Integer, nullable=False)
+    week_start = db.Column(db.Date, nullable=False)
+    week_end = db.Column(db.Date, nullable=False)
+    title = db.Column(db.String(150))
+    work_link = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    member = db.relationship('Member', backref='competition_guards')
+    competition = db.relationship('Competition', backref='guards')
+
+
+class CompetitionEnrollment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    status = db.Column(db.String(20), default='enrolled')  # enrolled, disqualified, withdrawn
+    disqualified_reason = db.Column(db.Text)
+    disqualified_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    disqualified_at = db.Column(db.DateTime)
+    enrolled_at = db.Column(db.DateTime, default=datetime.now)
+
+    member = db.relationship('Member', backref='competition_enrollments')
+    disqualifier = db.relationship('User', backref='competition_disqualifications')
+
+    __table_args__ = (db.UniqueConstraint('competition_id', 'member_id', name='_competition_enrollment_uc'),)
+
+
+# Sessions
+class SessionWeek(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150))
+    week_start = db.Column(db.Date, nullable=False)
+    week_end = db.Column(db.Date, nullable=False)
+    status = db.Column(db.String(20), default='draft')  # draft, published, archived
+    published_at = db.Column(db.DateTime)
+    published_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    publisher = db.relationship('User', backref='session_weeks_published')
+    sessions = db.relationship('SessionSchedule', backref='week', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<SessionWeek {self.week_start} - {self.week_end}>'
+
+
+class SessionSchedule(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    week_id = db.Column(db.Integer, db.ForeignKey('session_week.id'), nullable=False)
+    session_date = db.Column(db.Date, nullable=False)
+    day_of_week = db.Column(db.Integer, nullable=False)  # 0=Mon ... 6=Sun
+    start_time = db.Column(db.Time, nullable=False)
+    topic = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(80), nullable=False)
+    mode = db.Column(db.String(20), default='online')  # online, physical
+    meeting_link = db.Column(db.String(255))
+    location = db.Column(db.String(200))
+    teaching_minutes = db.Column(db.Integer, default=60)
+    questions_minutes = db.Column(db.Integer, default=15)
+    instructor_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), default='scheduled')  # scheduled, completed, cancelled
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    instructor = db.relationship('User', foreign_keys=[instructor_user_id], backref='instructed_sessions')
+    creator = db.relationship('User', foreign_keys=[created_by], backref='sessions_created')
+    reports = db.relationship('SessionReport', backref='session', lazy='dynamic')
+
+    def get_end_datetime(self):
+        total_minutes = (self.teaching_minutes or 0) + (self.questions_minutes or 0)
+        return datetime.combine(self.session_date, self.start_time) + timedelta(minutes=total_minutes)
+
+    def __repr__(self):
+        return f'<SessionSchedule {self.topic} on {self.session_date}>'
+
+
+class SessionReport(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('session_schedule.id'), nullable=False)
+    instructor_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    winner_username = db.Column(db.String(120))
+    winner_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    participant_count = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    notes = db.Column(db.Text)
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    approved_at = db.Column(db.DateTime)
+    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    points_awarded = db.Column(db.Integer, default=0)
+
+    instructor = db.relationship('User', foreign_keys=[instructor_user_id], backref='session_reports')
+    winner = db.relationship('User', foreign_keys=[winner_user_id], backref='session_wins')
+    approver = db.relationship('User', foreign_keys=[approved_by], backref='session_reports_approved')
+
+    __table_args__ = (db.UniqueConstraint('session_id', 'instructor_user_id', name='_session_report_uc'),)
+
+
+# Teams
+class Team(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    rating = db.Column(db.Integer, default=0)  # 0-5
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    members = db.relationship('TeamMember', backref='team', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<Team {self.name}>'
+
+
+class TeamMember(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    is_leader = db.Column(db.Boolean, default=False)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    member = db.relationship('Member', backref='team_memberships')
+
+    __table_args__ = (db.UniqueConstraint('team_id', 'member_id', name='_team_member_uc'),)

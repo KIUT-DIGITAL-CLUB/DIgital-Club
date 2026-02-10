@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Financial Reports</h2>
-        <p class="text-muted mb-0">Comprehensive financial analysis and period comparisons</p>
+        <p class="mb-0">Comprehensive financial analysis and period comparisons</p>
     </div>
     <div>
         <a href="{{ url_for('admin.financial') }}" class="admin-btn admin-btn-outline">
@@ -66,12 +66,12 @@
                             <td>
                                 <strong>{{ period.name }}</strong>
                                 {% if period.description %}
-                                <br><small class="text-muted">{{ period.description }}</small>
+                                <br><small >{{ period.description }}</small>
                                 {% endif %}
                             </td>
                             <td>
                                 {{ period.start_date.strftime('%b %d, %Y') }}<br>
-                                <small class="text-muted">to {{ period.end_date.strftime('%b %d, %Y') }}</small>
+                                <small >to {{ period.end_date.strftime('%b %d, %Y') }}</small>
                             </td>
                             <td>
                                 <span class="admin-badge {% if period.status == 'open' %}admin-badge-success{% else %}admin-badge-secondary{% endif %}">
@@ -143,7 +143,7 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-muted">No revenue categories with transactions.</p>
+                    <p >No revenue categories with transactions.</p>
                 {% endif %}
             </div>
             <div class="col-md-6">
@@ -161,7 +161,7 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-muted">No expense categories with transactions.</p>
+                    <p >No expense categories with transactions.</p>
                 {% endif %}
             </div>
         </div>
@@ -177,7 +177,7 @@
                 <h5><i class="fas fa-download"></i> Export Reports</h5>
             </div>
             <div class="admin-card-body">
-                <p class="text-muted">Export detailed financial reports for external analysis.</p>
+                <p >Export detailed financial reports for external analysis.</p>
                 {% if periods %}
                 <div class="d-grid gap-2">
                     {% for period in periods[:3] %}
@@ -188,7 +188,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted">No periods available for export.</p>
+                <p >No periods available for export.</p>
                 {% endif %}
             </div>
         </div>
@@ -199,7 +199,7 @@
                 <h5><i class="fas fa-calendar"></i> Period Management</h5>
             </div>
             <div class="admin-card-body">
-                <p class="text-muted">Manage financial periods and transactions.</p>
+                <p >Manage financial periods and transactions.</p>
                 <div class="d-grid gap-2">
                     <a href="{{ url_for('admin.create_financial_period') }}" class="admin-btn admin-btn-primary admin-btn-sm">
                         <i class="fas fa-plus"></i> New Period
@@ -217,7 +217,7 @@
                 <h5><i class="fas fa-cog"></i> Settings</h5>
             </div>
             <div class="admin-card-body">
-                <p class="text-muted">Configure financial categories and settings.</p>
+                <p >Configure financial categories and settings.</p>
                 <div class="d-grid gap-2">
                     <a href="{{ url_for('admin.financial_categories') }}" class="admin-btn admin-btn-outline admin-btn-sm">
                         <i class="fas fa-tags"></i> Categories

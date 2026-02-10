@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h2 class="mb-1">Add Project</h2>
-                    <p class="text-muted mb-0">Create a new project showcase</p>
+                    <p class="mb-0">Create a new project showcase</p>
                 </div>
             </div>
             
@@ -35,7 +35,7 @@
                     <label for="image" class="admin-form-label">Project Image URL</label>
                     <input type="url" class="admin-form-control" id="image" name="image" 
                            placeholder="https://example.com/project-image.jpg">
-                    <small class="form-text text-muted">Optional: URL to project screenshot or logo</small>
+                    <small class="form-text">Optional: URL to project screenshot or logo</small>
                 </div>
                 
                 <div class="admin-form-group">
@@ -52,12 +52,12 @@
                                 </option>
                                 {% endfor %}
                             </select>
-                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple technologies</small>
+                            <small class="form-text">Hold Ctrl/Cmd to select multiple technologies</small>
                         </div>
                         <div class="col-md-6">
                             <label class="admin-form-label">Selected Technologies:</label>
                             <div id="selected-techs" class="border rounded p-2" style="min-height: 200px; background: rgba(0,0,0,0.3);">
-                                <small class="text-muted">No technologies selected</small>
+                                <small >No technologies selected</small>
                             </div>
                             <div class="mt-2">
                                 <button type="button" class="btn btn-sm btn-outline-primary" onclick="addSelectedTechs()">
@@ -73,7 +73,7 @@
                     <!-- Custom Technology Input -->
                     <input type="text" class="admin-form-control" id="technologies" name="technologies" 
                            placeholder="e.g., Python, Flask, JavaScript, React (comma-separated)">
-                    <small class="form-text text-muted">
+                    <small class="form-text">
                         <strong>Tips:</strong> You can select from predefined technologies above or type custom ones separated by commas.
                         <br>• Web: HTML, CSS, JavaScript, React, Node.js, Express
                         <br>• Mobile: React Native, Flutter, Swift, Kotlin
@@ -94,7 +94,7 @@
                         </option>
                         {% endfor %}
                     </select>
-                    <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple members</small>
+                    <small class="form-text">Hold Ctrl/Cmd to select multiple members</small>
                     <div id="selected-count" class="text-info small mt-1" style="display: none;">
                         <i class="fas fa-users"></i> <span id="count-text">0</span> members selected
                     </div>
@@ -109,7 +109,7 @@
                         <div class="form-text">Featured projects will be displayed prominently on the main projects page</div>
                     </div>
                     {% if not members %}
-                    <small class="text-muted">No approved members found. Members must be approved before they can be added to projects.</small>
+                    <small >No approved members found. Members must be approved before they can be added to projects.</small>
                     {% endif %}
                 </div>
                 
@@ -173,7 +173,7 @@ function updateSelectedTechsDisplay() {
     const container = document.getElementById('selected-techs');
     
     if (selectedTechnologies.length === 0) {
-        container.innerHTML = '<small class="text-muted">No technologies selected</small>';
+        container.innerHTML = '<small >No technologies selected</small>';
         return;
     }
     

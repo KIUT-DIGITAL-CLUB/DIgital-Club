@@ -13,7 +13,7 @@
 <div class="admin-page-header mb-4">
     <div>
         <h2 class="mb-1">RSVP Management</h2>
-        <p class="text-muted mb-0">Manage event RSVPs and approvals</p>
+        <p class="mb-0">Manage event RSVPs and approvals</p>
     </div>
 </div>
 
@@ -60,7 +60,7 @@
     <div class="admin-card-body">
         <div class="row align-items-center">
             <div class="col-md-4">
-                <span class="text-muted">
+                <span >
                     <span id="selected-count">0</span> RSVP(s) selected
                 </span>
             </div>
@@ -97,7 +97,7 @@
                            placeholder="Enter number">
                     <span class="input-group-text">RSVPs</span>
                 </div>
-                <small class="form-text text-muted">
+                <small class="form-text">
                     Process the first N RSVPs from the current filtered list without selecting them individually.
                 </small>
             </div>
@@ -156,7 +156,7 @@
                                 <div>
                                     <div class="fw-bold">{{ rsvp.full_name }}</div>
                                     {% if rsvp.phone %}
-                                    <small class="text-muted">{{ rsvp.phone }}</small>
+                                    <small >{{ rsvp.phone }}</small>
                                     {% endif %}
                                     {% if not rsvp.member_id or rsvp.member_id == 0 %}
                                     <small class="admin-badge admin-badge-secondary ms-1">Non-Member</small>
@@ -168,7 +168,7 @@
                         <td>
                             <div>
                                 <div class="fw-bold">{{ rsvp.event.title }}</div>
-                                <small class="text-muted">
+                                <small >
                                     {{ rsvp.event.event_date.strftime('%B %d, %Y at %I:%M %p') }}
                                 </small>
                             </div>
@@ -185,14 +185,14 @@
                         <td>
                             <div>
                                 <div>{{ rsvp.submitted_at.strftime('%B %d, %Y') }}</div>
-                                <small class="text-muted">{{ rsvp.submitted_at.strftime('%I:%M %p') }}</small>
+                                <small >{{ rsvp.submitted_at.strftime('%I:%M %p') }}</small>
                             </div>
                         </td>
                         <td>
                             {% if rsvp.acceptance_code %}
                                 <code class="admin-code">{{ rsvp.acceptance_code }}</code>
                             {% else %}
-                                <span class="text-muted">-</span>
+                                <span >-</span>
                             {% endif %}
                         </td>
                         <td>
@@ -329,20 +329,20 @@
                         {% if rsvp.dietary_requirements %}
                         <div class="col-md-6 mb-3">
                             <strong>Dietary Requirements:</strong><br>
-                            <span class="text-muted">{{ rsvp.dietary_requirements }}</span>
+                            <span >{{ rsvp.dietary_requirements }}</span>
                         </div>
                         {% endif %}
                         {% if rsvp.emergency_contact %}
                         <div class="col-md-6 mb-3">
                             <strong>Emergency Contact:</strong><br>
-                            <span class="text-muted">{{ rsvp.emergency_contact }}
+                            <span >{{ rsvp.emergency_contact }}
                             {% if rsvp.emergency_phone %} - {{ rsvp.emergency_phone }}{% endif %}</span>
                         </div>
                         {% endif %}
                         {% if rsvp.additional_notes %}
                         <div class="col-12 mb-3">
                             <strong>Additional Notes:</strong><br>
-                            <span class="text-muted">{{ rsvp.additional_notes }}</span>
+                            <span >{{ rsvp.additional_notes }}</span>
                         </div>
                         {% endif %}
                     </div>

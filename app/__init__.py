@@ -82,6 +82,18 @@ def create_app():
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'profiles'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'gallery'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'digital_ids'), exist_ok=True)
+    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'competitions'), exist_ok=True)
+
+    @app.context_processor
+    def inject_guards():
+        try:
+            from datetime import datetime
+            from app.models import CompetitionGuard
+            today = datetime.now().date()
+            guards = CompetitionGuard.query.filter(CompetitionGuard.week_end >= today).order_by(CompetitionGuard.week_start.desc()).all()
+        except Exception:
+            guards = []
+        return {'guards_week': guards, 'current_year': datetime.now().year}
     
     # User loader for Flask-Login
     from app.models import User

@@ -7,213 +7,961 @@
 {% block extra_head %}
 {{ super() }}
 <style>
+    /* Profile Page Specific Styles */
+    .profile-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .profile-avatar-section {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .avatar-container {
+        position: relative;
+    }
+    
     .member-profile-avatar {
-        width: 96px;
-        height: 96px;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
         object-fit: cover;
-        border: 2px solid var(--admin-border);
+        border: 3px solid var(--border-color);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
     }
-
+    
     .member-profile-avatar.fallback {
-        display: inline-flex;
+        display: flex;
         align-items: center;
         justify-content: center;
+        background: linear-gradient(135deg, var(--surface-2), var(--surface-1));
+        color: var(--primary-color);
+        font-size: 3rem;
+        border: 3px solid var(--border-color);
+    }
+    
+    .avatar-upload-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .avatar-container:hover .avatar-upload-overlay {
+        opacity: 1;
+    }
+    
+    .avatar-upload-overlay i {
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .avatar-info {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .profile-title {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .profile-stats {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+    }
+    
+    .profile-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    
+    .profile-stat i {
+        color: var(--primary-color);
+        width: 16px;
+    }
+    
+    .profile-form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .form-section {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-section:hover {
+        border-color: var(--primary-color);
         background: var(--surface-2);
-        color: var(--admin-text-secondary);
-        font-size: 2.2rem;
     }
-
-    .member-profile-preview {
-        max-width: 100%;
-        border-radius: 0.5rem;
-        border: 1px solid var(--admin-border);
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
     }
-
-    .member-section-title {
+    
+    .section-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 1rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .section-subtitle {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .form-control-icon {
+        position: relative;
+    }
+    
+    .form-control-icon i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
         font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--admin-text-muted);
-        margin-bottom: 0.75rem;
+    }
+    
+    .form-control-icon input,
+    .form-control-icon select,
+    .form-control-icon textarea {
+        padding-left: 2.5rem;
+    }
+    
+    .social-links-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .social-link-input {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--surface-2);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+    
+    .social-link-input:hover {
+        border-color: var(--primary-color);
+        background: var(--surface-3);
+    }
+    
+    .social-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--surface-1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    
+    .social-icon.github { color: #333; }
+    .social-icon.linkedin { color: #0077b5; }
+    .social-icon.twitter { color: #1da1f2; }
+    
+    .social-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        outline: none;
+    }
+    
+    .social-input::placeholder {
+        color: var(--text-muted);
+    }
+    
+    .password-form {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        margin-top: 1.5rem;
+    }
+    
+    .password-strength {
+        height: 4px;
+        background: var(--surface-2);
+        border-radius: 2px;
+        margin-top: 0.25rem;
+        overflow: hidden;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        background: var(--error-color);
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .password-strength-bar.weak { width: 33%; background: var(--error-color); }
+    .password-strength-bar.fair { width: 66%; background: var(--warning-color); }
+    .password-strength-bar.strong { width: 100%; background: var(--success-color); }
+    
+    .digital-id-card {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        text-align: center;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .digital-id-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .digital-id-preview {
+        width: 100%;
+        max-width: 300px;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .digital-id-preview:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .id-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--gradient-primary);
+        border-radius: 50px;
+        color: var(--bg-primary);
+        font-weight: 600;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .id-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    
+    .id-action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: var(--surface-2);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .id-action-btn:hover {
+        background: var(--surface-3);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    .id-action-btn i {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .id-action-btn span {
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .profile-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .progress-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background: var(--surface-2);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
+    }
+    
+    .progress-bar {
+        flex: 1;
+        height: 6px;
+        background: var(--surface-3);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: var(--gradient-primary);
+        border-radius: 3px;
+        width: var(--progress-width, 0%);
+        transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        min-width: 60px;
+        text-align: right;
+    }
+    
+    .input-hint {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .required-marker {
+        color: var(--error-color);
+        margin-left: 2px;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-avatar-section {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .avatar-info {
+            text-align: center;
+        }
+        
+        .profile-stats {
+            justify-content: center;
+        }
+        
+        .profile-form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .id-actions {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .profile-actions {
+            flex-direction: column;
+        }
+        
+        .profile-actions .admin-btn {
+            width: 100%;
+        }
     }
 </style>
 {% endblock %}
 
 {% block member_content %}
-<div class="row g-4">
-    <div class="col-lg-8">
-        <div class="admin-card">
-            <div class="admin-card-header">
-                <h5>Profile Details</h5>
-            </div>
-            <div class="admin-card-body">
-                <form method="POST" action="{{ url_for('member.edit_profile') }}" enctype="multipart/form-data" class="admin-form">
-                    <div class="member-section-title">Profile Photo</div>
-                    <div class="d-flex align-items-center gap-3 flex-wrap mb-4">
-                        {% if member and member.profile_image %}
-                            <img src="{{ url_for('static', filename='uploads/profiles/' + member.profile_image) }}" alt="{{ member.full_name }}" class="member-profile-avatar" loading="lazy" decoding="async">
-                        {% else %}
-                            <div class="member-profile-avatar fallback">
-                                <i class="fas fa-user"></i>
-                            </div>
-                        {% endif %}
-                        <div class="flex-grow-1">
-                            <label class="admin-form-label" for="profile_image">Upload New Photo</label>
-                            <input type="file" class="admin-form-control" id="profile_image" name="profile_image" accept="image/*">
-                            <small class="text-muted">PNG, JPG, JPEG, or GIF.</small>
-                        </div>
-                    </div>
-
-                    <div class="member-section-title">Basic Information</div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="admin-form-label" for="full_name">Full Name *</label>
-                            <input type="text" class="admin-form-control" id="full_name" name="full_name" autocomplete="name" value="{{ member.full_name if member else '' }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="admin-form-label" for="title">Professional Title</label>
-                            <input type="text" class="admin-form-control" id="title" name="title" autocomplete="organization-title" value="{{ member.title if member else '' }}" placeholder="e.g., Software Developer">
-                        </div>
-                        <div class="col-12">
-                            <label class="admin-form-label" for="bio">Bio</label>
-                            <textarea class="admin-form-control" id="bio" name="bio" rows="3" placeholder="Tell us about yourself...">{{ member.bio if member else '' }}</textarea>
-                        </div>
-                    </div>
-
-                    <div class="member-section-title mt-4">Academic Information</div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="admin-form-label" for="course">Course</label>
-                            <select name="course" id="course" class="admin-form-control">
-                                <option value="">Select your course</option>
-                                <option value="Bachelor of Computer Science" {% if member and member.course == 'Bachelor of Computer Science' %}selected{% endif %}>Bachelor of Computer Science</option>
-                                <option value="Bachelor of Information Technology" {% if member and member.course == 'Bachelor of Information Technology' %}selected{% endif %}>Bachelor of Information Technology</option>
-                                <option value="Diploma in Computer Science" {% if member and member.course == 'Diploma in Computer Science' %}selected{% endif %}>Diploma in Computer Science</option>
-                                <option value="Diploma in Information Technology" {% if member and member.course == 'Diploma in Information Technology' %}selected{% endif %}>Diploma in Information Technology</option>
-                                <option value="Certificate in Computer Science" {% if member and member.course == 'Certificate in Computer Science' %}selected{% endif %}>Certificate in Computer Science</option>
-                                <option value="Certificate in Information Technology" {% if member and member.course == 'Certificate in Information Technology' %}selected{% endif %}>Certificate in Information Technology</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="admin-form-label" for="year">Year</label>
-                            <select name="year" id="year" class="admin-form-control">
-                                <option value="">Select your year</option>
-                                <option value="Year 1" {% if member and member.year == 'Year 1' %}selected{% endif %}>Year 1</option>
-                                <option value="Year 2" {% if member and member.year == 'Year 2' %}selected{% endif %}>Year 2</option>
-                                <option value="Year 3" {% if member and member.year == 'Year 3' %}selected{% endif %}>Year 3</option>
-                                <option value="Alumni" {% if member and member.year == 'Alumni' %}selected{% endif %}>Alumni</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="admin-form-label" for="status">Status</label>
-                            <select class="admin-form-control" id="status" name="status">
-                                <option value="student" {% if member and member.status == 'student' %}selected{% endif %}>Student</option>
-                                <option value="alumni" {% if member and member.status == 'alumni' %}selected{% endif %}>Alumni</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="member-section-title mt-4">Contact Information</div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="admin-form-label" for="phone">Phone Number</label>
-                            <input type="tel" class="admin-form-control" id="phone" name="phone" autocomplete="tel" inputmode="tel" value="{{ member.phone if member else '' }}" placeholder="+255 XXX XXX XXX">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="admin-form-label" for="areas_of_interest">Areas of Interest</label>
-                            <input type="text" class="admin-form-control" id="areas_of_interest" name="areas_of_interest" value="{{ member.areas_of_interest if member else '' }}" placeholder="Web Development, AI, Data Science">
-                        </div>
-                    </div>
-
-                    <div class="member-section-title mt-4">Social Links</div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="admin-form-label" for="github">GitHub Profile</label>
-                            <input type="text" class="admin-form-control" id="github" name="github" autocomplete="url" value="{{ member.github if member else '' }}" placeholder="https://github.com/username">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="admin-form-label" for="linkedin">LinkedIn Profile</label>
-                            <input type="text" class="admin-form-control" id="linkedin" name="linkedin" autocomplete="url" value="{{ member.linkedin if member else '' }}" placeholder="https://linkedin.com/in/username">
-                        </div>
-                    </div>
-
-                    <div class="mt-4 d-flex flex-wrap gap-2">
-                        <button type="submit" class="admin-btn admin-btn-primary">
-                            <i class="fas fa-save"></i> Save Profile
-                        </button>
-                        <a href="{{ url_for('member.dashboard') }}" class="admin-btn admin-btn-outline">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
-                        </a>
-                    </div>
-                </form>
-            </div>
+<div class="profile-header">
+    <div class="profile-avatar-section">
+        <div class="avatar-container">
+            {% if member and member.profile_image %}
+                <img src="{{ url_for('static', filename='uploads/profiles/' + member.profile_image) }}" 
+                     alt="{{ member.full_name }}" 
+                     class="member-profile-avatar" 
+                     loading="lazy" 
+                     decoding="async">
+            {% else %}
+                <div class="member-profile-avatar fallback">
+                    <i class="fas fa-user"></i>
+                </div>
+            {% endif %}
+            <label for="profile_image" class="avatar-upload-overlay">
+                <i class="fas fa-camera"></i>
+            </label>
         </div>
-
-        <div class="admin-card mt-4">
-            <div class="admin-card-header">
-                <h5>Password & Security</h5>
-            </div>
-            <div class="admin-card-body">
-                <form method="POST" action="{{ url_for('member.change_password') }}" class="admin-form">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="admin-form-label" for="current_password">Current Password</label>
-                            <input type="password" class="admin-form-control" id="current_password" name="current_password" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="admin-form-label" for="new_password">New Password</label>
-                            <input type="password" class="admin-form-control" id="new_password" name="new_password" minlength="6" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="admin-form-label" for="confirm_password">Confirm Password</label>
-                            <input type="password" class="admin-form-control" id="confirm_password" name="confirm_password" minlength="6" required>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <button type="submit" class="admin-btn admin-btn-outline">
-                            <i class="fas fa-key"></i> Update Password
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-4">
-        <div class="admin-card">
-            <div class="admin-card-header">
-                <h5>Digital ID</h5>
-            </div>
-            <div class="admin-card-body">
-                {% if member and member.digital_id_path %}
-                    <img src="{{ url_for('static', filename='uploads/digital_ids/' + member.digital_id_path) }}" alt="Digital ID" class="member-profile-preview mb-3" loading="lazy" decoding="async">
-                {% else %}
-                    <p class="text-muted">Your digital ID card will be generated once your profile is complete.</p>
-                {% endif %}
-
-                {% if member and member.member_id_number %}
-                    <div class="mb-3">
-                        <span class="admin-code">ID: {{ member.member_id_number }}</span>
-                    </div>
-                {% endif %}
-
-                <div class="d-grid gap-2">
-                    <a href="{{ url_for('member.digital_id') }}" class="admin-btn admin-btn-primary">
-                        <i class="fas fa-id-card"></i> View Digital ID
-                    </a>
-                    <a href="{{ url_for('member.download_id') }}" class="admin-btn admin-btn-outline">
-                        <i class="fas fa-download"></i> Download Front
-                    </a>
-                    <a href="{{ url_for('member.download_id', side='back') }}" class="admin-btn admin-btn-outline">
-                        <i class="fas fa-download"></i> Download Back
-                    </a>
-                    <a href="{{ url_for('member.regenerate_id') }}" class="admin-btn admin-btn-outline">
-                        <i class="fas fa-rotate"></i> Regenerate ID
-                    </a>
+        
+        <div class="avatar-info">
+            <h1 class="profile-name">{{ member.full_name if member else 'New Member' }}</h1>
+            {% if member and member.title %}
+                <div class="profile-title">{{ member.title }}</div>
+            {% endif %}
+            
+            {% if member and member.member_id_number %}
+                <div class="id-badge">
+                    <i class="fas fa-id-card"></i>
+                    ID: {{ member.member_id_number }}
+                </div>
+            {% endif %}
+            
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>{{ member.course or 'No course set' }}</span>
+                </div>
+                <div class="profile-stat">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>{{ member.year or 'No year set' }}</span>
+                </div>
+                <div class="profile-stat">
+                    <i class="fas fa-user-tag"></i>
+                    <span>{{ member.status|title if member else 'Unknown' }}</span>
                 </div>
             </div>
         </div>
     </div>
+    
+    <div class="progress-indicator">
+        <div class="progress-bar">
+            <div class="progress-fill" style="--progress-width: 75%;"></div>
+        </div>
+        <div class="progress-text">Profile 75% complete</div>
+    </div>
 </div>
+
+<div class="row g-4">
+    <!-- Left Column: Profile Forms -->
+    <div class="col-lg-8">
+        <form method="POST" action="{{ url_for('member.edit_profile') }}" enctype="multipart/form-data" class="profile-form-grid">
+            <!-- Hidden file input for avatar -->
+            <input type="file" id="profile_image" name="profile_image" accept="image/*" class="d-none" onchange="this.form.submit()">
+            
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div>
+                        <h5 class="section-title">Personal Information</h5>
+                        <div class="section-subtitle">Your basic profile details</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="full_name">
+                        Full Name <span class="required-marker">*</span>
+                    </label>
+                    <div class="form-control-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" 
+                               class="admin-form-control" 
+                               id="full_name" 
+                               name="full_name" 
+                               autocomplete="name"
+                               value="{{ member.full_name if member else '' }}" 
+                               required
+                               placeholder="Enter your full name">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="title">Professional Title</label>
+                    <div class="form-control-icon">
+                        <i class="fas fa-briefcase"></i>
+                        <input type="text" 
+                               class="admin-form-control" 
+                               id="title" 
+                               name="title" 
+                               autocomplete="organization-title"
+                               value="{{ member.title if member else '' }}" 
+                               placeholder="e.g., Software Developer">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="bio">Bio</label>
+                    <div class="form-control-icon">
+                        <i class="fas fa-file-alt"></i>
+                        <textarea class="admin-form-control" 
+                                  id="bio" 
+                                  name="bio" 
+                                  rows="3" 
+                                  placeholder="Tell us about your skills, interests, and goals...">{{ member.bio if member else '' }}</textarea>
+                    </div>
+                    <div class="input-hint">Share a brief introduction about yourself</div>
+                </div>
+            </div>
+            
+            <!-- Academic Information Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h5 class="section-title">Academic Information</h5>
+                        <div class="section-subtitle">Your educational background</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="course">Course</label>
+                    <div class="form-control-icon">
+                        <i class="fas fa-book"></i>
+                        <select name="course" id="course" class="admin-form-control">
+                            <option value="">Select your program</option>
+                            <option value="Bachelor of Computer Science" {% if member and member.course == 'Bachelor of Computer Science' %}selected{% endif %}>Bachelor of Computer Science</option>
+                            <option value="Bachelor of Information Technology" {% if member and member.course == 'Bachelor of Information Technology' %}selected{% endif %}>Bachelor of Information Technology</option>
+                            <option value="Bachelor of Software Engineering" {% if member and member.course == 'Bachelor of Software Engineering' %}selected{% endif %}>Bachelor of Software Engineering</option>
+                            <option value="Bachelor of Data Science" {% if member and member.course == 'Bachelor of Data Science' %}selected{% endif %}>Bachelor of Data Science</option>
+                            <option value="Bachelor of Cybersecurity" {% if member and member.course == 'Bachelor of Cybersecurity' %}selected{% endif %}>Bachelor of Cybersecurity</option>
+                            <option value="Diploma in Computer Science" {% if member and member.course == 'Diploma in Computer Science' %}selected{% endif %}>Diploma in Computer Science</option>
+                            <option value="Diploma in Information Technology" {% if member and member.course == 'Diploma in Information Technology' %}selected{% endif %}>Diploma in Information Technology</option>
+                            <option value="Diploma in Software Engineering" {% if member and member.course == 'Diploma in Software Engineering' %}selected{% endif %}>Diploma in Software Engineering</option>
+                            <option value="Diploma in Cybersecurity" {% if member and member.course == 'Diploma in Cybersecurity' %}selected{% endif %}>Diploma in Cybersecurity</option>
+                            <option value="Certificate of Information Technology" {% if member and member.course == 'Certificate of Information Technology' %}selected{% endif %}>Certificate of Information Technology</option>
+                            <option value="Non-Computing Program" {% if member and member.course == 'Non-Computing Program' %}selected{% endif %}>Non-Computing Program</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="year">Year</label>
+                    <div class="form-control-icon">
+                        <i class="fas fa-calendar"></i>
+                        <select name="year" id="year" class="admin-form-control">
+                            <option value="">Select your year</option>
+                            <option value="Year 1" {% if member and member.year == 'Year 1' %}selected{% endif %}>Year 1</option>
+                            <option value="Year 2" {% if member and member.year == 'Year 2' %}selected{% endif %}>Year 2</option>
+                            <option value="Year 3" {% if member and member.year == 'Year 3' %}selected{% endif %}>Year 3</option>
+                            <option value="Alumni" {% if member and member.year == 'Alumni' %}selected{% endif %}>Alumni</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="status">Status</label>
+                    <div class="form-control-icon">
+                        <i class="fas fa-user-tag"></i>
+                        <select class="admin-form-control" id="status" name="status">
+                            <option value="student" {% if member and member.status == 'student' %}selected{% endif %}>Student</option>
+                            <option value="alumni" {% if member and member.status == 'alumni' %}selected{% endif %}>Alumni</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact Information Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-address-book"></i>
+                    </div>
+                    <div>
+                        <h5 class="section-title">Contact Information</h5>
+                        <div class="section-subtitle">How to reach you</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <div class="form-control-icon">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" 
+                               class="admin-form-control" 
+                               id="phone" 
+                               name="phone" 
+                               autocomplete="tel" 
+                               inputmode="tel"
+                               value="{{ member.phone if member else '' }}" 
+                               placeholder="+255 XXX XXX XXX">
+                    </div>
+                    <div class="input-hint">Include country code for international contact</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="areas_of_interest">Areas of Interest</label>
+                    <div class="form-control-icon">
+                        <i class="fas fa-lightbulb"></i>
+                        <input type="text" 
+                               class="admin-form-control" 
+                               id="areas_of_interest" 
+                               name="areas_of_interest" 
+                               value="{{ member.areas_of_interest if member else '' }}" 
+                               placeholder="Web Development, AI, Data Science, Cybersecurity">
+                    </div>
+                    <div class="input-hint">Separate with commas</div>
+                </div>
+            </div>
+            
+            <!-- Social Links Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <div>
+                        <h5 class="section-title">Social Profiles</h5>
+                        <div class="section-subtitle">Connect your professional profiles</div>
+                    </div>
+                </div>
+                
+                <div class="social-links-grid">
+                    <div class="social-link-input">
+                        <div class="social-icon github">
+                            <i class="fab fa-github"></i>
+                        </div>
+                        <input type="text" 
+                               class="social-input" 
+                               id="github" 
+                               name="github" 
+                               autocomplete="url"
+                               value="{{ member.github if member else '' }}" 
+                               placeholder="https://github.com/username">
+                    </div>
+                    
+                    <div class="social-link-input">
+                        <div class="social-icon linkedin">
+                            <i class="fab fa-linkedin"></i>
+                        </div>
+                        <input type="text" 
+                               class="social-input" 
+                               id="linkedin" 
+                               name="linkedin" 
+                               autocomplete="url"
+                               value="{{ member.linkedin if member else '' }}" 
+                               placeholder="https://linkedin.com/in/username">
+                    </div>
+                </div>
+                
+                <div class="input-hint">Add your professional profiles to connect with others</div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-section" style="grid-column: 1 / -1;">
+                <div class="profile-actions">
+                    <button type="submit" class="admin-btn admin-btn-primary">
+                        <i class="fas fa-save"></i> Save All Changes
+                    </button>
+                    <a href="{{ url_for('member.dashboard') }}" class="admin-btn admin-btn-outline">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Password Change Form -->
+        <div class="password-form">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div>
+                    <h5 class="section-title">Password & Security</h5>
+                    <div class="section-subtitle">Update your password</div>
+                </div>
+            </div>
+            
+            <form method="POST" action="{{ url_for('member.change_password') }}" class="admin-form">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="current_password">Current Password</label>
+                        <div class="form-control-icon">
+                            <i class="fas fa-key"></i>
+                            <input type="password" 
+                                   class="admin-form-control" 
+                                   id="current_password" 
+                                   name="current_password" 
+                                   required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="new_password">New Password</label>
+                        <div class="form-control-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" 
+                                   class="admin-form-control" 
+                                   id="new_password" 
+                                   name="new_password" 
+                                   minlength="6" 
+                                   required
+                                   oninput="checkPasswordStrength(this.value)">
+                        </div>
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="confirm_password">Confirm Password</label>
+                        <div class="form-control-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" 
+                                   class="admin-form-control" 
+                                   id="confirm_password" 
+                                   name="confirm_password" 
+                                   minlength="6" 
+                                   required>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="admin-btn admin-btn-outline">
+                        <i class="fas fa-key"></i> Update Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Right Column: Digital ID & Actions -->
+    <div class="col-lg-4">
+        <div class="digital-id-card">
+            <div class="section-header" style="border-bottom: none; padding-bottom: 0; margin-bottom: 1.5rem;">
+                <div class="section-icon">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <div>
+                    <h5 class="section-title">Digital ID Card</h5>
+                    <div class="section-subtitle">Your official membership identification</div>
+                </div>
+            </div>
+            
+            {% if member and member.digital_id_path %}
+                <img src="{{ url_for('static', filename='uploads/digital_ids/' + member.digital_id_path) }}" 
+                     alt="Digital ID" 
+                     class="digital-id-preview" 
+                     loading="lazy" 
+                     decoding="async">
+            {% else %}
+                <div class="digital-id-preview" style="background: var(--surface-2); padding: 2rem; display: flex; align-items: center; justify-content: center;">
+                    <div style="text-align: center;">
+                        <i class="fas fa-id-card" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                        <div style="color: var(--text-muted); font-size: 0.9rem;">
+                            Digital ID will be generated<br>after profile completion
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if member and member.member_id_number %}
+                <div class="id-badge">
+                    <i class="fas fa-fingerprint"></i>
+                    ID: {{ member.member_id_number }}
+                </div>
+            {% endif %}
+            
+            <div class="id-actions">
+                <a href="{{ url_for('member.digital_id') }}" class="id-action-btn">
+                    <i class="fas fa-eye"></i>
+                    <span>View ID</span>
+                </a>
+                
+                <a href="{{ url_for('member.download_id') }}" class="id-action-btn">
+                    <i class="fas fa-download"></i>
+                    <span>Front Side</span>
+                </a>
+                
+                <a href="{{ url_for('member.download_id', side='back') }}" class="id-action-btn">
+                    <i class="fas fa-download"></i>
+                    <span>Back Side</span>
+                </a>
+                
+                <a href="{{ url_for('member.regenerate_id') }}" class="id-action-btn" onclick="return confirm('Regenerate your digital ID? This will create a new card with updated information.');">
+                    <i class="fas fa-rotate"></i>
+                    <span>Regenerate</span>
+                </a>
+            </div>
+            
+            <div class="input-hint" style="margin-top: 1rem; text-align: center;">
+                Keep your digital ID handy for club events and verification
+            </div>
+        </div>
+        
+        <!-- Profile Completion Tips -->
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h5>Profile Tips</h5>
+            </div>
+            <div class="admin-card-body">
+                <ul class="list-unstyled mb-0" style="font-size: 0.85rem;">
+                    <li class="mb-2 d-flex align-items-start gap-2">
+                        <i class="fas fa-check-circle" style="color: var(--success-color); margin-top: 0.2rem;"></i>
+                        <span>Complete all fields for better networking</span>
+                    </li>
+                    <li class="mb-2 d-flex align-items-start gap-2">
+                        <i class="fas fa-check-circle" style="color: var(--success-color); margin-top: 0.2rem;"></i>
+                        <span>Add a profile photo for recognition</span>
+                    </li>
+                    <li class="mb-2 d-flex align-items-start gap-2">
+                        <i class="fas fa-check-circle" style="color: var(--success-color); margin-top: 0.2rem;"></i>
+                        <span>Link your social profiles for connections</span>
+                    </li>
+                    <li class="mb-2 d-flex align-items-start gap-2">
+                        <i class="fas fa-check-circle" style="color: var(--success-color); margin-top: 0.2rem;"></i>
+                        <span>Keep your contact information updated</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        const strengthBar = document.getElementById('passwordStrengthBar');
+        let strength = 0;
+        
+        // Check password length
+        if (password.length >= 8) strength += 1;
+        if (password.length >= 12) strength += 1;
+        
+        // Check for mixed case
+        if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength += 1;
+        
+        // Check for numbers
+        if (password.match(/\d/)) strength += 1;
+        
+        // Check for special characters
+        if (password.match(/[^a-zA-Z\d]/)) strength += 1;
+        
+        // Update strength bar
+        strengthBar.className = 'password-strength-bar';
+        if (strength <= 2) {
+            strengthBar.classList.add('weak');
+        } else if (strength <= 4) {
+            strengthBar.classList.add('fair');
+        } else {
+            strengthBar.classList.add('strong');
+        }
+    }
+    
+    // Avatar upload preview (optional enhancement)
+    document.getElementById('profile_image')?.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const avatar = document.querySelector('.member-profile-avatar');
+                if (avatar) {
+                    if (avatar.classList.contains('fallback')) {
+                        // Replace fallback with image
+                        const newImg = document.createElement('img');
+                        newImg.src = e.target.result;
+                        newImg.className = 'member-profile-avatar';
+                        newImg.alt = 'Profile picture';
+                        avatar.parentNode.replaceChild(newImg, avatar);
+                    } else {
+                        // Update existing image
+                        avatar.src = e.target.result;
+                    }
+                }
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+    
+    // Form validation
+    document.querySelector('form')?.addEventListener('submit', function(e) {
+        const password = document.getElementById('new_password')?.value;
+        const confirmPassword = document.getElementById('confirm_password')?.value;
+        
+        if (password && confirmPassword && password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return false;
+        }
+        
+        return true;
+    });
+</script>
 {% endblock %}

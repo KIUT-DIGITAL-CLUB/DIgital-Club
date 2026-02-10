@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h2 class="mb-1">Edit Project</h2>
-                    <p class="text-muted mb-0">Update the project details</p>
+                    <p class="mb-0">Update the project details</p>
                 </div>
             </div>
             
@@ -35,7 +35,7 @@
                     <input type="url" class="admin-form-control" id="image" name="image" 
                            value="{{ project.image or '' }}"
                            placeholder="https://example.com/project-image.jpg">
-                    <small class="form-text text-muted">Optional: URL to project screenshot or logo</small>
+                    <small class="form-text">Optional: URL to project screenshot or logo</small>
                 </div>
                 
                 <div class="admin-form-group">
@@ -57,7 +57,7 @@
                         </option>
                         {% endfor %}
                     </select>
-                    <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple members</small>
+                    <small class="form-text">Hold Ctrl/Cmd to select multiple members</small>
                     <div id="selected-count" class="text-info small mt-1" style="display: none;">
                         <i class="fas fa-users"></i> <span id="count-text">0</span> members selected
                     </div>
@@ -73,7 +73,7 @@
                         <div class="form-text">Featured projects will be displayed prominently on the main projects page</div>
                     </div>
                     {% if not members %}
-                    <small class="text-muted">No approved members found. Members must be approved before they can be added to projects.</small>
+                    <small >No approved members found. Members must be approved before they can be added to projects.</small>
                     {% endif %}
                 </div>
                 

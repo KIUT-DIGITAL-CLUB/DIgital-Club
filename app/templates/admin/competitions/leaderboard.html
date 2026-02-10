@@ -1,0 +1,592 @@
+﻿{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Leaderboard - {{ competition.title }}{% endblock %}
+{% block page_title %}Leaderboard{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.competitions_view', competition_id=competition.id) }}">{{ competition.title }}</a><span class="breadcrumb-separator">/</span> <span>Leaderboard</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Admin Leaderboard Specific Styles */
+    .leaderboard-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--admin-border);
+    }
+    
+    .leaderboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .leaderboard-stat {
+        text-align: center;
+        padding: 0.75rem;
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--admin-border);
+    }
+    
+    .leaderboard-value {
+        display: block;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--admin-primary);
+        font-family: 'Fira Code', monospace;
+        line-height: 1;
+    }
+    
+    .leaderboard-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--admin-text-muted);
+        margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .rewards-summary {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        padding: 1.25rem;
+        border: 1px solid var(--admin-border);
+        margin-bottom: 1.5rem;
+    }
+    
+    .rewards-summary h6 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--admin-text-primary);
+        margin-bottom: 0.75rem;
+    }
+    
+    .rewards-list {
+        display: grid;
+        gap: 0.5rem;
+    }
+    
+    .reward-summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--admin-border);
+    }
+    
+    .reward-summary-item:last-child {
+        border-bottom: none;
+    }
+    
+    .reward-range {
+        font-size: 0.8rem;
+        color: var(--admin-text-secondary);
+    }
+    
+    .reward-points {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--admin-primary);
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .leaderboard-table-wrapper {
+        overflow-x: auto;
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--admin-border);
+        background: var(--surface-1);
+    }
+    
+    .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+    
+    .leaderboard-table thead {
+        background: var(--surface-2);
+    }
+    
+    .leaderboard-table th {
+        padding: 1rem 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--admin-text-primary);
+        border-bottom: 2px solid var(--admin-border);
+        font-family: 'Fira Code', monospace;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    
+    .leaderboard-table tbody tr {
+        border-bottom: 1px solid var(--admin-border);
+        transition: all 0.2s ease;
+    }
+    
+    .leaderboard-table tbody tr:hover {
+        background: var(--surface-2);
+    }
+    
+    .leaderboard-table td {
+        padding: 0.875rem 0.75rem;
+        color: var(--admin-text-secondary);
+        vertical-align: middle;
+    }
+
+    .award-medal {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #111;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .medal-gold { background: linear-gradient(45deg, #FFD700, #FFA500); }
+    .medal-silver { background: linear-gradient(45deg, #C0C0C0, #A0A0A0); }
+    .medal-bronze { background: linear-gradient(45deg, #CD7F32, #A0522D); }
+    .medal-participation { background: linear-gradient(45deg, #6B7280, #4B5563); color: #fff; }
+
+    .award-trophy {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #111;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .trophy-gold { background: linear-gradient(45deg, #FFD700, #FFA500); }
+    .trophy-silver { background: linear-gradient(45deg, #C0C0C0, #A0A0A0); }
+    .trophy-bronze { background: linear-gradient(45deg, #CD7F32, #A0522D); }
+    .trophy-participation { background: linear-gradient(45deg, #6B7280, #4B5563); color: #fff; }
+    
+    .rank-cell {
+        font-family: 'Fira Code', monospace;
+        font-weight: 700;
+        font-size: 1rem;
+        text-align: center;
+        min-width: 50px;
+    }
+    
+    .rank-1 .rank-cell {
+        color: #FFD700;
+    }
+    
+    .rank-2 .rank-cell {
+        color: #C0C0C0;
+    }
+    
+    .rank-3 .rank-cell {
+        color: #CD7F32;
+    }
+    
+    .member-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 200px;
+    }
+    
+    .member-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--admin-primary);
+        font-weight: 600;
+        border: 2px solid var(--admin-border);
+    }
+    
+    .member-name {
+        font-weight: 500;
+        color: var(--admin-text-primary);
+    }
+    
+    .score-cell {
+        font-family: 'Fira Code', monospace;
+        font-weight: 700;
+        font-size: 1rem;
+        min-width: 80px;
+    }
+    
+    .award-cell {
+        min-width: 120px;
+    }
+    
+    .submission-cell {
+        min-width: 100px;
+    }
+    
+    .action-cell {
+        text-align: right;
+        min-width: 100px;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .pagination-info {
+        font-size: 0.85rem;
+        color: var(--admin-text-muted);
+    }
+    
+    .finalize-section {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        border: 1px solid var(--admin-border);
+        margin-top: 1.5rem;
+        text-align: center;
+    }
+    
+    .finalize-section h6 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--admin-text-primary);
+        margin-bottom: 0.75rem;
+    }
+    
+    .finalize-section p {
+        font-size: 0.85rem;
+        color: var(--admin-text-muted);
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .leaderboard-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .leaderboard-table-wrapper {
+            overflow: hidden;
+        }
+
+        .leaderboard-table thead {
+            display: none;
+        }
+
+        .leaderboard-table,
+        .leaderboard-table tbody,
+        .leaderboard-table tr,
+        .leaderboard-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .leaderboard-table tr {
+            border: 1px solid var(--admin-border);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: var(--surface-1);
+        }
+
+        .leaderboard-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.25rem;
+        }
+
+        .leaderboard-table td::before {
+            content: attr(data-label);
+            font-size: 0.75rem;
+            color: var(--admin-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .member-cell {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.4rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="leaderboard-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h5 class="mb-1">Leaderboard - {{ competition.title }}</h5>
+            <p class="mb-0" style="font-size: 0.85rem; color: var(--admin-text-muted);">
+                Final rankings and awards distribution
+            </p>
+        </div>
+        <div>
+            {% if can_finalize %}
+            <span class="admin-badge admin-badge-success">Ready to Finalize</span>
+            {% else %}
+            <span class="admin-badge admin-badge-warning">Pending Finalization</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="leaderboard-stats">
+        <div class="leaderboard-stat">
+            <span class="leaderboard-value">{{ submissions.total }}</span>
+            <span class="leaderboard-label">Submissions</span>
+        </div>
+        <div class="leaderboard-stat">
+            <span class="leaderboard-value">{{ competition.rewards.count() }}</span>
+            <span class="leaderboard-label">Reward Tiers</span>
+        </div>
+        <div class="leaderboard-stat">
+            <span class="leaderboard-value">{{ competition.judges.count() }}</span>
+            <span class="leaderboard-label">Judges</span>
+        </div>
+        <div class="leaderboard-stat">
+            <span class="leaderboard-value">{{ competition.status.title() }}</span>
+            <span class="leaderboard-label">Status</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5>Rankings</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">
+                    Showing {{ ((submissions.page - 1) * submissions.per_page) + 1 }}-{{ [submissions.page * submissions.per_page, submissions.total]|min }} of {{ submissions.total }}
+                </p>
+            </div>
+            <div class="admin-card-body">
+                {% if submissions.items %}
+                <div class="leaderboard-table-wrapper">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th class="rank-cell">Rank</th>
+                                <th class="member-cell">Participant</th>
+                                <th class="score-cell">Score</th>
+                                <th class="submission-cell">Submission</th>
+                                <th class="award-cell">Award</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in submissions.items %}
+                            {% set current_rank = loop.index + ((submissions.page - 1) * submissions.per_page) %}
+                            {% set award = badges.get(current_rank) %}
+                            <tr class="rank-{{ current_rank if current_rank <= 3 else '' }}">
+                                <td class="rank-cell" data-label="Rank">
+                                    {% if current_rank == 1 %}
+                                        <span class="award-medal medal-gold" title="1st place">
+                                            <i class="fas fa-medal"></i>
+                                        </span>
+                                    {% elif current_rank == 2 %}
+                                        <span class="award-medal medal-silver" title="2nd place">
+                                            <i class="fas fa-medal"></i>
+                                        </span>
+                                    {% elif current_rank == 3 %}
+                                        <span class="award-medal medal-bronze" title="3rd place">
+                                            <i class="fas fa-medal"></i>
+                                        </span>
+                                    {% else %}
+                                        {{ current_rank }}
+                                    {% endif %}
+                                </td>
+                                <td class="member-cell" data-label="Participant">
+                                    <div class="member-avatar">
+                                        {{ s.member.full_name[0]|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="member-name">{{ s.member.full_name }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--admin-text-muted);">
+                                            {{ s.member.email }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="score-cell" data-label="Score">
+                                    {% if s.final_score %}
+                                    {{ s.final_score }}
+                                    {% else %}
+                                    <span style="color: var(--admin-text-muted); font-size: 0.85rem;">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="submission-cell" data-label="Submission">
+                                    {% if s.submission_type in ['video', 'report'] %}
+                                        <a href="{{ url_for('static', filename='uploads/competitions/' + s.submission_value) }}" 
+                                           target="_blank" 
+                                           style="font-size: 0.85rem; color: var(--admin-primary);">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ s.submission_value }}" 
+                                           target="_blank" 
+                                           style="font-size: 0.85rem; color: var(--admin-primary);">
+                                            <i class="fas fa-external-link-alt"></i> View
+                                        </a>
+                                    {% endif %}
+                                </td>
+                                <td class="award-cell" data-label="Award">
+                                    {% if award %}
+                                        <span class="award-trophy {% if current_rank == 1 %}trophy-gold{% elif current_rank == 2 %}trophy-silver{% elif current_rank == 3 %}trophy-bronze{% else %}trophy-participation{% endif %}" title="{{ award[3] }}">
+                                            <i class="fas fa-trophy"></i>
+                                        </span>
+                                    {% else %}
+                                        <span style="color: var(--admin-text-muted); font-size: 0.85rem;">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if submissions.pages > 1 %}
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Page {{ submissions.page }} of {{ submissions.pages }}
+                    </div>
+                    
+                    <nav aria-label="Leaderboard pagination">
+                        <ul class="pagination">
+                            {% if submissions.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for(request.endpoint, competition_id=competition.id, page=submissions.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for p in submissions.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                {% if p %}
+                                    <li class="page-item {% if p == submissions.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for(request.endpoint, competition_id=competition.id, page=p) }}">{{ p }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">…</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if submissions.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for(request.endpoint, competition_id=competition.id, page=submissions.next_num) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="empty-state" style="padding: 2rem;">
+                    <i class="fas fa-list-ol" style="font-size: 2rem;"></i>
+                    <h6 style="margin: 1rem 0 0.5rem 0;">No Submissions Yet</h6>
+                    <p class="mb-0" style="font-size: 0.85rem;">
+                        The leaderboard will populate once submissions are scored.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="rewards-summary">
+            <h6>Rewards Structure</h6>
+            <div class="rewards-list">
+                {% for r in competition.rewards %}
+                <div class="reward-summary-item">
+                    <span class="reward-range">
+                        {% if r.reward_type == 'percent' %}
+                            Top {{ r.percent }}%
+                        {% else %}
+                            Positions {{ r.rank_from }} - {{ r.rank_to }}
+                        {% endif %}
+                    </span>
+                    <span class="reward-points">+{{ r.points }} pts</span>
+                </div>
+                {% else %}
+                <div class="text-muted" style="font-size: 0.85rem; text-align: center; padding: 1rem 0;">
+                    No rewards configured yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h5>Badge Key</h5>
+            </div>
+            <div class="admin-card-body">
+                <p class="mb-2" style="font-size: 0.85rem; color: var(--admin-text-muted);">
+                    Badges show award eligibility based on competition rules.
+                </p>
+                {% if competition.rewards.count() %}
+                <div class="badges-key">
+                    {% for r in competition.rewards %}
+                    {% if r.reward_type == 'percent' %}
+                        {% set trophy_class = 'trophy-gold' if r.percent and r.percent <= 10 else 'trophy-silver' if r.percent and r.percent <= 20 else 'trophy-bronze' if r.percent and r.percent <= 30 else 'trophy-participation' %}
+                    {% else %}
+                        {% set trophy_class = 'trophy-gold' if r.rank_from == 1 else 'trophy-silver' if r.rank_from == 2 else 'trophy-bronze' if r.rank_from == 3 else 'trophy-participation' %}
+                    {% endif %}
+                    <div class="key-item mb-2">
+                        <span class="award-trophy {{ trophy_class }}">
+                            <i class="fas fa-trophy"></i>
+                        </span>
+                        <span style="font-size: 0.85rem;">
+                            {% if r.reward_type == 'percent' %}
+                                Top {{ r.percent }}%
+                            {% else %}
+                                Positions {{ r.rank_from }} - {{ r.rank_to }}
+                            {% endif %}
+                            {% if r.prize_title %} • {{ r.prize_title }}{% endif %}
+                            • +{{ r.points }} pts
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-muted" style="font-size: 0.85rem;">
+                    No rewards configured yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if can_finalize %}
+        <div class="finalize-section">
+            <h6>Finalize Competition</h6>
+            <p>
+                Once you finalize the competition, winners will be announced and rewards will be distributed.
+                This action cannot be undone.
+            </p>
+            <form method="POST" action="{{ url_for('admin.competitions_finalize', competition_id=competition.id) }}">
+                <button type="submit" class="admin-btn admin-btn-primary" onclick="return confirm('Are you sure you want to finalize this competition? Winners will be announced and rewards distributed. This action cannot be undone.');">
+                    <i class="fas fa-flag-checkered"></i> Finalize & Publish
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

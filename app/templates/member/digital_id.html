@@ -7,69 +7,484 @@
 {% block extra_head %}
 {{ super() }}
 <style>
-    .member-id-preview {
-        width: 100%;
-        border-radius: 0.5rem;
-        border: 1px solid var(--admin-border);
-        box-shadow: var(--admin-shadow);
+    /* Digital ID Specific Styles */
+    .digital-id-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
     }
-
-    .member-id-actions .admin-btn {
+    
+    .digital-id-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    
+    @media (max-width: 992px) {
+        .digital-id-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+    }
+    
+    .id-card-preview-container {
+        position: relative;
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    }
+    
+    .id-card-preview {
         width: 100%;
+        height: auto;
+        display: block;
+        transition: transform 0.3s ease;
+    }
+    
+    .id-card-preview:hover {
+        transform: scale(1.02);
+    }
+    
+    .id-card-loading {
+        display: flex;
+        align-items: center;
         justify-content: center;
+        min-height: 300px;
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        border: 2px dashed var(--border-color);
+    }
+    
+    .id-card-loading-content {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .id-card-loading-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        opacity: 0.7;
+    }
+    
+    .id-card-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .id-number-display {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        text-align: center;
+    }
+    
+    .id-number-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .id-number-value {
+        font-family: 'Fira Code', monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        letter-spacing: 1px;
+    }
+    
+    .id-card-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .action-card {
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .action-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .action-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .action-card:hover .action-icon {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        transform: scale(1.1);
+    }
+    
+    .action-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .action-description {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+    
+    .id-status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 1.5rem;
+    }
+    
+    .status-active {
+        background: rgba(0, 255, 0, 0.1);
+        border: 1px solid rgba(0, 255, 0, 0.3);
+        color: var(--success-color);
+    }
+    
+    .status-pending {
+        background: rgba(255, 170, 0, 0.1);
+        border: 1px solid rgba(255, 170, 0, 0.3);
+        color: var(--warning-color);
+    }
+    
+    .status-icon {
+        font-size: 1.25rem;
+    }
+    
+    .id-usage-info {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        margin-top: 2rem;
+    }
+    
+    .usage-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .usage-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .usage-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .usage-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .usage-icon {
+        color: var(--primary-color);
+        font-size: 1rem;
+        margin-top: 0.1rem;
+        min-width: 20px;
+    }
+    
+    .usage-text {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+    
+    .qr-code-container {
+        background: white;
+        border-radius: var(--border-radius-sm);
+        padding: 1rem;
+        display: inline-block;
+        margin-top: 1rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    @media (max-width: 768px) {
+        .id-card-actions {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-card {
+            padding: 1.25rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block member_content %}
-<div class="row g-4">
-    <div class="col-lg-7">
+<div class="digital-id-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <h5 class="mb-1">Your Digital ID</h5>
+            <p class="mb-0" style="font-size: 0.9rem; color: var(--text-muted);">
+                Official membership identification for Digital Club
+            </p>
+        </div>
+        
+    </div>
+</div>
+
+<div class="digital-id-grid">
+    <!-- Left Column: ID Preview -->
+    <div>
         <div class="admin-card">
             <div class="admin-card-header">
-                <h5>Digital ID Preview</h5>
+                <h5>ID Card Preview</h5>
+                <p class="mb-0" style="font-size: 0.85rem; color: var(--text-muted);">
+                    Front side of your digital membership card
+                </p>
             </div>
             <div class="admin-card-body">
                 {% if member.digital_id_path %}
-                    <img src="{{ url_for('static', filename='uploads/digital_ids/' + member.digital_id_path) }}" alt="Digital ID - Front" class="member-id-preview mb-3" loading="lazy" decoding="async">
+                <div class="id-card-preview-container">
+                    <img src="{{ url_for('static', filename='uploads/digital_ids/' + member.digital_id_path) }}" 
+                         alt="Digital ID - Front" 
+                         class="id-card-preview" 
+                         loading="lazy" 
+                         decoding="async">
+                </div>
                 {% else %}
-                    <div class="admin-alert admin-alert-info">
-                        <div class="admin-alert-icon info"><i class="fas fa-info"></i></div>
-                        <div>
-                            <strong>Digital ID not generated yet.</strong>
-                            <div>Complete your profile information to generate your card.</div>
+                <div class="id-card-loading">
+                    <div class="id-card-loading-content">
+                        <div class="id-card-loading-icon">
+                            <i class="fas fa-id-card"></i>
                         </div>
+                        <h6 style="color: var(--text-primary); margin-bottom: 0.5rem;">Digital ID Not Generated</h6>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                            Complete your profile information to generate your digital membership card.
+                        </p>
+                        <a href="{{ url_for('member.profile') }}" class="admin-btn admin-btn-primary admin-btn-sm">
+                            <i class="fas fa-user-edit"></i> Complete Profile
+                        </a>
                     </div>
+                </div>
                 {% endif %}
-
+                
                 {% if member.member_id_number %}
-                    <div class="mt-3">
-                        <span class="admin-code">ID: {{ member.member_id_number }}</span>
-                    </div>
+                <div class="id-number-display">
+                    <div class="id-number-label">Membership ID Number</div>
+                    <div class="id-number-value">{{ member.member_id_number }}</div>
+                </div>
                 {% endif %}
+                
+                <div class="mt-3" style="font-size: 0.85rem; color: var(--text-muted);">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Your digital ID is valid for club access, events, and member benefits.
+                </div>
             </div>
         </div>
+        
+        <div class="id-usage-info">
+            <h6 class="usage-title">Where to Use Your Digital ID</h6>
+            <ul class="usage-list">
+                <li>
+                    <i class="fas fa-door-open usage-icon"></i>
+                    <div class="usage-text">Access to club facilities and labs</div>
+                </li>
+                <li>
+                    <i class="fas fa-calendar-check usage-icon"></i>
+                    <div class="usage-text">Check-in for workshops and events</div>
+                </li>
+                <li>
+                    <i class="fas fa-trophy usage-icon"></i>
+                    <div class="usage-text">Participate in competitions</div>
+                </li>
+                
+                <li>
+                    <i class="fas fa-users usage-icon"></i>
+                    <div class="usage-text">Network with other members</div>
+                </li>
+            </ul>
+        </div>
     </div>
-
-    <div class="col-lg-5">
+    
+    <!-- Right Column: Actions & Tools -->
+    <div>
         <div class="admin-card">
             <div class="admin-card-header">
-                <h5>Actions</h5>
+                <h5>ID Card Tools</h5>
+                <p class="mb-0" style="font-size: 0.85rem; color: var(--text-muted);">
+                    Download, regenerate, or manage your digital ID
+                </p>
             </div>
-            <div class="admin-card-body member-id-actions">
-                <a href="{{ url_for('member.download_id') }}" class="admin-btn admin-btn-primary">
-                    <i class="fas fa-download"></i> Download Front
-                </a>
-                <a href="{{ url_for('member.download_id', side='back') }}" class="admin-btn admin-btn-outline">
-                    <i class="fas fa-download"></i> Download Back
-                </a>
-                <a href="{{ url_for('member.regenerate_id') }}" class="admin-btn admin-btn-outline">
-                    <i class="fas fa-rotate"></i> Regenerate ID
-                </a>
-                <a href="{{ url_for('member.profile') }}" class="admin-btn admin-btn-outline">
-                    <i class="fas fa-user"></i> Back to Profile
-                </a>
+            <div class="admin-card-body">
+                <div class="id-card-actions">
+                    <a href="{{ url_for('member.download_id') }}" class="action-card">
+                        <div class="action-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="action-title">Download Front</div>
+                        <div class="action-description">
+                            Download high-resolution front side of your ID card
+                        </div>
+                    </a>
+                    
+                    <a href="{{ url_for('member.download_id', side='back') }}" class="action-card">
+                        <div class="action-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="action-title">Download Back</div>
+                        <div class="action-description">
+                            Download the back side with terms and conditions
+                        </div>
+                    </a>
+                    
+                    <a href="{{ url_for('member.regenerate_id') }}" class="action-card" onclick="return confirm('Regenerate your digital ID card? This will create a new card with updated information.');">
+                        <div class="action-icon">
+                            <i class="fas fa-rotate"></i>
+                        </div>
+                        <div class="action-title">Regenerate ID</div>
+                        <div class="action-description">
+                            Update your ID card with latest profile information
+                        </div>
+                    </a>
+                    
+                    <a href="{{ url_for('member.profile') }}" class="action-card">
+                        <div class="action-icon">
+                            <i class="fas fa-user-edit"></i>
+                        </div>
+                        <div class="action-title">Update Profile</div>
+                        <div class="action-description">
+                            Edit your profile information for ID card updates
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="mt-4">
+                    <h6 style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.75rem;">Quick Tips</h6>
+                    <ul style="padding-left: 1.25rem; margin: 0; font-size: 0.85rem; color: var(--text-secondary);">
+                        <li class="mb-1">Keep your digital ID accessible on your mobile device</li>
+                        <li class="mb-1">Regenerate your ID after profile updates</li>
+                        <li class="mb-1">Use the back side for reference to club rules</li>
+                        <li>Contact support if you encounter any issues</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        
+        
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h5>Need Help?</h5>
+            </div>
+            <div class="admin-card-body">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                    Having issues with your digital ID or need assistance?
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('main.contact') }}" class="admin-btn admin-btn-outline">
+                        <i class="fas fa-headset"></i> Contact Support
+                    </a>
+                    <a href="{{ url_for('static', filename='docs/digital_id_guide.pdf') }}" class="admin-btn admin-btn-outline">
+                        <i class="fas fa-file-pdf"></i> Download Guide
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Add smooth hover effects for action cards
+    document.querySelectorAll('.action-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            const icon = this.querySelector('.action-icon');
+            icon.style.transform = 'scale(1.1) rotate(5deg)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            const icon = this.querySelector('.action-icon');
+            icon.style.transform = 'scale(1) rotate(0deg)';
+        });
+    });
+    
+    // Add click confirmation for regenerate button
+    document.querySelectorAll('a[href*="regenerate_id"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to regenerate your digital ID? This will create a new card with your current profile information.')) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Add loading state for downloads
+    document.querySelectorAll('a[href*="download_id"]').forEach(link => {
+        link.addEventListener('click', function() {
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing Download...';
+            this.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                this.innerHTML = originalHTML;
+                this.style.pointerEvents = 'auto';
+            }, 3000);
+        });
+    });
+</script>
 {% endblock %}

@@ -9,7 +9,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1"><i class="fas fa-id-card"></i> Member Digital IDs</h2>
-        <p class="text-muted mb-0">View, flip, and export all member digital ID cards</p>
+        <p class="mb-0">View, flip, and export all member digital ID cards</p>
     </div>
     <div class="d-flex gap-2">
         <button onclick="window.print()" class="admin-btn admin-btn-outline">
@@ -85,7 +85,7 @@
     <div class="member-id-card-wrapper" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}">
         <div class="member-id-header">
             <h5 class="mb-1">{{ member.full_name }}</h5>
-            <p class="text-muted mb-0 small">
+            <p class="mb-0 small">
                 <i class="fas fa-id-badge"></i> {{ member.member_id_number }}
                 {% if member.course %}
                 <br><i class="fas fa-graduation-cap"></i> {{ member.course }} - {{ member.year }}
@@ -113,7 +113,7 @@
         </div>
         
         <div class="member-id-footer">
-            <small class="text-muted">
+            <small >
                 <i class="fas fa-hand-pointer"></i> Click to flip
             </small>
         </div>

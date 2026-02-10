@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Gallery Management</h2>
-        <p class="text-muted mb-0">Manage gallery images and videos</p>
+        <p class="mb-0">Manage gallery images and videos</p>
     </div>
     <a href="{{ url_for('admin.add_gallery_item') }}" class="admin-btn admin-btn-primary">
         <i class="fas fa-plus"></i> Add Gallery Item
@@ -24,14 +24,14 @@
             <img src="{{ item.url }}" class="card-img-top" alt="{{ item.caption }}" style="height: 200px; object-fit: cover;">
             {% else %}
             <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                <i class="fas fa-video fa-3x text-muted"></i>
+                <i class="fas fa-video fa-3x"></i>
             </div>
             {% endif %}
             <div class="admin-card-body">
                 <h6 class="mb-2">{{ item.caption or 'No caption' }}</h6>
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="admin-badge admin-badge-secondary">{{ item.type.title() }}</span>
-                    <small class="text-muted">{{ item.uploaded_at.strftime('%Y-%m-%d') }}</small>
+                    <small >{{ item.uploaded_at.strftime('%Y-%m-%d') }}</small>
                 </div>
                 <div class="btn-group w-100 mt-3">
                     <a href="{{ url_for('admin.edit_gallery_item', item_id=item.id) }}" class="admin-btn admin-btn-sm admin-btn-outline">

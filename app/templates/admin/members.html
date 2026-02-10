@@ -8,7 +8,7 @@
 <div class="admin-page-header mb-4">
     <div>
         <h2 class="mb-1">Member Management</h2>
-        <p class="text-muted mb-0">View and manage all club members with payment tracking</p>
+        <p class="mb-0">View and manage all club members with payment tracking</p>
     </div>
     <div>
         <a href="{{ url_for('admin.scan_id') }}" class="admin-btn admin-btn-primary">
@@ -131,7 +131,7 @@
                     <i class="fas fa-download me-2"></i>
                     Download Reports
                 </h5>
-                <p class="text-muted mb-0">Export member data as CSV files</p>
+                <p class="mb-0">Export member data as CSV files</p>
             </div>
             <div class="btn-group">
                 <a href="{{ url_for('admin.export_members', report_type='all_users') }}" 
@@ -188,14 +188,14 @@
                             {% endif %}
                             <div>
                                 <h6 class="mb-0">{{ member.full_name }}</h6>
-                                <small class="text-muted">{{ member.user.email }}</small>
+                                <small >{{ member.user.email }}</small>
                             </div>
                         </div>
                     </td>
                     <td><strong>{{ member.member_id_number }}</strong></td>
                     <td>
                         {{ member.course or 'N/A' }}<br>
-                        <small class="text-muted">{{ member.year or 'N/A' }}</small>
+                        <small >{{ member.year or 'N/A' }}</small>
                     </td>
                     <td>
                         {% if member.user.is_super_admin %}

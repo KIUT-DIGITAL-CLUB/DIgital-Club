@@ -6,7 +6,10 @@ from app.models import (
     User, Member, Leader, News, Event, Project, Gallery, Topic, Newsletter, 
     Blog, RSVP, Technology, RewardTransaction, Trophy, MemberTrophy, 
     MembershipPayment, SystemSettings, FinancialPeriod, FinancialCategory, 
-    FinancialTransaction
+    FinancialTransaction, Competition, CompetitionJudge, CompetitionCriteria,
+    CompetitionSubmission, CompetitionScore, CompetitionReward,
+    CompetitionSponsor, CompetitionSponsorLink, CompetitionWinner, CompetitionGuard,
+    CompetitionEnrollment, SessionWeek, SessionSchedule, SessionReport, Team, TeamMember
 )
 from app import db
 from app.utils import get_notification_service
@@ -2763,3 +2766,953 @@ def export_financial_period(period_id):
     except Exception as e:
         flash(f'Error exporting report: {str(e)}', 'error')
         return redirect(url_for('admin.financial_period_detail', period_id=period_id))
+
+# Competitions
+
+def _competition_is_judge(competition_id, user_id):
+    return CompetitionJudge.query.filter_by(competition_id=competition_id, user_id=user_id, is_active=True).first()
+
+
+def _calculate_submission_scores(submission):
+    competition = submission.competition
+    criteria = competition.criteria.order_by(CompetitionCriteria.id.asc()).all()
+    criteria_total = sum(c.weight_percent or 0 for c in criteria)
+    judges = competition.judges.filter_by(is_active=True).all()
+
+    judge_totals = []
+    for judge in judges:
+        total = 0
+        scored_any = False
+        for c in criteria:
+            score_row = CompetitionScore.query.filter_by(
+                submission_id=submission.id,
+                judge_id=judge.user_id,
+                criteria_id=c.id
+            ).first()
+            if score_row:
+                scored_any = True
+                max_points = c.max_points or 1
+                total += (score_row.score / max_points) * (c.weight_percent or 0)
+        if scored_any:
+            judge_totals.append(total)
+
+    submission.total_score = round(sum(judge_totals) / len(judge_totals), 2) if judge_totals else 0
+    submission.final_score = round(submission.total_score + (submission.bonus_points or 0), 2)
+
+
+@admin_bp.route('/competitions')
+@login_required
+@admin_required
+def competitions():
+    items = Competition.query.order_by(Competition.created_at.desc()).all()
+    return render_template('admin/competitions/index.html', competitions=items, view_label='All')
+
+
+@admin_bp.route('/competitions/weekly')
+@login_required
+@admin_required
+def competitions_weekly():
+    items = Competition.query.filter_by(frequency='weekly').order_by(Competition.created_at.desc()).all()
+    return render_template('admin/competitions/index.html', competitions=items, view_label='Weekly')
+
+
+@admin_bp.route('/competitions/monthly')
+@login_required
+@admin_required
+def competitions_monthly():
+    items = Competition.query.filter_by(frequency='monthly').order_by(Competition.created_at.desc()).all()
+    return render_template('admin/competitions/index.html', competitions=items, view_label='Monthly')
+
+
+@admin_bp.route('/competitions/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def competitions_add():
+    if request.method == 'POST':
+        starts_at = datetime.strptime(request.form.get('starts_at'), '%Y-%m-%dT%H:%M') if request.form.get('starts_at') else None
+        ends_at = datetime.strptime(request.form.get('ends_at'), '%Y-%m-%dT%H:%M') if request.form.get('ends_at') else None
+        if not starts_at or not ends_at or ends_at <= starts_at:
+            flash('End time must be after start time.', 'error')
+            return redirect(url_for('admin.competitions_add'))
+
+        competition = Competition(
+            title=request.form.get('title'),
+            description=request.form.get('description'),
+            category=request.form.get('category'),
+            frequency=request.form.get('frequency'),
+            level=int(request.form.get('level') or 1),
+            status=request.form.get('status', 'draft'),
+            eligibility_rule=request.form.get('eligibility_rule', 'default'),
+            eligibility_years=request.form.get('eligibility_years'),
+            requires_paid_membership=bool(request.form.get('requires_paid_membership')),
+            submission_type=request.form.get('submission_type'),
+            submission_max_mb=int(request.form.get('submission_max_mb') or 10),
+            starts_at=starts_at,
+            ends_at=ends_at,
+            assessment_mode=request.form.get('assessment_mode', 'online'),
+            assessment_instructions=request.form.get('assessment_instructions'),
+            assessment_link=request.form.get('assessment_link'),
+            assessment_location=request.form.get('assessment_location'),
+            assessment_date=datetime.strptime(request.form.get('assessment_date'), '%Y-%m-%dT%H:%M') if request.form.get('assessment_date') else None,
+            created_by=current_user.id,
+        )
+        db.session.add(competition)
+        db.session.commit()
+        flash('Competition created. Add judges, criteria, and rewards next.', 'success')
+        return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+
+    return render_template('admin/competitions/form.html', competition=None)
+
+
+@admin_bp.route('/competitions/<int:competition_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def competitions_edit(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    if request.method == 'POST':
+        if competition.status == 'finalized':
+            flash('Finalized competitions are locked and cannot be edited.', 'error')
+            return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+        assessment_only = competition.status in ['published', 'judging']
+        if assessment_only:
+            new_status = request.form.get('status', competition.status)
+            if new_status not in ['published', 'judging']:
+                flash('Only status changes to Published/Judging are allowed here.', 'error')
+                return redirect(url_for('admin.competitions_edit', competition_id=competition.id))
+            competition.status = new_status
+            competition.assessment_mode = request.form.get('assessment_mode', competition.assessment_mode)
+            competition.assessment_instructions = request.form.get('assessment_instructions')
+            competition.assessment_link = request.form.get('assessment_link')
+            competition.assessment_location = request.form.get('assessment_location')
+            competition.assessment_date = datetime.strptime(request.form.get('assessment_date'), '%Y-%m-%dT%H:%M') if request.form.get('assessment_date') else competition.assessment_date
+            flash('Competition is published/judging. Only status and assessment details were updated.', 'warning')
+        else:
+            starts_at = datetime.strptime(request.form.get('starts_at'), '%Y-%m-%dT%H:%M') if request.form.get('starts_at') else competition.starts_at
+            ends_at = datetime.strptime(request.form.get('ends_at'), '%Y-%m-%dT%H:%M') if request.form.get('ends_at') else competition.ends_at
+            if ends_at <= starts_at:
+                flash('End time must be after start time.', 'error')
+                return redirect(url_for('admin.competitions_edit', competition_id=competition.id))
+            competition.title = request.form.get('title')
+            competition.description = request.form.get('description')
+            competition.category = request.form.get('category')
+            competition.frequency = request.form.get('frequency')
+            competition.level = int(request.form.get('level') or competition.level)
+            competition.status = request.form.get('status', competition.status)
+            competition.eligibility_rule = request.form.get('eligibility_rule', competition.eligibility_rule)
+            competition.eligibility_years = request.form.get('eligibility_years')
+            competition.requires_paid_membership = bool(request.form.get('requires_paid_membership'))
+            competition.submission_type = request.form.get('submission_type')
+            competition.submission_max_mb = int(request.form.get('submission_max_mb') or competition.submission_max_mb)
+            competition.starts_at = starts_at
+            competition.ends_at = ends_at
+            competition.assessment_mode = request.form.get('assessment_mode', competition.assessment_mode)
+            competition.assessment_instructions = request.form.get('assessment_instructions')
+            competition.assessment_link = request.form.get('assessment_link')
+            competition.assessment_location = request.form.get('assessment_location')
+            competition.assessment_date = datetime.strptime(request.form.get('assessment_date'), '%Y-%m-%dT%H:%M') if request.form.get('assessment_date') else competition.assessment_date
+        db.session.commit()
+        flash('Competition updated.', 'success')
+        return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+
+    assessment_only = competition.status in ['published', 'judging']
+    finalized_locked = competition.status == 'finalized'
+    return render_template('admin/competitions/form.html', competition=competition, assessment_only=assessment_only, finalized_locked=finalized_locked)
+
+
+@admin_bp.route('/competitions/<int:competition_id>')
+@login_required
+@admin_required
+def competitions_view(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    users = User.query.order_by(User.email.asc()).all()
+    sponsors_all = CompetitionSponsor.query.filter_by(is_active=True).order_by(CompetitionSponsor.name.asc()).all()
+    judges = competition.judges.filter_by(is_active=True).join(User).order_by(User.email.asc()).all()
+    criteria = competition.criteria.order_by(CompetitionCriteria.id.asc()).all()
+    criteria_total = sum(c.weight_percent or 0 for c in criteria)
+    rewards = competition.rewards.order_by(CompetitionReward.id.asc()).all()
+    sponsors = competition.sponsors.order_by(CompetitionSponsorLink.display_order.asc()).all()
+    submissions_count = competition.submissions.count()
+    enrollments_count = competition.enrollments.count()
+    return render_template('admin/competitions/detail.html', competition=competition, judges=judges, criteria=criteria, rewards=rewards, sponsors=sponsors, submissions_count=submissions_count, enrollments_count=enrollments_count, users=users, sponsors_all=sponsors_all, criteria_total=criteria_total)
+
+
+@admin_bp.route('/competitions/<int:competition_id>/criteria/add', methods=['POST'])
+@login_required
+@admin_required
+def competitions_criteria_add(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    criteria = CompetitionCriteria(
+        competition_id=competition.id,
+        name=request.form.get('name'),
+        description=request.form.get('description'),
+        max_points=int(request.form.get('max_points') or 10),
+        weight_percent=int(request.form.get('weight_percent') or 0),
+    )
+    db.session.add(criteria)
+    db.session.commit()
+    flash('Criteria added.', 'success')
+    return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+
+
+@admin_bp.route('/competitions/<int:competition_id>/criteria/<int:criteria_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def competitions_criteria_delete(competition_id, criteria_id):
+    criteria = CompetitionCriteria.query.get_or_404(criteria_id)
+    db.session.delete(criteria)
+    db.session.commit()
+    flash('Criteria removed.', 'success')
+    return redirect(url_for('admin.competitions_view', competition_id=competition_id))
+
+
+@admin_bp.route('/competitions/<int:competition_id>/judges', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def competitions_judges(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    if request.method == 'POST':
+        user_id = int(request.form.get('user_id'))
+        is_chair = bool(request.form.get('is_chair'))
+        user = User.query.get(user_id)
+        if is_chair and (not user or user.role != 'admin'):
+            flash('Chair judge must be an admin user.', 'error')
+            return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+        existing = CompetitionJudge.query.filter_by(competition_id=competition.id, user_id=user_id).first()
+        if not existing:
+            db.session.add(CompetitionJudge(competition_id=competition.id, user_id=user_id, is_chair=is_chair))
+        else:
+            existing.is_active = True
+            existing.is_chair = is_chair
+        if is_chair:
+            CompetitionJudge.query.filter(
+                CompetitionJudge.competition_id == competition.id,
+                CompetitionJudge.user_id != user_id
+            ).update({CompetitionJudge.is_chair: False})
+        db.session.commit()
+        flash('Judge assigned.', 'success')
+        return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+    
+    return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+
+
+@admin_bp.route('/competitions/<int:competition_id>/judges/<int:judge_id>/remove', methods=['POST'])
+@login_required
+@admin_required
+def competitions_judges_remove(competition_id, judge_id):
+    judge = CompetitionJudge.query.get_or_404(judge_id)
+    judge.is_active = False
+    judge.is_chair = False
+    db.session.commit()
+    flash('Judge removed.', 'success')
+    return redirect(url_for('admin.competitions_view', competition_id=competition_id))
+
+
+@admin_bp.route('/competitions/<int:competition_id>/rewards/add', methods=['POST'])
+@login_required
+@admin_required
+def competitions_rewards_add(competition_id):
+    reward_type = request.form.get('reward_type', 'position')
+    rank_from = int(request.form.get('rank_from') or 1)
+    rank_to = int(request.form.get('rank_to') or 1)
+    percent = int(request.form.get('percent') or 0)
+    points = int(request.form.get('points') or 0)
+    if reward_type == 'percent' and (percent <= 0 or percent > 100):
+        flash('Percent reward must be between 1 and 100.', 'error')
+        return redirect(url_for('admin.competitions_view', competition_id=competition_id))
+    if reward_type == 'position' and (rank_from <= 0 or rank_to <= 0 or rank_from > rank_to):
+        flash('Rank range is invalid.', 'error')
+        return redirect(url_for('admin.competitions_view', competition_id=competition_id))
+
+    reward = CompetitionReward(
+        competition_id=competition_id,
+        reward_type=reward_type,
+        rank_from=rank_from,
+        rank_to=rank_to,
+        percent=percent,
+        points=points,
+        prize_title=request.form.get('prize_title'),
+        prize_description=request.form.get('prize_description'),
+    )
+    db.session.add(reward)
+    db.session.commit()
+    flash('Reward rule added.', 'success')
+    return redirect(url_for('admin.competitions_view', competition_id=competition_id))
+
+
+@admin_bp.route('/competitions/<int:competition_id>/rewards/<int:reward_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def competitions_rewards_delete(competition_id, reward_id):
+    reward = CompetitionReward.query.get_or_404(reward_id)
+    db.session.delete(reward)
+    db.session.commit()
+    flash('Reward rule removed.', 'success')
+    return redirect(url_for('admin.competitions_view', competition_id=competition_id))
+
+
+@admin_bp.route('/competitions/<int:competition_id>/sponsors', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def competitions_sponsors(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    if request.method == 'POST':
+        sponsor_id = int(request.form.get('sponsor_id'))
+        is_primary = bool(request.form.get('is_primary'))
+        existing = CompetitionSponsorLink.query.filter_by(competition_id=competition.id, sponsor_id=sponsor_id).first()
+        if not existing:
+            db.session.add(CompetitionSponsorLink(competition_id=competition.id, sponsor_id=sponsor_id, is_primary=is_primary))
+        else:
+            existing.is_primary = is_primary
+        if is_primary:
+            CompetitionSponsorLink.query.filter(
+                CompetitionSponsorLink.competition_id == competition.id,
+                CompetitionSponsorLink.sponsor_id != sponsor_id
+            ).update({CompetitionSponsorLink.is_primary: False})
+        db.session.commit()
+        flash('Sponsor assigned.', 'success')
+        return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+    
+    return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+
+
+@admin_bp.route('/competitions/sponsors/add', methods=['POST'])
+@login_required
+@admin_required
+def competitions_sponsors_add():
+    sponsor = CompetitionSponsor(
+        name=request.form.get('name'),
+        website=request.form.get('website'),
+        logo=request.form.get('logo'),
+        description=request.form.get('description')
+    )
+    db.session.add(sponsor)
+    db.session.commit()
+    flash('Sponsor created.', 'success')
+    return redirect(request.referrer or url_for('admin.competitions'))
+
+
+@admin_bp.route('/competitions/<int:competition_id>/submissions')
+@login_required
+@admin_required
+def competitions_submissions(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    submissions = competition.submissions.join(Member).order_by(CompetitionSubmission.submitted_at.desc()).all()
+    judge = _competition_is_judge(competition.id, current_user.id)
+    is_judge = judge is not None
+    is_chair = judge.is_chair if judge else False
+    return render_template('admin/competitions/submissions.html', competition=competition, submissions=submissions, is_judge=is_judge, is_chair=is_chair)
+
+
+@admin_bp.route('/competitions/<int:competition_id>/submissions/<int:submission_id>/score', methods=['GET', 'POST'])
+@login_required
+def competitions_score(competition_id, submission_id):
+    competition = Competition.query.get_or_404(competition_id)
+    submission = CompetitionSubmission.query.get_or_404(submission_id)
+    if submission.competition_id != competition.id:
+        flash('Invalid submission for this competition.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+    if competition.status == 'finalized':
+        flash('Competition is finalized. Scoring is locked.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+    judge = _competition_is_judge(competition.id, current_user.id)
+    if not judge:
+        flash('You are not assigned to judge this competition.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+
+    criteria = competition.criteria.order_by(CompetitionCriteria.id.asc()).all()
+    if request.method == 'POST':
+        for c in criteria:
+            value = float(request.form.get(f'criteria_{c.id}') or 0)
+            if value > c.max_points:
+                value = c.max_points
+            score_row = CompetitionScore.query.filter_by(
+                submission_id=submission.id,
+                judge_id=current_user.id,
+                criteria_id=c.id
+            ).first()
+            if not score_row:
+                score_row = CompetitionScore(
+                    submission_id=submission.id,
+                    judge_id=current_user.id,
+                    criteria_id=c.id
+                )
+                db.session.add(score_row)
+            score_row.score = value
+            score_row.comment = request.form.get(f'comment_{c.id}')
+        db.session.commit()
+        _calculate_submission_scores(submission)
+        db.session.commit()
+        flash('Scores saved.', 'success')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+
+    existing_scores = {s.criteria_id: s for s in submission.scores.filter_by(judge_id=current_user.id).all()}
+    return render_template('admin/competitions/score.html', competition=competition, submission=submission, criteria=criteria, existing_scores=existing_scores)
+
+
+@admin_bp.route('/competitions/<int:competition_id>/finalize', methods=['POST'])
+@login_required
+@admin_required
+def competitions_finalize(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    chair = CompetitionJudge.query.filter_by(competition_id=competition.id, user_id=current_user.id, is_chair=True, is_active=True).first()
+    if not chair:
+        flash('Only the chair judge can finalize the competition.', 'error')
+        return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+    if chair.judge.role != 'admin':
+        flash('Chair judge must be an admin to finalize.', 'error')
+        return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+
+    criteria_total = sum(c.weight_percent or 0 for c in competition.criteria.all())
+    if criteria_total != 100:
+        flash(f'Criteria weights must total 100%. Current total: {criteria_total}%.', 'error')
+        return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+
+    # Reset previous winners
+    CompetitionWinner.query.filter_by(competition_id=competition.id).delete()
+    CompetitionGuard.query.filter_by(competition_id=competition.id).delete()
+    RewardTransaction.query.filter(
+        RewardTransaction.transaction_type == 'competition',
+        RewardTransaction.reason.ilike(f"Competition {competition.id}%")
+    ).delete(synchronize_session=False)
+
+    submissions = competition.submissions.filter(CompetitionSubmission.status != 'disqualified').all()
+    submissions = sorted(submissions, key=lambda s: s.final_score, reverse=True)
+    for idx, submission in enumerate(submissions, start=1):
+        submission.rank = idx
+        submission.is_winner = False
+        submission.points_awarded = 0
+    prize_map = {}
+
+    # Apply rewards
+    total_submissions = len(submissions)
+    for reward in competition.rewards.all():
+        if reward.reward_type == 'percent' and reward.percent:
+            if total_submissions == 0:
+                continue
+            count = max(1, int((reward.percent / 100.0) * total_submissions))
+            for submission in submissions[:count]:
+                submission.points_awarded = max(submission.points_awarded or 0, reward.points or 0)
+                submission.is_winner = True
+                prize_map[submission.id] = (reward.prize_title, reward.prize_description)
+        else:
+            start = reward.rank_from or 1
+            end = reward.rank_to or start
+            for submission in submissions:
+                if submission.rank and start <= submission.rank <= end:
+                    submission.points_awarded = max(submission.points_awarded or 0, reward.points or 0)
+                    submission.is_winner = True
+                    prize_map[submission.id] = (reward.prize_title, reward.prize_description)
+
+    for submission in submissions:
+        if submission.is_winner:
+            prize_title, prize_description = prize_map.get(submission.id, (None, None))
+            db.session.add(CompetitionWinner(
+                competition_id=competition.id,
+                member_id=submission.member_id,
+                level=competition.level,
+                rank=submission.rank,
+                points_awarded=submission.points_awarded,
+                prize_title=prize_title,
+                prize_description=prize_description,
+            ))
+            if submission.points_awarded:
+                db.session.add(RewardTransaction(
+                    member_id=submission.member_id,
+                    points=submission.points_awarded,
+                    transaction_type='competition',
+                    reason=f"Competition {competition.id} - {competition.title} (Rank {submission.rank})",
+                    admin_id=current_user.id
+                ))
+
+    if submissions:
+        top = submissions[0]
+        today = datetime.now().date()
+        db.session.add(CompetitionGuard(
+            competition_id=competition.id,
+            member_id=top.member_id,
+            level=competition.level,
+            week_start=today,
+            week_end=today + timedelta(days=7),
+            title=f"Guard of the Week - Level {competition.level}",
+            work_link=top.submission_value if top.submission_type in ['github', 'link'] else None
+        ))
+
+    competition.status = 'finalized'
+    db.session.commit()
+    flash('Competition finalized and winners published.', 'success')
+    return redirect(url_for('admin.competitions_view', competition_id=competition.id))
+
+
+@admin_bp.route('/competitions/<int:competition_id>/submissions/<int:submission_id>/bonus', methods=['POST'])
+@login_required
+@admin_required
+def competitions_bonus(competition_id, submission_id):
+    competition = Competition.query.get_or_404(competition_id)
+    chair = CompetitionJudge.query.filter_by(competition_id=competition.id, user_id=current_user.id, is_chair=True, is_active=True).first()
+    if not chair:
+        flash('Only the chair judge can adjust bonus points.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+    submission = CompetitionSubmission.query.get_or_404(submission_id)
+    bonus = float(request.form.get('bonus_points') or 0)
+    submission.bonus_points = bonus
+    _calculate_submission_scores(submission)
+    db.session.commit()
+    flash('Bonus points updated.', 'success')
+    return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+
+@admin_bp.route('/competitions/<int:competition_id>/enrollments')
+@login_required
+@admin_required
+def competitions_enrollments(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    enrollments = CompetitionEnrollment.query.filter_by(competition_id=competition.id).join(Member).order_by(CompetitionEnrollment.enrolled_at.desc()).all()
+    return render_template('admin/competitions/enrollments.html', competition=competition, enrollments=enrollments)
+
+
+@admin_bp.route('/competitions/<int:competition_id>/enrollments/<int:enrollment_id>/disqualify', methods=['POST'])
+@login_required
+@admin_required
+def competitions_disqualify(competition_id, enrollment_id):
+    competition = Competition.query.get_or_404(competition_id)
+    enrollment = CompetitionEnrollment.query.get_or_404(enrollment_id)
+    if enrollment.competition_id != competition.id:
+        flash('Invalid enrollment.', 'error')
+        return redirect(url_for('admin.competitions_enrollments', competition_id=competition.id))
+    reason = request.form.get('disqualified_reason')
+    enrollment.status = 'disqualified'
+    enrollment.disqualified_reason = reason
+    enrollment.disqualified_by = current_user.id
+    enrollment.disqualified_at = datetime.now()
+
+    submission = CompetitionSubmission.query.filter_by(competition_id=competition.id, member_id=enrollment.member_id).first()
+    if submission:
+        submission.status = 'disqualified'
+    db.session.commit()
+    flash('Member disqualified.', 'success')
+    return redirect(url_for('admin.competitions_enrollments', competition_id=competition.id))
+
+
+def _build_reward_badges(rewards, total_submissions):
+    badges = {}
+    if total_submissions == 0:
+        return badges
+    for reward in rewards:
+        if reward.reward_type == "percent" and reward.percent:
+            count = max(1, int((reward.percent / 100.0) * total_submissions))
+            for rank in range(1, count + 1):
+                badges[rank] = (reward.points or 0, reward.prize_title, reward.prize_description, f"Top {reward.percent}%")
+        else:
+            start = reward.rank_from or 1
+            end = reward.rank_to or start
+            for rank in range(start, end + 1):
+                badges[rank] = (reward.points or 0, reward.prize_title, reward.prize_description, f"Rank {start}-{end}")
+    return badges
+
+
+@admin_bp.route('/competitions/<int:competition_id>/leaderboard')
+@login_required
+@admin_required
+def competitions_leaderboard(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    submissions_query = competition.submissions.filter(CompetitionSubmission.status != 'disqualified').order_by(CompetitionSubmission.final_score.desc())
+    page = request.args.get('page', 1, type=int)
+    submissions_page = submissions_query.paginate(page=page, per_page=20, error_out=False)
+    rewards = competition.rewards.order_by(CompetitionReward.id.asc()).all()
+    badges = _build_reward_badges(rewards, submissions_page.total)
+    chair = CompetitionJudge.query.filter_by(competition_id=competition.id, user_id=current_user.id, is_chair=True, is_active=True).first()
+    can_finalize = chair is not None and chair.judge.role == 'admin' and competition.status != 'finalized'
+    return render_template('admin/competitions/leaderboard.html', competition=competition, submissions=submissions_page, badges=badges, can_finalize=can_finalize)
+
+
+# Sessions
+def _session_categories():
+    return [
+        'Web Development',
+        'Mobile Development',
+        'Cybersecurity',
+        'DevOps',
+        'Graphics Design',
+        'Data Science',
+        'AI/ML',
+        'Networking',
+        'Other',
+    ]
+
+
+@admin_bp.route('/sessions')
+@login_required
+@admin_required
+def sessions_index():
+    weeks = SessionWeek.query.order_by(SessionWeek.week_start.desc()).all()
+    return render_template('admin/sessions/index.html', weeks=weeks)
+
+
+@admin_bp.route('/sessions/week/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def sessions_week_add():
+    if request.method == 'POST':
+        title = request.form.get('title') or 'Weekly Sessions'
+        week_start = request.form.get('week_start')
+        if not week_start:
+            flash('Week start date is required.', 'error')
+            return redirect(url_for('admin.sessions_week_add'))
+        try:
+            week_start_date = datetime.strptime(week_start, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid start date format.', 'error')
+            return redirect(url_for('admin.sessions_week_add'))
+        week_end_date = week_start_date + timedelta(days=6)
+        week = SessionWeek(
+            title=title,
+            week_start=week_start_date,
+            week_end=week_end_date,
+            status='draft'
+        )
+        db.session.add(week)
+        db.session.commit()
+        flash('Session week created.', 'success')
+        return redirect(url_for('admin.sessions_week_view', week_id=week.id))
+    return render_template('admin/sessions/week_form.html')
+
+
+@admin_bp.route('/sessions/week/<int:week_id>')
+@login_required
+@admin_required
+def sessions_week_view(week_id):
+    week = SessionWeek.query.get_or_404(week_id)
+    sessions = week.sessions.order_by(SessionSchedule.session_date.asc(), SessionSchedule.start_time.asc()).all()
+    day_map = {}
+    for session in sessions:
+        day_map.setdefault(session.session_date, []).append(session)
+    day_list = sorted(day_map.items(), key=lambda item: item[0])
+    users = User.query.order_by(User.email.asc()).all()
+    return render_template(
+        'admin/sessions/week_detail.html',
+        week=week,
+        day_list=day_list,
+        users=users,
+        categories=_session_categories()
+    )
+
+
+@admin_bp.route('/sessions/week/<int:week_id>/publish', methods=['POST'])
+@login_required
+@admin_required
+def sessions_week_publish(week_id):
+    week = SessionWeek.query.get_or_404(week_id)
+    if week.status != 'published':
+        week.status = 'published'
+        week.published_at = datetime.utcnow()
+        week.published_by = current_user.id
+        db.session.commit()
+        flash('Weekly timetable published.', 'success')
+    return redirect(url_for('admin.sessions_week_view', week_id=week.id))
+
+
+@admin_bp.route('/sessions/week/<int:week_id>/archive', methods=['POST'])
+@login_required
+@admin_required
+def sessions_week_archive(week_id):
+    week = SessionWeek.query.get_or_404(week_id)
+    week.status = 'archived'
+    db.session.commit()
+    flash('Weekly timetable archived.', 'success')
+    return redirect(url_for('admin.sessions_week_view', week_id=week.id))
+
+
+@admin_bp.route('/sessions/session/add/<int:week_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def sessions_session_add(week_id):
+    week = SessionWeek.query.get_or_404(week_id)
+    users = User.query.order_by(User.email.asc()).all()
+    if request.method == 'POST':
+        session_date = request.form.get('session_date')
+        start_time = request.form.get('start_time')
+        topic = request.form.get('topic')
+        category = request.form.get('category')
+        mode = request.form.get('mode')
+        meeting_link = request.form.get('meeting_link')
+        location = request.form.get('location')
+        teaching_minutes = request.form.get('teaching_minutes') or 60
+        questions_minutes = request.form.get('questions_minutes') or 15
+        instructor_user_id = request.form.get('instructor_user_id')
+        status = request.form.get('status') or 'scheduled'
+
+        if not session_date or not start_time or not topic or not category or not instructor_user_id:
+            flash('Please fill all required fields.', 'error')
+            return redirect(url_for('admin.sessions_session_add', week_id=week.id))
+
+        try:
+            session_date_val = datetime.strptime(session_date, '%Y-%m-%d').date()
+            start_time_val = datetime.strptime(start_time, '%H:%M').time()
+        except ValueError:
+            flash('Invalid date/time format.', 'error')
+            return redirect(url_for('admin.sessions_session_add', week_id=week.id))
+
+        day_of_week = session_date_val.weekday()
+        session = SessionSchedule(
+            week_id=week.id,
+            session_date=session_date_val,
+            day_of_week=day_of_week,
+            start_time=start_time_val,
+            topic=topic,
+            category=category,
+            mode=mode,
+            meeting_link=meeting_link,
+            location=location,
+            teaching_minutes=int(teaching_minutes),
+            questions_minutes=int(questions_minutes),
+            instructor_user_id=int(instructor_user_id),
+            status=status,
+            created_by=current_user.id,
+        )
+        db.session.add(session)
+        db.session.commit()
+        flash('Session added.', 'success')
+        return redirect(url_for('admin.sessions_week_view', week_id=week.id))
+
+    return render_template(
+        'admin/sessions/session_form.html',
+        week=week,
+        session=None,
+        users=users,
+        categories=_session_categories()
+    )
+
+
+@admin_bp.route('/sessions/session/<int:session_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def sessions_session_edit(session_id):
+    session = SessionSchedule.query.get_or_404(session_id)
+    week = session.week
+    users = User.query.order_by(User.email.asc()).all()
+    if request.method == 'POST':
+        session_date = request.form.get('session_date')
+        start_time = request.form.get('start_time')
+        topic = request.form.get('topic')
+        category = request.form.get('category')
+        mode = request.form.get('mode')
+        meeting_link = request.form.get('meeting_link')
+        location = request.form.get('location')
+        teaching_minutes = request.form.get('teaching_minutes') or 60
+        questions_minutes = request.form.get('questions_minutes') or 15
+        instructor_user_id = request.form.get('instructor_user_id')
+        status = request.form.get('status') or 'scheduled'
+
+        if not session_date or not start_time or not topic or not category or not instructor_user_id:
+            flash('Please fill all required fields.', 'error')
+            return redirect(url_for('admin.sessions_session_edit', session_id=session.id))
+
+        try:
+            session_date_val = datetime.strptime(session_date, '%Y-%m-%d').date()
+            start_time_val = datetime.strptime(start_time, '%H:%M').time()
+        except ValueError:
+            flash('Invalid date/time format.', 'error')
+            return redirect(url_for('admin.sessions_session_edit', session_id=session.id))
+
+        session.session_date = session_date_val
+        session.day_of_week = session_date_val.weekday()
+        session.start_time = start_time_val
+        session.topic = topic
+        session.category = category
+        session.mode = mode
+        session.meeting_link = meeting_link
+        session.location = location
+        session.teaching_minutes = int(teaching_minutes)
+        session.questions_minutes = int(questions_minutes)
+        session.instructor_user_id = int(instructor_user_id)
+        session.status = status
+        db.session.commit()
+        flash('Session updated.', 'success')
+        return redirect(url_for('admin.sessions_week_view', week_id=week.id))
+
+    return render_template(
+        'admin/sessions/session_form.html',
+        week=week,
+        session=session,
+        users=users,
+        categories=_session_categories()
+    )
+
+
+@admin_bp.route('/sessions/session/<int:session_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def sessions_session_delete(session_id):
+    session = SessionSchedule.query.get_or_404(session_id)
+    week_id = session.week_id
+    db.session.delete(session)
+    db.session.commit()
+    flash('Session removed.', 'success')
+    return redirect(url_for('admin.sessions_week_view', week_id=week_id))
+
+
+@admin_bp.route('/sessions/reports')
+@login_required
+@admin_required
+def sessions_reports():
+    reports = SessionReport.query.order_by(SessionReport.submitted_at.desc()).all()
+    users = User.query.order_by(User.email.asc()).all()
+    return render_template('admin/sessions/reports.html', reports=reports, users=users)
+
+
+@admin_bp.route('/sessions/reports/<int:report_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def sessions_report_approve(report_id):
+    report = SessionReport.query.get_or_404(report_id)
+    winner_user_id = request.form.get('winner_user_id')
+    if not winner_user_id:
+        flash('Select a winner to award points.', 'error')
+        return redirect(url_for('admin.sessions_reports'))
+    winner = User.query.get(int(winner_user_id))
+    if not winner or not winner.member:
+        flash('Selected user does not have a member profile.', 'error')
+        return redirect(url_for('admin.sessions_reports'))
+
+    if report.status != 'approved':
+        report.status = 'approved'
+        report.approved_by = current_user.id
+        report.approved_at = datetime.utcnow()
+        report.winner_user_id = winner.id
+        report.points_awarded = 5
+
+        transaction = RewardTransaction(
+            member_id=winner.member.id,
+            points=5,
+            transaction_type='session_winner',
+            reason=f"Session winner: {report.session.topic} on {report.session.session_date}",
+            admin_id=current_user.id
+        )
+        db.session.add(transaction)
+        db.session.commit()
+
+    flash('Report approved and points awarded.', 'success')
+    return redirect(url_for('admin.sessions_reports'))
+
+
+@admin_bp.route('/sessions/reports/<int:report_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def sessions_report_reject(report_id):
+    report = SessionReport.query.get_or_404(report_id)
+    report.status = 'rejected'
+    report.approved_by = current_user.id
+    report.approved_at = datetime.utcnow()
+    db.session.commit()
+    flash('Report rejected.', 'warning')
+    return redirect(url_for('admin.sessions_reports'))
+
+
+# Teams
+def _default_team_names():
+    return [
+        'Alpha Company',
+        'Bravo Company',
+        'Charlie Company',
+        'Delta Company',
+        'Echo Company',
+        'Foxtrot Company',
+        'Golf Company',
+        'Hotel Company',
+        'India Company',
+        'Juliet Company',
+    ]
+
+
+@admin_bp.route('/teams')
+@login_required
+@admin_required
+def teams_index():
+    teams = Team.query.order_by(Team.rating.desc(), Team.name.asc()).all()
+    return render_template('admin/teams/index.html', teams=teams)
+
+
+@admin_bp.route('/teams/seed', methods=['POST'])
+@login_required
+@admin_required
+def teams_seed():
+    existing = {t.name for t in Team.query.all()}
+    created = 0
+    for name in _default_team_names():
+        if name not in existing:
+            db.session.add(Team(name=name, rating=0))
+            created += 1
+    db.session.commit()
+    flash(f'{created} teams created.', 'success')
+    return redirect(url_for('admin.teams_index'))
+
+
+@admin_bp.route('/teams/<int:team_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def teams_view(team_id):
+    team = Team.query.get_or_404(team_id)
+    members = Member.query.order_by(Member.full_name.asc()).all()
+    if request.method == 'POST':
+        team.description = request.form.get('description')
+        rating = request.form.get('rating')
+        try:
+            team.rating = max(0, min(5, int(rating)))
+        except (TypeError, ValueError):
+            team.rating = 0
+        db.session.commit()
+        flash('Team updated.', 'success')
+        return redirect(url_for('admin.teams_view', team_id=team.id))
+    team_members = team.members.join(Member).order_by(Member.full_name.asc()).all()
+    return render_template('admin/teams/detail.html', team=team, team_members=team_members, members=members)
+
+
+@admin_bp.route('/teams/<int:team_id>/assign', methods=['POST'])
+@login_required
+@admin_required
+def teams_assign_member(team_id):
+    team = Team.query.get_or_404(team_id)
+    member_id = request.form.get('member_id')
+    is_leader = bool(request.form.get('is_leader'))
+    if not member_id:
+        flash('Select a member to assign.', 'error')
+        return redirect(url_for('admin.teams_view', team_id=team.id))
+    existing = TeamMember.query.filter_by(team_id=team.id, member_id=int(member_id)).first()
+    if existing:
+        flash('Member already in this team.', 'warning')
+        return redirect(url_for('admin.teams_view', team_id=team.id))
+    if is_leader:
+        TeamMember.query.filter_by(team_id=team.id, is_leader=True).update({'is_leader': False})
+    tm = TeamMember(team_id=team.id, member_id=int(member_id), is_leader=is_leader)
+    db.session.add(tm)
+    db.session.commit()
+    flash('Member assigned to team.', 'success')
+    return redirect(url_for('admin.teams_view', team_id=team.id))
+
+
+@admin_bp.route('/teams/<int:team_id>/members/<int:team_member_id>/remove', methods=['POST'])
+@login_required
+@admin_required
+def teams_remove_member(team_id, team_member_id):
+    tm = TeamMember.query.get_or_404(team_member_id)
+    if tm.team_id != team_id:
+        flash('Invalid team member.', 'error')
+        return redirect(url_for('admin.teams_view', team_id=team_id))
+    db.session.delete(tm)
+    db.session.commit()
+    flash('Member removed from team.', 'success')
+    return redirect(url_for('admin.teams_view', team_id=team_id))
+
+
+@admin_bp.route('/teams/<int:team_id>/members/<int:team_member_id>/leader', methods=['POST'])
+@login_required
+@admin_required
+def teams_set_leader(team_id, team_member_id):
+    tm = TeamMember.query.get_or_404(team_member_id)
+    if tm.team_id != team_id:
+        flash('Invalid team member.', 'error')
+        return redirect(url_for('admin.teams_view', team_id=team_id))
+    TeamMember.query.filter_by(team_id=team_id, is_leader=True).update({'is_leader': False})
+    tm.is_leader = True
+    db.session.commit()
+    flash('Team leader updated.', 'success')
+    return redirect(url_for('admin.teams_view', team_id=team_id))

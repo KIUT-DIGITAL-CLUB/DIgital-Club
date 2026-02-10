@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Create Financial Period</h2>
-        <p class="text-muted mb-0">Start a new financial period for tracking club finances</p>
+        <p class="mb-0">Start a new financial period for tracking club finances</p>
     </div>
     <div>
         <a href="{{ url_for('admin.financial') }}" class="admin-btn admin-btn-outline">
@@ -27,7 +27,7 @@
             </div>
             <div class="flex-grow-1">
                 <h5 class="mb-1">Existing Open Period</h5>
-                <p class="mb-0 text-muted">
+                <p >
                     There is currently an open financial period: <strong>{{ existing_open.name }}</strong>
                     ({{ existing_open.start_date.strftime('%B %d, %Y') }} - {{ existing_open.end_date.strftime('%B %d, %Y') }})
                 </p>

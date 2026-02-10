@@ -14,7 +14,7 @@
             <div class="card border-primary">
                 <div class="card-body text-center">
                     <h1 class="display-3 text-primary mb-0">{{ total_points }}</h1>
-                    <p class="text-muted">Total Points</p>
+                    <p >Total Points</p>
                 </div>
             </div>
         </div>
@@ -22,7 +22,7 @@
             <div class="card border-success">
                 <div class="card-body text-center">
                     <h1 class="display-3 text-success mb-0">{{ trophies|length }}</h1>
-                    <p class="text-muted">Trophies Earned</p>
+                    <p >Trophies Earned</p>
                 </div>
             </div>
         </div>
@@ -30,7 +30,7 @@
             <div class="card border-info">
                 <div class="card-body text-center">
                     <h1 class="display-3 text-info mb-0">{{ attendance|length }}</h1>
-                    <p class="text-muted">Events Attended</p>
+                    <p >Events Attended</p>
                 </div>
             </div>
         </div>
@@ -71,7 +71,7 @@
                             <i class="{{ trophy.icon }} text-warning"></i>
                         </div>
                         <h5 class="mt-3">{{ trophy.name }}</h5>
-                        <p class="text-muted small">{{ trophy.description }}</p>
+                        <p class="small">{{ trophy.description }}</p>
                         <span class="badge bg-success">{{ trophy.points_required }} points</span>
                     </div>
                 </div>
@@ -98,7 +98,7 @@
                         <span class="badge bg-success">Earned!</span>
                         {% endif %}
                     </span>
-                    <small class="text-muted">{{ trophy.points_required }} points</small>
+                    <small >{{ trophy.points_required }} points</small>
                 </div>
                 <div class="progress" style="height: 25px;">
                     <div class="progress-bar {% if earned %}bg-success{% else %}bg-primary{% endif %}" 

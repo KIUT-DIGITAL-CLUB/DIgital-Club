@@ -1,0 +1,85 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Session{% endblock %}
+{% block page_title %}{{ 'Edit Session' if session else 'Add Session' }}{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.sessions_index') }}">Sessions</a><span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.sessions_week_view', week_id=week.id) }}">Week</a><span class="breadcrumb-separator">/</span> <span>{{ 'Edit' if session else 'Add' }}</span>{% endblock %}
+
+{% block admin_content %}
+<div class="admin-card">
+    <div class="admin-card-body">
+        <form method="POST">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="admin-form-label">Session Date</label>
+                    <input type="date" name="session_date" class="admin-form-control" value="{{ session.session_date.strftime('%Y-%m-%d') if session else '' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="admin-form-label">Start Time</label>
+                    <input type="time" name="start_time" class="admin-form-control" value="{{ session.start_time.strftime('%H:%M') if session else '' }}" required>
+                </div>
+                <div class="col-md-8">
+                    <label class="admin-form-label">Topic</label>
+                    <input type="text" name="topic" class="admin-form-control" value="{{ session.topic if session else '' }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="admin-form-label">Category</label>
+                    <select name="category" class="admin-form-select" required>
+                        <option value="">Select category</option>
+                        {% for c in categories %}
+                        <option value="{{ c }}" {% if session and session.category == c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="admin-form-label">Mode</label>
+                    <select name="mode" class="admin-form-select">
+                        <option value="online" {% if session and session.mode == 'online' %}selected{% endif %}>Online</option>
+                        <option value="physical" {% if session and session.mode == 'physical' %}selected{% endif %}>Physical</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="admin-form-label">Instructor</label>
+                    <select name="instructor_user_id" class="admin-form-select" required>
+                        <option value="">Select instructor</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}" {% if session and session.instructor_user_id == u.id %}selected{% endif %}>
+                            {{ u.member.full_name if u.member else u.email }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="admin-form-label">Meeting Link (online)</label>
+                    <input type="text" name="meeting_link" class="admin-form-control" value="{{ session.meeting_link if session else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="admin-form-label">Location (physical)</label>
+                    <input type="text" name="location" class="admin-form-control" value="{{ session.location if session else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="admin-form-label">Teaching Minutes</label>
+                    <input type="number" name="teaching_minutes" class="admin-form-control" value="{{ session.teaching_minutes if session else 60 }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="admin-form-label">Questions Minutes</label>
+                    <input type="number" name="questions_minutes" class="admin-form-control" value="{{ session.questions_minutes if session else 15 }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="admin-form-label">Status</label>
+                    <select name="status" class="admin-form-select">
+                        <option value="scheduled" {% if session and session.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                        <option value="completed" {% if session and session.status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if session and session.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="admin-btn admin-btn-primary">
+                    <i class="fas fa-save"></i> Save Session
+                </button>
+                <a href="{{ url_for('admin.sessions_week_view', week_id=week.id) }}" class="admin-btn admin-btn-outline ms-2">Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

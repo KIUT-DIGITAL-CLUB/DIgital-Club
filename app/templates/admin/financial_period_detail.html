@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">{{ period.name }}</h2>
-        <p class="text-muted mb-0">
+        <p class="mb-0">
             {{ period.start_date.strftime('%B %d, %Y') }} - {{ period.end_date.strftime('%B %d, %Y') }}
             {% if period.description %} | {{ period.description }}{% endif %}
         </p>
@@ -104,7 +104,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-1">{{ category_name }}</h6>
-                            <small class="text-muted">{{ category_type.title() }}</small>
+                            <small >{{ category_type.title() }}</small>
                         </div>
                         <div class="text-end">
                             <strong class="{% if category_type == 'revenue' %}text-success{% else %}text-danger{% endif %}">
@@ -190,7 +190,7 @@
                             <td>
                                 {{ transaction.description }}
                                 {% if transaction.notes %}
-                                <br><small class="text-muted">{{ transaction.notes }}</small>
+                                <br><small >{{ transaction.notes }}</small>
                                 {% endif %}
                             </td>
                             <td>

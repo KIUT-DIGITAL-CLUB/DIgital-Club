@@ -8,7 +8,7 @@
 <div class="admin-page-header mb-4">
     <div>
         <h2 class="mb-1">Financial Management</h2>
-        <p class="text-muted mb-0">Manage financial periods and track club finances</p>
+        <p class="mb-0">Manage financial periods and track club finances</p>
     </div>
     <div class="admin-page-header-actions">
         <a href="{{ url_for('admin.create_financial_period') }}" class="admin-btn admin-btn-primary">
@@ -53,7 +53,7 @@
         <div class="admin-page-header">
             <div>
                 <h5 class="mb-1">Membership Payments</h5>
-                <p class="text-muted mb-0">Payments feed into your budgets and revenue tracking.</p>
+                <p class="mb-0">Payments feed into your budgets and revenue tracking.</p>
             </div>
             <div class="admin-page-header-actions">
                 <a href="{{ url_for('admin.payments') }}" class="admin-btn admin-btn-success">
@@ -103,7 +103,7 @@
             </div>
             <div class="flex-grow-1">
                 <h5 class="mb-1">Current Financial Period: {{ current_period.name }}</h5>
-                <p class="mb-0 text-muted">
+                <p >
                     {{ current_period.start_date.strftime('%B %d, %Y') }} - {{ current_period.end_date.strftime('%B %d, %Y') }}
                     {% if current_period.description %} | {{ current_period.description }}{% endif %}
                 </p>
@@ -126,7 +126,7 @@
             </div>
             <div class="flex-grow-1">
                 <h5 class="mb-1">No Active Financial Period</h5>
-                <p class="mb-0 text-muted">Create a new financial period to start tracking finances.</p>
+                <p >Create a new financial period to start tracking finances.</p>
             </div>
             <div>
                 <a href="{{ url_for('admin.create_financial_period') }}" 
@@ -157,13 +157,13 @@
                             </span>
                         </div>
                         <div class="admin-period-dates">
-                            <small class="text-muted">
+                            <small >
                                 {{ period.start_date.strftime('%b %d, %Y') }} - {{ period.end_date.strftime('%b %d, %Y') }}
                             </small>
                         </div>
                         {% if period.description %}
                         <div class="admin-period-description">
-                            <small class="text-muted">{{ period.description }}</small>
+                            <small >{{ period.description }}</small>
                         </div>
                         {% endif %}
                         <div class="admin-period-stats">
@@ -231,7 +231,7 @@
                 <h5><i class="fas fa-tags"></i> Categories</h5>
             </div>
             <div class="admin-card-body">
-                <p class="text-muted">Manage financial transaction categories for better organization.</p>
+                <p >Manage financial transaction categories for better organization.</p>
                 <a href="{{ url_for('admin.financial_categories') }}" class="admin-btn admin-btn-outline">
                     <i class="fas fa-cog"></i> Manage Categories
                 </a>
@@ -244,7 +244,7 @@
                 <h5><i class="fas fa-chart-bar"></i> Reports</h5>
             </div>
             <div class="admin-card-body">
-                <p class="text-muted">View comprehensive financial reports and analytics.</p>
+                <p >View comprehensive financial reports and analytics.</p>
                 <a href="{{ url_for('admin.financial_reports') }}" class="admin-btn admin-btn-outline">
                     <i class="fas fa-chart-line"></i> View Reports
                 </a>

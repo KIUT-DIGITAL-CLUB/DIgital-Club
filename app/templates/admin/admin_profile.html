@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">My Profile</h2>
-        <p class="text-muted mb-0">View your member profile information</p>
+        <p class="mb-0">View your member profile information</p>
     </div>
     <div>
         <a href="{{ url_for('admin.dashboard') }}" class="admin-btn admin-btn-outline">
@@ -33,7 +33,7 @@
                 </div>
                 {% endif %}
                 <h4>{{ member.full_name }}</h4>
-                <p class="text-muted">{{ member.member_id_number }}</p>
+                <p >{{ member.member_id_number }}</p>
                 {% if member.user.is_super_admin %}
                 <span class="admin-badge admin-badge-warning">
                     <i class="fas fa-crown"></i> Super Admin
@@ -47,13 +47,13 @@
             <div class="col-md-9">
                 <div class="row">
                     <div class="col-md-6">
-                        <h6 class="text-muted mb-2">Contact Information</h6>
+                        <h6 class="mb-2">Contact Information</h6>
                         <p><strong>Email:</strong> {{ member.user.email }}</p>
                         <p><strong>Phone:</strong> {{ member.phone or 'Not provided' }}</p>
                         <p><strong>Address:</strong> {{ member.address or 'Not provided' }}</p>
                     </div>
                     <div class="col-md-6">
-                        <h6 class="text-muted mb-2">Academic Information</h6>
+                        <h6 class="mb-2">Academic Information</h6>
                         <p><strong>Course:</strong> {{ member.course or 'Not provided' }}</p>
                         <p><strong>Year:</strong> {{ member.year or 'Not provided' }}</p>
                         <p><strong>Student ID:</strong> {{ member.student_id or 'Not provided' }}</p>
@@ -61,7 +61,7 @@
                 </div>
                 {% if member.bio %}
                 <div class="mt-3">
-                    <h6 class="text-muted mb-2">Bio</h6>
+                    <h6 class="mb-2">Bio</h6>
                     <p>{{ member.bio }}</p>
                 </div>
                 {% endif %}
@@ -134,7 +134,7 @@
                     </div>
                     <div class="admin-trophy-content">
                         <h6>{{ trophy.name }}</h6>
-                        <p class="text-muted">{{ trophy.description }}</p>
+                        <p >{{ trophy.description }}</p>
                         <small class="text-success">
                             <i class="fas fa-star"></i> {{ trophy.points_required }} points
                         </small>
@@ -164,7 +164,7 @@
                         </div>
                         <div class="admin-activity-content">
                             <h6>{{ transaction.description }}</h6>
-                            <p class="text-muted">{{ transaction.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                            <p >{{ transaction.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
                         </div>
                         <div class="admin-activity-meta">
                             <span class="admin-badge {% if transaction.points > 0 %}admin-badge-success{% else %}admin-badge-danger{% endif %}">
@@ -200,7 +200,7 @@
                         </div>
                         <div class="admin-activity-content">
                             <h6>{{ rsvp.event.title }}</h6>
-                            <p class="text-muted">{{ rsvp.checked_in_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                            <p >{{ rsvp.checked_in_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
                         </div>
                         <div class="admin-activity-meta">
                             <span class="admin-badge admin-badge-success">
@@ -249,7 +249,7 @@
                             {% if payment.financial_period %}
                             {{ payment.financial_period.name }}
                             {% else %}
-                            <span class="text-muted">No period assigned</span>
+                            <span >No period assigned</span>
                             {% endif %}
                         </td>
                         <td>{{ payment.payment_method.title() }}</td>

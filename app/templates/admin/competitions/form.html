@@ -1,0 +1,375 @@
+﻿{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}{{ 'Edit' if competition else 'New' }} Competition - Admin{% endblock %}
+{% block page_title %}{{ 'Edit' if competition else 'New' }} Competition{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.competitions') }}">Competitions</a><span class="breadcrumb-separator">/</span> <span>{{ 'Edit' if competition else 'New' }}</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Admin Competition Edit Specific Styles */
+    .form-section {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--admin-border);
+    }
+    
+    .form-section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--admin-border);
+    }
+    
+    .form-section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--admin-primary);
+        font-size: 1.1rem;
+    }
+    
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--admin-text-primary);
+        margin: 0;
+    }
+    
+    .form-section-subtitle {
+        font-size: 0.85rem;
+        color: var(--admin-text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .form-field-full {
+        grid-column: 1 / -1;
+    }
+    
+    .form-check-group {
+        background: var(--surface-2);
+        border-radius: var(--border-radius-sm);
+        padding: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .form-check-label {
+        font-size: 0.9rem;
+        color: var(--admin-text-primary);
+    }
+    
+    .locked-note {
+        background: rgba(255, 170, 0, 0.1);
+        border: 1px solid var(--admin-warning);
+        border-radius: var(--border-radius-sm);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: var(--admin-warning);
+        font-size: 0.9rem;
+    }
+    
+    .locked-note i {
+        margin-right: 0.5rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+        border-top: 1px solid var(--admin-border);
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .form-actions .admin-btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+{% set locked = assessment_only if assessment_only is defined else false %}
+{% if finalized_locked %}
+    {% set locked = true %}
+{% endif %}
+
+{% if locked %}
+<div class="locked-note">
+    <i class="fas fa-lock"></i>
+    {% if finalized_locked %}
+        This competition has been finalized. Only assessment details can be edited.
+    {% else %}
+        Only assessment details can be edited at this stage.
+    {% endif %}
+</div>
+{% endif %}
+
+<form method="POST" class="admin-form">
+    <!-- Basic Information Section -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <div class="form-section-icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <div>
+                <h5 class="form-section-title">Basic Information</h5>
+                <div class="form-section-subtitle">Title, category, and description</div>
+            </div>
+        </div>
+        
+        <div class="form-grid">
+            <div class="form-field">
+                <label class="admin-form-label">Competition Title *</label>
+                <input type="text" class="admin-form-control" name="title" value="{{ competition.title if competition else '' }}" required {% if locked %}disabled{% endif %}>
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">Category *</label>
+                <input type="text" class="admin-form-control" name="category" value="{{ competition.category if competition else '' }}" placeholder="e.g., Software Development" required {% if locked %}disabled{% endif %}>
+            </div>
+            
+            <div class="form-field-full">
+                <label class="admin-form-label">Challenge Description *</label>
+                <textarea class="admin-form-control" name="description" rows="4" required {% if locked %}disabled{% endif %}>{{ competition.description if competition else '' }}</textarea>
+                <div style="font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 0.25rem;">
+                    Describe the competition challenge, requirements, and objectives.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Competition Settings Section -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <div class="form-section-icon">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div>
+                <h5 class="form-section-title">Competition Settings</h5>
+                <div class="form-section-subtitle">Frequency, level, and status</div>
+            </div>
+        </div>
+        
+        <div class="form-grid">
+            <div class="form-field">
+                <label class="admin-form-label">Frequency *</label>
+                <select class="admin-form-control" name="frequency" required {% if locked %}disabled{% endif %}>
+                    <option value="weekly" {% if competition and competition.frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+                    <option value="monthly" {% if competition and competition.frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+                    <option value="quarterly" {% if competition and competition.frequency == 'quarterly' %}selected{% endif %}>Quarterly</option>
+                    <option value="annual" {% if competition and competition.frequency == 'annual' %}selected{% endif %}>Annual</option>
+                </select>
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">Difficulty Level *</label>
+                <select class="admin-form-control" name="level" required {% if locked %}disabled{% endif %}>
+                    <option value="1" {% if competition and competition.level == 1 %}selected{% endif %}>Level 1 (Beginner)</option>
+                    <option value="2" {% if competition and competition.level == 2 %}selected{% endif %}>Level 2 (Intermediate)</option>
+                    <option value="3" {% if competition and competition.level == 3 %}selected{% endif %}>Level 3 (Advanced)</option>
+                </select>
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">Status</label>
+                <select class="admin-form-control" name="status" {% if finalized_locked %}disabled{% endif %}>
+                    {% set status = competition.status if competition else 'draft' %}
+                    <option value="draft" {% if status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="published" {% if status == 'published' %}selected{% endif %}>Published</option>
+                    <option value="judging" {% if status == 'judging' %}selected{% endif %}>Judging</option>
+                    <option value="finalized" {% if status == 'finalized' %}selected{% endif %}>Finalized</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Eligibility Section -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <div class="form-section-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div>
+                <h5 class="form-section-title">Eligibility Rules</h5>
+                <div class="form-section-subtitle">Define who can participate</div>
+            </div>
+        </div>
+        
+        <div class="form-grid">
+            <div class="form-field">
+                <label class="admin-form-label">Eligibility Rule</label>
+                <select class="admin-form-control" name="eligibility_rule" {% if locked %}disabled{% endif %}>
+                    <option value="default" {% if competition and competition.eligibility_rule == 'default' %}selected{% endif %}>Default by Level</option>
+                    <option value="custom" {% if competition and competition.eligibility_rule == 'custom' %}selected{% endif %}>Custom Years</option>
+                </select>
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">Eligible Years</label>
+                <input type="text" class="admin-form-control" name="eligibility_years" value="{{ competition.eligibility_years if competition else '' }}" placeholder="e.g., Year 1, Year 2" {% if locked %}disabled{% endif %}>
+                <div style="font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 0.25rem;">
+                    Comma-separated list of eligible years
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">Membership Requirement</label>
+                <div class="form-check-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="requires_paid_membership" id="requires_paid_membership" {% if competition and competition.requires_paid_membership %}checked{% endif %} {% if locked %}disabled{% endif %}>
+                        <label class="form-check-label" for="requires_paid_membership">
+                            Paid Membership Required
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submission Details Section -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <div class="form-section-icon">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <div>
+                <h5 class="form-section-title">Submission Details</h5>
+                <div class="form-section-subtitle">How participants submit their work</div>
+            </div>
+        </div>
+        
+        <div class="form-grid">
+            <div class="form-field">
+                <label class="admin-form-label">Submission Type *</label>
+                <select class="admin-form-control" name="submission_type" required {% if locked %}disabled{% endif %}>
+                    {% set st = competition.submission_type if competition else '' %}
+                    <option value="video" {% if st == 'video' %}selected{% endif %}>Video (Screen Record)</option>
+                    <option value="github" {% if st == 'github' %}selected{% endif %}>GitHub URL</option>
+                    <option value="report" {% if st == 'report' %}selected{% endif %}>Report Document</option>
+                    <option value="link" {% if st == 'link' %}selected{% endif %}>Hosted App Link</option>
+                    <option value="other" {% if st == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">Max File Size (MB)</label>
+                <input type="number" class="admin-form-control" name="submission_max_mb" value="{{ competition.submission_max_mb if competition else 10 }}" {% if locked %}disabled{% endif %}>
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">Assessment Mode</label>
+                <select class="admin-form-control" name="assessment_mode">
+                    <option value="online" {% if competition and competition.assessment_mode == 'online' %}selected{% endif %}>Online</option>
+                    <option value="physical" {% if competition and competition.assessment_mode == 'physical' %}selected{% endif %}>Physical</option>
+                    <option value="hybrid" {% if competition and competition.assessment_mode == 'hybrid' %}selected{% endif %}>Hybrid</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Timeline Section -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <div class="form-section-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div>
+                <h5 class="form-section-title">Timeline</h5>
+                <div class="form-section-subtitle">Competition dates and deadlines</div>
+            </div>
+        </div>
+        
+        <div class="form-grid">
+            <div class="form-field">
+                <label class="admin-form-label">Start Date & Time *</label>
+                <input type="datetime-local" class="admin-form-control" name="starts_at" value="{{ competition.starts_at.strftime('%Y-%m-%dT%H:%M') if competition else '' }}" required {% if locked %}disabled{% endif %}>
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">End Date & Time *</label>
+                <input type="datetime-local" class="admin-form-control" name="ends_at" value="{{ competition.ends_at.strftime('%Y-%m-%dT%H:%M') if competition else '' }}" required {% if locked %}disabled{% endif %}>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Assessment Details Section -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <div class="form-section-icon">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div>
+                <h5 class="form-section-title">Assessment Details</h5>
+                <div class="form-section-subtitle">Judging and evaluation information</div>
+            </div>
+        </div>
+        
+        <div class="form-grid">
+            <div class="form-field">
+                <label class="admin-form-label">Assessment Date/Time</label>
+                <input type="datetime-local" class="admin-form-control" name="assessment_date" value="{{ competition.assessment_date.strftime('%Y-%m-%dT%H:%M') if competition and competition.assessment_date else '' }}">
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">Assessment Link</label>
+                <input type="text" class="admin-form-control" name="assessment_link" value="{{ competition.assessment_link if competition else '' }}" placeholder="https://meet.google.com/...">
+            </div>
+            
+            <div class="form-field">
+                <label class="admin-form-label">Assessment Location</label>
+                <input type="text" class="admin-form-control" name="assessment_location" value="{{ competition.assessment_location if competition else '' }}" placeholder="Lab 2, Conference Room, etc.">
+            </div>
+            
+            <div class="form-field-full">
+                <label class="admin-form-label">Assessment Instructions</label>
+                <textarea class="admin-form-control" name="assessment_instructions" rows="3">{{ competition.assessment_instructions if competition else '' }}</textarea>
+                <div style="font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 0.25rem;">
+                    Additional instructions for judges and participants regarding the assessment process.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <div>
+            <button type="submit" class="admin-btn admin-btn-primary">
+                <i class="fas fa-save"></i> Save Competition
+            </button>
+        </div>
+        
+        <div>
+            <a href="{{ url_for('admin.competitions') }}" class="admin-btn admin-btn-outline">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </div>
+</form>
+{% endblock %}

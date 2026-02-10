@@ -15,7 +15,7 @@
         <div class="row align-items-center">
             <div class="col-md-6">
                 <h3>{{ event.title }}</h3>
-                <p class="text-muted mb-0">
+                <p class="mb-0">
                     <i class="fas fa-calendar"></i> {{ event.event_date.strftime('%Y-%m-%d %H:%M') }}<br>
                     <i class="fas fa-map-marker-alt"></i> {{ event.location }}
                 </p>
@@ -31,15 +31,15 @@
                 <div class="row text-center">
                     <div class="col-4">
                         <h4 class="mb-0">{{ total_rsvps }}</h4>
-                        <small class="text-muted">Total RSVPs</small>
+                        <small >Total RSVPs</small>
                     </div>
                     <div class="col-4">
                         <h4 class="mb-0 text-success">{{ checked_in }}</h4>
-                        <small class="text-muted">Checked In</small>
+                        <small >Checked In</small>
                     </div>
                     <div class="col-4">
                         <h4 class="mb-0 text-warning">{{ not_checked_in }}</h4>
-                        <small class="text-muted">Pending</small>
+                        <small >Pending</small>
                     </div>
                 </div>
             </div>
@@ -89,7 +89,7 @@
                             <span class="admin-badge admin-badge-info">Member</span>
                             {% endif %}
                         </h6>
-                        <small class="text-muted">
+                        <small >
                             {{ rsvp.email }}
                             {% if rsvp.member %}
                             <br>ID: {{ rsvp.member.member_id_number }}
@@ -101,7 +101,7 @@
                         <span class="admin-badge admin-badge-success">
                             <i class="fas fa-check-circle"></i> Checked In
                         </span><br>
-                        <small class="text-muted">{{ rsvp.checked_in_at.strftime('%H:%M') }}</small>
+                        <small >{{ rsvp.checked_in_at.strftime('%H:%M') }}</small>
                         {% else %}
                         <span class="admin-badge admin-badge-warning">
                             <i class="fas fa-clock"></i> Not Checked In

@@ -77,10 +77,14 @@ def register():
         db.session.add(user)
         db.session.flush()  # Get user ID
         
+        def _normalize_name(value):
+            parts = [p for p in (value or '').strip().split() if p]
+            return ' '.join([p[:1].upper() + p[1:].lower() for p in parts])
+
         # Create member profile
         member = Member(
             user_id=user.id,
-            full_name=full_name,
+            full_name=_normalize_name(full_name),
             course=course,
             year=year
         )

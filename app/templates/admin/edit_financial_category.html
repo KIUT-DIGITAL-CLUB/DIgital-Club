@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Edit Financial Category</h2>
-        <p class="text-muted mb-0">Modify category details for {{ category.name }}</p>
+        <p class="mb-0">Modify category details for {{ category.name }}</p>
     </div>
     <div>
         <a href="{{ url_for('admin.financial_categories') }}" class="admin-btn admin-btn-outline">
@@ -26,7 +26,7 @@
             </div>
             <div class="flex-grow-1">
                 <h5 class="mb-1">{{ category.name }}</h5>
-                <p class="mb-0 text-muted">
+                <p >
                     {{ category.type.title() }} Category | 
                     {{ category.get_transaction_count() }} transactions | 
                     Tsh {{ "%.2f"|format(category.get_total_amount()) }} total
@@ -68,7 +68,7 @@
                             <span class="admin-badge {% if category.type == 'revenue' %}admin-badge-success{% else %}admin-badge-danger{% endif %}">
                                 {{ category.type.title() }}
                             </span>
-                            <small class="text-muted">(Type cannot be changed)</small>
+                            <small >(Type cannot be changed)</small>
                         </div>
                         <div class="form-text">Category type is fixed and cannot be modified.</div>
                     </div>
@@ -139,14 +139,14 @@
                     {% if category.is_active %}
                     <span class="text-success">Active</span>
                     {% else %}
-                    <span class="text-muted">Inactive</span>
+                    <span >Inactive</span>
                     {% endif %}
                 </p>
                 <p><strong>Built-in:</strong> 
                     {% if category.is_builtin %}
                     <span class="text-info">Yes</span>
                     {% else %}
-                    <span class="text-muted">No</span>
+                    <span >No</span>
                     {% endif %}
                 </p>
             </div>

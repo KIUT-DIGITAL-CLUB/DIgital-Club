@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Reward Transactions</h2>
-        <p class="text-muted mb-0">View all point transactions</p>
+        <p class="mb-0">View all point transactions</p>
     </div>
 </div>
 
@@ -72,7 +72,7 @@
                         <a href="{{ url_for('admin.member_detail', member_id=trans.member.id) }}">
                             {{ trans.member.full_name }}
                         </a><br>
-                        <small class="text-muted">{{ trans.member.member_id_number }}</small>
+                        <small >{{ trans.member.member_id_number }}</small>
                     </td>
                     <td>
                         {% if trans.points > 0 %}

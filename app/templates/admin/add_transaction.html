@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Add Transaction</h2>
-        <p class="text-muted mb-0">Record a new financial transaction for {{ period.name }}</p>
+        <p class="mb-0">Record a new financial transaction for {{ period.name }}</p>
     </div>
     <div>
         <a href="{{ url_for('admin.financial_period_detail', period_id=period.id) }}" class="admin-btn admin-btn-outline">
@@ -26,7 +26,7 @@
             </div>
             <div class="flex-grow-1">
                 <h5 class="mb-1">{{ period.name }}</h5>
-                <p class="mb-0 text-muted">
+                <p >
                     {{ period.start_date.strftime('%B %d, %Y') }} - {{ period.end_date.strftime('%B %d, %Y') }}
                     {% if period.description %} | {{ period.description }}{% endif %}
                 </p>

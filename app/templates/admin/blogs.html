@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Blog Management</h2>
-        <p class="text-muted mb-0">Manage blog posts and articles</p>
+        <p class="mb-0">Manage blog posts and articles</p>
     </div>
     <a href="{{ url_for('admin.add_blog') }}" class="admin-btn admin-btn-primary">
         <i class="fas fa-plus"></i> Add Blog Post
@@ -40,7 +40,7 @@
                         <div>
                             <div class="fw-bold">{{ blog.title }}</div>
                             {% if blog.excerpt %}
-                            <small class="text-muted">{{ blog.excerpt[:100] }}{% if blog.excerpt|length > 100 %}...{% endif %}</small>
+                            <small >{{ blog.excerpt[:100] }}{% if blog.excerpt|length > 100 %}...{% endif %}</small>
                             {% endif %}
                         </div>
                     </td>
@@ -59,7 +59,7 @@
                         {% if blog.published_date %}
                         {{ blog.published_date.strftime('%Y-%m-%d') }}
                         {% else %}
-                        <span class="text-muted">Not published</span>
+                        <span >Not published</span>
                         {% endif %}
                     </td>
                     <td>{{ blog.views }}</td>

@@ -12,12 +12,29 @@ from app.models import (
     MembershipPayment,
     RSVP,
     FinancialPeriod,
+    Competition,
+    CompetitionJudge,
+    CompetitionCriteria,
+    CompetitionSubmission,
+    CompetitionScore,
+    CompetitionSponsorLink,
+    CompetitionEnrollment,
+    CompetitionReward,
+    SessionWeek,
+    SessionSchedule,
+    SessionReport,
+    Team,
+    TeamMember,
 )
 from app import db
 from app.id_generator import generate_digital_id, delete_digital_id
 import os
 import json
 from datetime import datetime
+
+def _normalize_name(value):
+    parts = [p for p in (value or '').strip().split() if p]
+    return ' '.join([p[:1].upper() + p[1:].lower() for p in parts])
 
 @member_bp.route('/')
 @login_required
@@ -26,7 +43,32 @@ def dashboard():
         flash('Please complete your profile first.', 'warning')
         return redirect(url_for('member.edit_profile'))
     
-    return render_template('member/dashboard.html', member=current_user.member)
+    disqualified = CompetitionEnrollment.query.filter_by(member_id=current_user.member.id, status='disqualified').join(Competition).order_by(CompetitionEnrollment.disqualified_at.desc()).all()
+    member = current_user.member
+    total_points = member.get_total_points()
+    competitions_count = CompetitionSubmission.query.filter_by(member_id=member.id).count()
+    best_rank = db.session.query(db.func.min(CompetitionSubmission.rank)).filter(
+        CompetitionSubmission.member_id == member.id,
+        CompetitionSubmission.rank.isnot(None)
+    ).scalar()
+    team_membership = TeamMember.query.filter_by(member_id=member.id).first()
+    upcoming_sessions = []
+    week = SessionWeek.query.filter_by(status='published').order_by(SessionWeek.week_start.desc()).first()
+    if week:
+        upcoming_sessions = week.sessions.order_by(SessionSchedule.session_date.asc(), SessionSchedule.start_time.asc()).limit(5).all()
+    recent_rewards = member.reward_transactions.order_by(RewardTransaction.created_at.desc()).limit(5).all()
+    return render_template(
+        'member/dashboard.html',
+        member=member,
+        disqualified_enrollments=disqualified,
+        total_points=total_points,
+        competitions_count=competitions_count,
+        best_rank=best_rank,
+        team_membership=team_membership,
+        upcoming_sessions=upcoming_sessions,
+        recent_rewards=recent_rewards,
+        current_date=datetime.now(),
+    )
 
 @member_bp.route('/profile')
 @login_required
@@ -69,7 +111,7 @@ def edit_profile():
             member = Member(user_id=current_user.id)
             db.session.add(member)
         
-        member.full_name = request.form.get('full_name')
+        member.full_name = _normalize_name(request.form.get('full_name'))
         member.title = request.form.get('title')
         member.bio = request.form.get('bio')
         member.course = request.form.get('course')
@@ -412,31 +454,448 @@ def membership():
                          payments=payments)
 
 
-@member_bp.route('/competitions/weekly')
-@login_required
-def competitions_weekly():
-    return render_template('member/competitions_weekly.html')
-
-
-@member_bp.route('/competitions/monthly')
-@login_required
-def competitions_monthly():
-    return render_template('member/competitions_monthly.html')
 
 
 @member_bp.route('/competitions/rankings')
 @login_required
 def competitions_rankings():
-    return render_template('member/competitions_rankings.html')
+    points_rows = db.session.query(
+        Member,
+        db.func.coalesce(db.func.sum(RewardTransaction.points), 0).label('points')
+    ).select_from(Member).join(User, User.id == Member.user_id).outerjoin(
+        RewardTransaction,
+        RewardTransaction.member_id == Member.id
+    ).filter(
+        User.is_approved == True
+    ).group_by(Member.id).order_by(db.desc('points')).all()
+
+    top_member = points_rows[0] if points_rows else None
+
+    leaderboard = []
+    my_entry = None
+    for idx, (member, points) in enumerate(points_rows, start=1):
+        submissions = CompetitionSubmission.query.filter_by(member_id=member.id).all()
+        competitions_count = len(submissions)
+        ranks = [s.rank for s in submissions if s.rank]
+        best_rank = min(ranks) if ranks else None
+        entry = {
+            'rank': idx,
+            'member': member,
+            'points': int(points or 0),
+            'competitions': competitions_count,
+            'best_rank': best_rank,
+        }
+        if current_user.member and member.id == current_user.member.id:
+            my_entry = entry
+        leaderboard.append(entry)
+
+    teams = Team.query.order_by(Team.rating.desc(), Team.name.asc()).all()
+    team_members = {}
+    for team in teams:
+        members = team.members.join(Member).order_by(TeamMember.is_leader.desc(), Member.full_name.asc()).all()
+        team_members[team.id] = members
+
+    return render_template(
+        'member/competitions_rankings.html',
+        leaderboard=leaderboard,
+        top_member=top_member,
+        teams=teams,
+        team_members=team_members,
+        my_entry=my_entry,
+    )
 
 
 @member_bp.route('/sessions/timetable')
 @login_required
 def sessions_timetable():
-    return render_template('member/sessions_timetable.html')
+    week = SessionWeek.query.filter_by(status='published').order_by(SessionWeek.week_start.desc()).first()
+    sessions_by_day = []
+    if week:
+        sessions = week.sessions.order_by(SessionSchedule.session_date.asc(), SessionSchedule.start_time.asc()).all()
+        day_map = {}
+        for session in sessions:
+            day_map.setdefault(session.session_date, []).append(session)
+        sessions_by_day = sorted(day_map.items(), key=lambda item: item[0])
+    return render_template(
+        'member/sessions_timetable.html',
+        week=week,
+        sessions_by_day=sessions_by_day,
+        now=datetime.now(),
+        datetime=datetime,
+    )
 
 
 @member_bp.route('/sessions/instructors')
 @login_required
 def sessions_instructors():
-    return render_template('member/sessions_instructors.html')
+    week = SessionWeek.query.filter_by(status='published').order_by(SessionWeek.week_start.desc()).first()
+    instructors = []
+    if week:
+        sessions = week.sessions.all()
+        seen = set()
+        for session in sessions:
+            if session.instructor_user_id not in seen:
+                instructors.append(session.instructor)
+                seen.add(session.instructor_user_id)
+    return render_template('member/sessions_instructors.html', week=week, instructors=instructors)
+
+
+@member_bp.route('/sessions/<int:session_id>/report', methods=['GET', 'POST'])
+@login_required
+def session_report_submit(session_id):
+    session = SessionSchedule.query.get_or_404(session_id)
+    if session.instructor_user_id != current_user.id:
+        flash('You are not assigned as instructor for this session.', 'error')
+        return redirect(url_for('member.sessions_timetable'))
+
+    existing = SessionReport.query.filter_by(session_id=session.id, instructor_user_id=current_user.id).first()
+    if request.method == 'POST':
+        winner_username = request.form.get('winner_username', '').strip()
+        participant_count = request.form.get('participant_count', '0').strip()
+        notes = request.form.get('notes', '').strip()
+
+        if not winner_username:
+            flash('Winner username is required.', 'error')
+            return redirect(url_for('member.session_report_submit', session_id=session.id))
+
+        try:
+            participant_count_val = int(participant_count)
+        except ValueError:
+            participant_count_val = 0
+
+        if existing and existing.status == 'approved':
+            flash('Report already approved. Contact admin for changes.', 'warning')
+            return redirect(url_for('member.sessions_timetable'))
+
+        if not existing:
+            existing = SessionReport(
+                session_id=session.id,
+                instructor_user_id=current_user.id,
+            )
+            db.session.add(existing)
+
+        existing.winner_username = winner_username
+        existing.participant_count = participant_count_val
+        existing.notes = notes
+        existing.status = 'pending'
+        existing.submitted_at = datetime.utcnow()
+        db.session.commit()
+        flash('Session report submitted for review.', 'success')
+        return redirect(url_for('member.sessions_timetable'))
+
+    return render_template('member/session_report.html', session=session, report=existing)
+
+# Competitions
+
+def _member_is_judge(competition_id, user_id):
+    return CompetitionJudge.query.filter_by(competition_id=competition_id, user_id=user_id, is_active=True).first()
+
+
+def _member_can_submit(competition, member, user_id):
+    if not member:
+        return False, 'Profile required before submitting.'
+    if _member_is_judge(competition.id, user_id):
+        return False, 'Judges cannot submit to the same competition.'
+    if competition.status != 'published':
+        return False, 'Competition is not open for submissions.'
+    now = datetime.now()
+    if now < competition.starts_at or now > competition.ends_at:
+        return False, 'Submission window is closed.'
+    if competition.requires_paid_membership and not member.has_valid_membership():
+        return False, 'Valid membership is required to enroll.'
+    allowed_years = competition.get_allowed_years()
+    if member.year and allowed_years and member.year not in allowed_years:
+        return False, 'You are not eligible for this level.'
+    enrollment = CompetitionEnrollment.query.filter_by(competition_id=competition.id, member_id=member.id).first()
+    if not enrollment:
+        return False, 'Please enroll before submitting.'
+    if enrollment.status == 'disqualified':
+        return False, 'You have been disqualified from this competition.'
+    existing = CompetitionSubmission.query.filter_by(competition_id=competition.id, member_id=member.id).first()
+    if existing:
+        return False, 'You have already submitted for this competition.'
+    return True, ''
+
+
+def _calculate_submission_scores(submission):
+    competition = submission.competition
+    criteria = competition.criteria.order_by(CompetitionCriteria.id.asc()).all()
+    judges = competition.judges.filter_by(is_active=True).all()
+
+    judge_totals = []
+    for judge in judges:
+        total = 0
+        scored_any = False
+        for c in criteria:
+            score_row = CompetitionScore.query.filter_by(
+                submission_id=submission.id,
+                judge_id=judge.user_id,
+                criteria_id=c.id
+            ).first()
+            if score_row:
+                scored_any = True
+                max_points = c.max_points or 1
+                total += (score_row.score / max_points) * (c.weight_percent or 0)
+        if scored_any:
+            judge_totals.append(total)
+
+    submission.total_score = round(sum(judge_totals) / len(judge_totals), 2) if judge_totals else 0
+    submission.final_score = round(submission.total_score + (submission.bonus_points or 0), 2)
+
+
+@member_bp.route('/competitions/weekly')
+@login_required
+def competitions_weekly():
+    now = datetime.now()
+    base = Competition.query.filter(Competition.frequency == 'weekly', Competition.status != 'draft')
+    ongoing = base.filter(Competition.status == 'published', Competition.starts_at <= now, Competition.ends_at >= now).order_by(Competition.ends_at.asc()).all()
+    past_query = base.filter(Competition.status == 'finalized').order_by(Competition.ends_at.desc())
+    page = request.args.get('page', 1, type=int)
+    past = past_query.paginate(page=page, per_page=6, error_out=False)
+    return render_template('member/competitions_list.html', view_label='Weekly', ongoing=ongoing, past=past)
+
+
+@member_bp.route('/competitions/monthly')
+@login_required
+def competitions_monthly():
+    now = datetime.now()
+    base = Competition.query.filter(Competition.frequency == 'monthly', Competition.status != 'draft')
+    ongoing = base.filter(Competition.status == 'published', Competition.starts_at <= now, Competition.ends_at >= now).order_by(Competition.ends_at.asc()).all()
+    past_query = base.filter(Competition.status == 'finalized').order_by(Competition.ends_at.desc())
+    page = request.args.get('page', 1, type=int)
+    past = past_query.paginate(page=page, per_page=6, error_out=False)
+    return render_template('member/competitions_list.html', view_label='Monthly', ongoing=ongoing, past=past)
+
+
+@member_bp.route('/competitions/<int:competition_id>')
+@login_required
+def competition_detail(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    member = current_user.member
+    sponsor_links = competition.sponsors.order_by(CompetitionSponsorLink.display_order.asc()).all()
+    eligible, reason = _member_can_submit(competition, member, current_user.id)
+    submission = None
+    enrollment = None
+    if member:
+        submission = CompetitionSubmission.query.filter_by(competition_id=competition.id, member_id=member.id).first()
+        enrollment = CompetitionEnrollment.query.filter_by(competition_id=competition.id, member_id=member.id).first()
+    is_judge = _member_is_judge(competition.id, current_user.id) is not None
+    rewards = competition.rewards.order_by(CompetitionReward.id.asc()).all()
+    my_rank = None
+    my_award = None
+    total_ranked = 0
+    if competition.status == 'finalized' and member:
+        ranked = competition.submissions.filter(CompetitionSubmission.status != 'disqualified').order_by(CompetitionSubmission.final_score.desc()).all()
+        total_ranked = len(ranked)
+        if ranked:
+            badges = _build_reward_badges(rewards, len(ranked))
+            for idx, s in enumerate(ranked, start=1):
+                if s.member_id == member.id:
+                    my_rank = idx
+                    my_award = badges.get(idx)
+                    break
+    return render_template(
+        'member/competition_detail.html',
+        competition=competition,
+        eligible=eligible,
+        reason=reason,
+        submission=submission,
+        enrollment=enrollment,
+        is_judge=is_judge,
+        sponsors=sponsor_links,
+        rewards=rewards,
+        my_rank=my_rank,
+        my_award=my_award,
+        total_ranked=total_ranked,
+    )
+
+
+@member_bp.route('/competitions/<int:competition_id>/submit', methods=['POST'])
+@login_required
+def competition_submit(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    member = current_user.member
+    eligible, reason = _member_can_submit(competition, member, current_user.id)
+    if not eligible:
+        flash(reason, 'error')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    submission_value = ''
+    if competition.submission_type in ['video', 'report']:
+        file = request.files.get('submission_file')
+        if not file or not file.filename:
+            flash('Submission file is required.', 'error')
+            return redirect(url_for('member.competition_detail', competition_id=competition.id))
+        filename = secure_filename(file.filename)
+        ext = filename.lower().split('.')[-1]
+        if competition.submission_type == 'video' and ext not in ['mp4', 'mov', 'avi', 'webm']:
+            flash('Invalid video file type.', 'error')
+            return redirect(url_for('member.competition_detail', competition_id=competition.id))
+        if competition.submission_type == 'report' and ext not in ['pdf', 'doc', 'docx']:
+            flash('Invalid report file type.', 'error')
+            return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+        file.stream.seek(0, os.SEEK_END)
+        size_mb = file.stream.tell() / (1024 * 1024)
+        file.stream.seek(0)
+        if size_mb > (competition.submission_max_mb or 10):
+            flash(f'File exceeds {competition.submission_max_mb}MB limit.', 'error')
+            return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+        timestamp = int(datetime.utcnow().timestamp())
+        upload_name = f"comp_{competition.id}_member_{member.id}_{timestamp}_{filename}"
+        upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'competitions', upload_name)
+        file.save(upload_path)
+        submission_value = upload_name
+    else:
+        submission_value = request.form.get('submission_url', '').strip()
+        if not submission_value:
+            flash('Submission link is required.', 'error')
+            return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    submission = CompetitionSubmission(
+        competition_id=competition.id,
+        member_id=member.id,
+        submission_type=competition.submission_type,
+        submission_value=submission_value,
+    )
+    db.session.add(submission)
+    db.session.commit()
+
+    flash('Submission received successfully.', 'success')
+    return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+
+@member_bp.route('/competitions/<int:competition_id>/leaderboard')
+@login_required
+def competition_leaderboard(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    submissions_query = competition.submissions.filter(CompetitionSubmission.status != 'disqualified').order_by(CompetitionSubmission.final_score.desc())
+    page = request.args.get('page', 1, type=int)
+    submissions_page = submissions_query.paginate(page=page, per_page=20, error_out=False)
+    is_judge = _member_is_judge(competition.id, current_user.id) is not None
+    rewards = competition.rewards.order_by(CompetitionReward.id.asc()).all()
+    badges = _build_reward_badges(rewards, submissions_page.total)
+    member = current_user.member
+    my_submission = None
+    my_rank = None
+    my_award = None
+    if member:
+        for idx, s in enumerate(submissions_query.all(), start=1):
+            if s.member_id == member.id:
+                my_submission = s
+                my_rank = idx
+                my_award = badges.get(idx)
+                break
+    return render_template('member/competition_leaderboard.html', competition=competition, submissions=submissions_page, is_judge=is_judge, badges=badges, my_submission=my_submission, my_rank=my_rank, my_award=my_award)
+
+
+@member_bp.route('/competitions/<int:competition_id>/score/<int:submission_id>', methods=['GET', 'POST'])
+@login_required
+def competition_score_member(competition_id, submission_id):
+    competition = Competition.query.get_or_404(competition_id)
+    submission = CompetitionSubmission.query.get_or_404(submission_id)
+    if submission.competition_id != competition.id:
+        flash('Invalid submission for this competition.', 'error')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+    if competition.status == 'finalized':
+        flash('Competition is finalized. Scoring is locked.', 'error')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+    judge = _member_is_judge(competition.id, current_user.id)
+    if not judge:
+        flash('You are not assigned to judge this competition.', 'error')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    criteria = competition.criteria.order_by(CompetitionCriteria.id.asc()).all()
+    if request.method == 'POST':
+        for c in criteria:
+            value = float(request.form.get(f'criteria_{c.id}') or 0)
+            if value > c.max_points:
+                value = c.max_points
+            score_row = CompetitionScore.query.filter_by(
+                submission_id=submission.id,
+                judge_id=current_user.id,
+                criteria_id=c.id
+            ).first()
+            if not score_row:
+                score_row = CompetitionScore(
+                    submission_id=submission.id,
+                    judge_id=current_user.id,
+                    criteria_id=c.id
+                )
+                db.session.add(score_row)
+            score_row.score = value
+            score_row.comment = request.form.get(f'comment_{c.id}')
+        db.session.commit()
+        _calculate_submission_scores(submission)
+        db.session.commit()
+        flash('Scores saved.', 'success')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    existing_scores = {s.criteria_id: s for s in submission.scores.filter_by(judge_id=current_user.id).all()}
+    return render_template('member/competition_score.html', competition=competition, submission=submission, criteria=criteria, existing_scores=existing_scores)
+
+@member_bp.route('/competitions/<int:competition_id>/enroll', methods=['POST'])
+@login_required
+def competition_enroll(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    member = current_user.member
+    if not member:
+        flash('Please complete your profile first.', 'warning')
+        return redirect(url_for('member.profile'))
+
+    if _member_is_judge(competition.id, current_user.id):
+        flash('Judges cannot enroll in this competition.', 'error')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    now = datetime.now()
+    if competition.status != 'published' or now < competition.starts_at or now > competition.ends_at:
+        flash('Competition is not open for enrollment.', 'error')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    if competition.requires_paid_membership and not member.has_valid_membership():
+        flash('Valid membership is required to enroll.', 'error')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    allowed_years = competition.get_allowed_years()
+    if member.year and allowed_years and member.year not in allowed_years:
+        flash('You are not eligible for this level.', 'error')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    existing = CompetitionEnrollment.query.filter_by(competition_id=competition.id, member_id=member.id).first()
+    if existing:
+        flash('You are already enrolled.', 'info')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    agree = request.form.get('agree_terms')
+    if not agree:
+        flash('You must agree to the terms before enrolling.', 'error')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+    enrollment = CompetitionEnrollment(
+        competition_id=competition.id,
+        member_id=member.id,
+        status='enrolled',
+        enrolled_at=datetime.now()
+    )
+    db.session.add(enrollment)
+    db.session.commit()
+    flash('Enrollment successful. You may submit once.', 'success')
+    return redirect(url_for('member.competition_detail', competition_id=competition.id))
+
+
+def _build_reward_badges(rewards, total_submissions):
+    badges = {}
+    if total_submissions == 0:
+        return badges
+    for reward in rewards:
+        if reward.reward_type == "percent" and reward.percent:
+            count = max(1, int((reward.percent / 100.0) * total_submissions))
+            for rank in range(1, count + 1):
+                badges[rank] = (reward.points or 0, reward.prize_title, reward.prize_description, f"Top {reward.percent}%")
+        else:
+            start = reward.rank_from or 1
+            end = reward.rank_to or start
+            for rank in range(start, end + 1):
+                badges[rank] = (reward.points or 0, reward.prize_title, reward.prize_description, f"Rank {start}-{end}")
+    return badges

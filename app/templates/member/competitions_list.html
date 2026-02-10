@@ -1,0 +1,427 @@
+﻿{% extends "member/member_base.html" %}
+
+{% block title %}{{ view_label }} Competitions - Digital Club{% endblock %}
+{% block page_title %}{{ view_label }} Competitions{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Competitions</span><span class="breadcrumb-separator">/</span> <span>{{ view_label }}</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Competition List Specific Styles */
+    .competition-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 1.25rem;
+    }
+    
+    @media (max-width: 992px) {
+        .competition-grid {
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .competition-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .competition-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        backdrop-filter: blur(10px);
+    }
+    
+    .competition-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+    
+    .competition-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .competition-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .competition-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .competition-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .competition-badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .badge-category {
+        background: rgba(var(--particle-color), 0.1);
+        color: var(--primary-color);
+        border: 1px solid rgba(var(--particle-color), 0.3);
+    }
+    
+    .badge-status-ongoing {
+        background: rgba(0, 255, 0, 0.1);
+        color: var(--success-color);
+        border: 1px solid rgba(0, 255, 0, 0.3);
+    }
+    
+    .badge-status-past {
+        background: rgba(255, 170, 0, 0.1);
+        color: var(--warning-color);
+        border: 1px solid rgba(255, 170, 0, 0.3);
+    }
+    
+    .badge-level {
+        background: rgba(255, 0, 255, 0.1);
+        color: var(--secondary-color);
+        border: 1px solid rgba(255, 0, 255, 0.3);
+    }
+    
+    .competition-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .competition-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+        flex-grow: 1;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+    
+    .meta-item i {
+        width: 16px;
+        color: var(--primary-color);
+        opacity: 0.8;
+    }
+    
+    .meta-date-range {
+        background: var(--surface-1);
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--border-radius-sm);
+        border-left: 3px solid var(--primary-color);
+        font-size: 0.8rem;
+    }
+    
+    .competition-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .competition-stats {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .participant-count {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        background: var(--surface-1);
+        border-radius: 20px;
+    }
+    
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-muted);
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        border: 1px dashed var(--border-color);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+        color: var(--primary-color);
+    }
+    
+    .empty-state h5 {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .pagination {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        background: var(--surface-1);
+    }
+    
+    .page-link:hover {
+        background: var(--surface-2);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .page-item.active .page-link {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        border-color: transparent;
+        font-weight: 600;
+    }
+    
+    .page-item.disabled .page-link {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: var(--surface-5);
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .section-subtitle {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block member_content %}
+<div class="admin-card">
+    <div class="section-header">
+        <div>
+            <h5 class="section-title">Ongoing {{ view_label }} Competitions</h5>
+            <div class="section-subtitle">Active competitions you can join right now</div>
+        </div>
+       
+    </div>
+    <div class="admin-card-body">
+        {% if ongoing %}
+        <div class="competition-grid">
+            {% for comp in ongoing %}
+            <div class="competition-card">
+                <div class="competition-badges">
+                    <span class="competition-badge badge-category">{{ comp.category }}</span>
+                    <span class="competition-badge badge-status-ongoing">Ongoing</span>
+                    <span class="competition-badge badge-level">Level {{ comp.level }}</span>
+                </div>
+                
+                <h5 class="competition-title">{{ comp.title }}</h5>
+                
+                <div class="competition-meta">
+                    <div class="meta-date-range">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {{ comp.starts_at.strftime('%b %d, %Y %H:%M') }} → {{ comp.ends_at.strftime('%b %d, %Y %H:%M') }}
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user-check"></i>
+                        <span>{{ comp.enrollments.count() }} enrolled</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-trophy"></i>
+                        <span>{{ comp.rewards.count() }} reward categories</span>
+                    </div>
+                </div>
+                
+                <div class="competition-actions">
+                    <a href="{{ url_for('member.competition_detail', competition_id=comp.id) }}" class="admin-btn admin-btn-outline admin-btn-sm">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                    {% if comp.status == 'published' %}
+                    <a href="{{ url_for('member.competition_detail', competition_id=comp.id) }}" class="admin-btn admin-btn-primary admin-btn-sm">
+                        <i class="fas fa-arrow-right"></i> Join Now
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h5>No Ongoing Competitions</h5>
+            <p>There are no {{ view_label|lower }} competitions running at the moment.<br>Check back soon for new challenges!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="admin-card mt-4">
+    <div class="section-header">
+        <div>
+            <h5 class="section-title">Past {{ view_label }} Competitions</h5>
+            <div class="section-subtitle">Previous competitions and their results</div>
+        </div>
+        
+    </div>
+    <div class="admin-card-body">
+        {% if past.items %}
+        <div class="competition-grid">
+            {% for comp in past.items %}
+            <div class="competition-card">
+                <div class="competition-badges">
+                    <span class="competition-badge badge-category">{{ comp.category }}</span>
+                    <span class="competition-badge badge-status-past">Completed</span>
+                    <span class="competition-badge badge-level">Level {{ comp.level }}</span>
+                </div>
+                
+                <h5 class="competition-title">{{ comp.title }}</h5>
+                
+                <div class="competition-meta">
+                    <div class="meta-date-range">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Ended {{ comp.ends_at.strftime('%b %d, %Y') }}
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user-check"></i>
+                        <span>{{ comp.enrollments.count() }} participated</span>
+                    </div>
+                    {% if comp.winner %}
+                    <div class="meta-item">
+                        <i class="fas fa-crown"></i>
+                        <span>Winner: {{ comp.winner.member.full_name }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="competition-actions">
+                    <a href="{{ url_for('member.competition_detail', competition_id=comp.id) }}" class="admin-btn admin-btn-outline admin-btn-sm">
+                        <i class="fas fa-eye"></i> Details
+                    </a>
+                    <a href="{{ url_for('member.competition_leaderboard', competition_id=comp.id) }}" class="admin-btn admin-btn-outline admin-btn-sm">
+                        <i class="fas fa-list-ol"></i> Leaderboard
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if past.pages > 1 %}
+        <div class="pagination-wrapper">
+            <nav aria-label="Past competitions pagination">
+                <ul class="pagination">
+                    {% if past.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for(request.endpoint, page=past.prev_num) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for p in past.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                        {% if p %}
+                            <li class="page-item {% if p == past.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for(request.endpoint, page=p) }}">{{ p }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if past.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for(request.endpoint, page=past.next_num) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <h5>No Past Competitions</h5>
+            <p>No {{ view_label|lower }} competitions have been completed yet.<br>Be the first to participate when new ones launch!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

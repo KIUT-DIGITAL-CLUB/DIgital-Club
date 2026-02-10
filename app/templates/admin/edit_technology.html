@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h2 class="mb-1">Edit Technology</h2>
-                    <p class="text-muted mb-0">Update technology information</p>
+                    <p class="mb-0">Update technology information</p>
                 </div>
             </div>
             
@@ -23,7 +23,7 @@
                     <label for="name" class="admin-form-label">Technology Name *</label>
                     <input type="text" class="admin-form-control" id="name" name="name" required 
                            value="{{ technology.name }}" placeholder="e.g., React, Python, Arduino">
-                    <small class="form-text text-muted">Enter the technology name (must be unique)</small>
+                    <small class="form-text">Enter the technology name (must be unique)</small>
                 </div>
                 
                 <div class="admin-form-group">
@@ -37,21 +37,21 @@
                         <option value="data" {% if technology.category == 'data' %}selected{% endif %}>Data Science</option>
                         <option value="other" {% if technology.category == 'other' %}selected{% endif %}>Other</option>
                     </select>
-                    <small class="form-text text-muted">Choose the category this technology belongs to</small>
+                    <small class="form-text">Choose the category this technology belongs to</small>
                 </div>
                 
                 <div class="admin-form-group">
                     <label for="description" class="admin-form-label">Description</label>
                     <textarea class="admin-form-control" id="description" name="description" rows="3" 
                               placeholder="Brief description of this technology...">{{ technology.description or '' }}</textarea>
-                    <small class="form-text text-muted">Optional: Describe what this technology is used for</small>
+                    <small class="form-text">Optional: Describe what this technology is used for</small>
                 </div>
                 
                 <div class="admin-form-group">
                     <label for="icon" class="admin-form-label">Icon Class</label>
                     <input type="text" class="admin-form-control" id="icon" name="icon" 
                            value="{{ technology.icon or '' }}" placeholder="e.g., fab fa-react, fab fa-python, fas fa-microchip">
-                    <small class="form-text text-muted">
+                    <small class="form-text">
                         Optional: Font Awesome icon class. Examples:
                         <br>• <code>fab fa-react</code> for React
                         <br>• <code>fab fa-python</code> for Python
@@ -68,7 +68,7 @@
                             Active Technology
                         </label>
                     </div>
-                    <small class="form-text text-muted">Active technologies will be available for selection when adding projects</small>
+                    <small class="form-text">Active technologies will be available for selection when adding projects</small>
                 </div>
                 
                 <!-- Technology Preview -->
@@ -86,7 +86,7 @@
                                     <h5 class="mb-1">{{ technology.name }}</h5>
                                     <span class="admin-badge admin-badge-primary">{{ technology.category|title }}</span>
                                     {% if technology.description %}
-                                    <p class="text-muted mb-0 mt-1">{{ technology.description }}</p>
+                                    <p class="mb-0 mt-1">{{ technology.description }}</p>
                                     {% endif %}
                                 </div>
                             </div>
@@ -118,7 +118,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <h6>Created</h6>
-                        <p class="text-muted">{{ technology.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        <p >{{ technology.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
                     </div>
                     <div class="col-md-6">
                         <h6>Status</h6>

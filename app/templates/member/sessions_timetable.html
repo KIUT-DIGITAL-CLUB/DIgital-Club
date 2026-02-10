@@ -6,12 +6,675 @@
 
 {% block extra_head %}
 {{ super() }}
+<style>
+    /* Timetable Specific Styles */
+    .timetable-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .timetable-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .week-navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .week-display {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .week-badge {
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .week-date-range {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .navigation-controls {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .day-navigation {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+    
+    .day-nav-button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        text-decoration: none;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+        min-width: 80px;
+    }
+    
+    .day-nav-button:hover {
+        background: var(--surface-2);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .day-nav-button.active {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        border-color: transparent;
+    }
+    
+    .day-nav-day {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .day-nav-date {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+    
+    .timetable-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+    
+    .day-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    .day-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border-color: var(--primary-color);
+    }
+    
+    .day-card-header {
+        padding: 1.25rem 1.5rem;
+        background: var(--surface-2);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .day-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .day-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--surface-1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 1rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .day-session-count {
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    
+    .sessions-list {
+        padding: 0;
+    }
+    
+    .session-card {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+    
+    .session-card:hover {
+        background: var(--surface-1);
+    }
+    
+    .session-card:last-child {
+        border-bottom: none;
+    }
+    
+    .session-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        gap: 1rem;
+    }
+    
+    .session-topic {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.4;
+        flex: 1;
+    }
+    
+    .session-time {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+    }
+    
+    .session-start {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .session-duration {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .session-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+    
+    .meta-item i {
+        color: var(--primary-color);
+        width: 16px;
+        opacity: 0.8;
+    }
+    
+    .session-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .session-tag {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: 1px solid;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .tag-category {
+        background: rgba(var(--particle-color), 0.1);
+        color: var(--primary-color);
+        border-color: rgba(var(--particle-color), 0.3);
+    }
+    
+    .tag-mode {
+        background: rgba(255, 0, 255, 0.1);
+        color: var(--secondary-color);
+        border-color: rgba(255, 0, 255, 0.3);
+    }
+    
+    .tag-location {
+        background: rgba(255, 255, 0, 0.1);
+        color: var(--accent-color);
+        border-color: rgba(255, 255, 0, 0.3);
+    }
+    
+    .tag-status {
+        background: rgba(0, 255, 0, 0.1);
+        color: var(--success-color);
+        border-color: rgba(0, 255, 0, 0.3);
+    }
+    
+    .session-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .join-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        text-decoration: none;
+        border-radius: var(--border-radius-lg);
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+    
+    .join-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px var(--shadow-color);
+    }
+    
+    .instructor-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        font-size: 0.8rem;
+    }
+    
+    .instructor-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .report-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--success-color);
+        color: var(--bg-primary);
+        text-decoration: none;
+        border-radius: var(--border-radius-lg);
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+    
+    .report-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+        color: var(--primary-color);
+    }
+    
+    .empty-state h5 {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .week-navigation {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .navigation-controls {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .session-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .session-time {
+            align-items: flex-start;
+            text-align: left;
+        }
+        
+        .session-actions {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .day-navigation {
+            flex-wrap: nowrap;
+        }
+        
+        .day-nav-button {
+            min-width: 70px;
+            padding: 0.5rem 0.75rem;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block member_content %}
+<div class="timetable-header">
+    <div class="week-navigation">
+        <div class="week-display">
+            <span class="week-badge">Week {{ week.week_number if week else 'N/A' }}</span>
+            {% if week %}
+                <span class="week-date-range">
+                    {{ week.week_start.strftime('%b %d') }} - {{ week.week_end.strftime('%b %d, %Y') }}
+                </span>
+            {% endif %}
+        </div>
+        
+        <div class="navigation-controls">
+            <!-- Add week navigation buttons here if implemented -->
+            <button class="admin-btn admin-btn-outline admin-btn-sm" disabled>
+                <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            <button class="admin-btn admin-btn-outline admin-btn-sm" disabled>
+                Current Week
+            </button>
+            <button class="admin-btn admin-btn-outline admin-btn-sm" disabled>
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <h5 class="mb-2">Weekly Timetable</h5>
+    <p class="mb-0">
+        {% if week %}
+            View and join scheduled sessions for this week. Click on a session to get more details.
+        {% else %}
+            No published timetable for the current week.
+        {% endif %}
+    </p>
+    
+    {% if week and sessions_by_day %}
+    <div class="day-navigation" id="dayNavigation">
+        {% for day, sessions in sessions_by_day %}
+        <a href="#day-{{ day.strftime('%Y-%m-%d') }}" class="day-nav-button {% if loop.first %}active{% endif %}" data-day="{{ day.strftime('%Y-%m-%d') }}">
+            <span class="day-nav-day">{{ day.strftime('%a') }}</span>
+            <span class="day-nav-date">{{ day.strftime('%d') }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+{% if week and sessions_by_day %}
+<div class="timetable-grid">
+    {% for day, sessions in sessions_by_day %}
+    <div class="day-card" id="day-{{ day.strftime('%Y-%m-%d') }}">
+        <div class="day-card-header">
+            <div class="day-title">
+                <div class="day-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div>
+                    {{ day.strftime('%A') }}
+                    <div class="text-muted" style="font-size: 0.85rem;">{{ day.strftime('%B %d, %Y') }}</div>
+                </div>
+            </div>
+            <div class="day-session-count">
+                {{ sessions|length }} session{{ 's' if sessions|length != 1 else '' }}
+            </div>
+        </div>
+        
+        <div class="sessions-list">
+            {% for s in sessions %}
+            <div class="session-card">
+                <div class="session-header">
+                    <h6 class="session-topic">{{ s.topic }}</h6>
+                    <div class="session-time">
+                        <span class="session-start">{{ s.start_time.strftime('%H:%M') }}</span>
+                        <span class="session-duration">{{ s.teaching_minutes }} min + {{ s.questions_minutes }} min Q&A</span>
+                    </div>
+                </div>
+                
+                <div class="session-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span>{{ s.instructor.member.full_name if s.instructor.member else s.instructor.email }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Ends at {{ s.get_end_datetime().strftime('%H:%M') }}</span>
+                    </div>
+                </div>
+                
+                <div class="session-tags">
+                    <span class="session-tag tag-category">
+                        <i class="fas fa-tag"></i>{{ s.category }}
+                    </span>
+                    <span class="session-tag tag-mode">
+                        <i class="fas fa-satellite-dish"></i>{{ s.mode|title }}
+                    </span>
+                    {% if s.location %}
+                    <span class="session-tag tag-location">
+                        <i class="fas fa-map-marker-alt"></i>{{ s.location }}
+                    </span>
+                    {% endif %}
+                    <span class="session-tag tag-status">
+                        <i class="fas fa-circle"></i>{{ s.status|title }}
+                    </span>
+                </div>
+                
+                <div class="session-actions">
+                    
+                    
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        {% if s.meeting_link %}
+                        <a href="{{ s.meeting_link }}" target="_blank" class="join-button">
+                            <i class="fas fa-video"></i> Join
+                        </a>
+                        {% endif %}
+                        
+                        {% if s.instructor_user_id == current_user.id %}
+                            {% if now >= s.get_end_datetime() %}
+                                <a href="{{ url_for('member.session_report_submit', session_id=s.id) }}" class="report-button">
+                                    <i class="fas fa-clipboard-check"></i> Submit Report
+                                </a>
+                            {% else %}
+                                <span class="text-muted" style="font-size: 0.8rem;">
+                                    <i class="fas fa-clock"></i> Report opens after session
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
 <div class="admin-card">
     <div class="admin-card-body">
-        <p>This feature is under maintenance. Session timetable content will be here.</p>
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h5>No Sessions Scheduled</h5>
+            <p class="mb-0">There are no sessions published for this week yet.<br>Check back soon for updates!</p>
+        </div>
     </div>
 </div>
+{% endif %}
+
+{% if week and sessions_by_day %}
+<div class="admin-card mt-4">
+    <div class="admin-card-header">
+        <h5>Quick Actions</h5>
+    </div>
+    <div class="admin-card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <a href="{{ url_for('member.sessions_instructors') }}" class="admin-btn admin-btn-outline w-100">
+                    <i class="fas fa-users"></i> View All Instructors
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{{ url_for('member.session_history') if 'session_history' in url_for.__code__.co_names else '#' }}" class="admin-btn admin-btn-outline w-100">
+                    <i class="fas fa-history"></i> Session History
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Day navigation
+    document.querySelectorAll('.day-nav-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetDay = button.getAttribute('data-day');
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.day-nav-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            button.classList.add('active');
+            
+            // Scroll to the corresponding day card
+            const targetElement = document.getElementById(`day-${targetDay}`);
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - 100,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+    
+    // Highlight current day based on scroll position
+    const observerOptions = {
+        root: null,
+        rootMargin: '-100px 0px -80% 0px',
+        threshold: 0
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const dayId = entry.target.id.replace('day-', '');
+                document.querySelectorAll('.day-nav-button').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-day') === dayId) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all day cards
+    document.querySelectorAll('.day-card').forEach(card => {
+        observer.observe(card);
+    });
+    
+    // Add live clock to current sessions
+    function updateLiveClocks() {
+        document.querySelectorAll('.session-card').forEach(card => {
+            const sessionTime = card.querySelector('.session-start').textContent;
+            const sessionDate = card.closest('.day-card').id.replace('day-', '');
+            
+            // Parse the full datetime
+            const sessionDateTime = new Date(`${sessionDate}T${sessionTime}:00`);
+            const now = new Date();
+            
+            // Add live indicator if session is currently happening
+            if (now >= sessionDateTime && now <= new Date(sessionDateTime.getTime() + (parseInt('{{ s.teaching_minutes + s.questions_minutes if s else 90 }}') * 60000))) {
+                const timeIndicator = document.createElement('div');
+                timeIndicator.className = 'live-indicator';
+                timeIndicator.innerHTML = `
+                    <span style="display: flex; align-items: center; gap: 0.5rem; color: var(--success-color); font-size: 0.8rem; font-weight: 600;">
+                        <i class="fas fa-circle" style="animation: pulse 1.5s infinite;"></i>
+                        Live Now
+                    </span>
+                `;
+                const header = card.querySelector('.session-header');
+                if (!card.querySelector('.live-indicator')) {
+                    header.appendChild(timeIndicator);
+                }
+            }
+        });
+    }
+    
+    // Update clocks every minute
+    updateLiveClocks();
+    setInterval(updateLiveClocks, 60000);
+</script>
+<style>
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .live-indicator {
+        margin-left: auto;
+    }
+</style>
 {% endblock %}

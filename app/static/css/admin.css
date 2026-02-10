@@ -333,12 +333,16 @@
 .admin-main {
     flex: 1;
     margin-left: 240px;
+    width: calc(100% - 240px);
+    max-width: calc(100% - 240px);
     transition: margin-left 0.3s ease;
     background-color: var(--admin-bg-primary);
 }
 
 .admin-main.sidebar-collapsed {
     margin-left: 72px;
+    width: calc(100% - 72px);
+    max-width: calc(100% - 72px);
 }
 
 /* Admin Header */
@@ -1194,9 +1198,14 @@ textarea.admin-form-control:-webkit-autofill {
     .admin-sidebar.show {
         transform: translateX(0);
     }
+    .admin-breadcrumb {
+    display: none;
+}
     
     .admin-main {
         margin-left: 0;
+        width: 100%;
+        max-width: 100%;
     }
     
     .admin-content {
@@ -1237,6 +1246,9 @@ textarea.admin-form-control:-webkit-autofill {
     .admin-form {
         padding: 1rem;
     }
+    .admin-breadcrumb {
+    display: none;
+}
 }
 
 /* Override Bootstrap styles for admin panel */
@@ -1286,6 +1298,18 @@ textarea.admin-form-control:-webkit-autofill {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.countdown-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid var(--admin-border);
+    background: var(--surface-1);
+    font-size: 0.78rem;
+    color: var(--admin-text-secondary);
 }
 
 /* Bootstrap dropdown within admin */

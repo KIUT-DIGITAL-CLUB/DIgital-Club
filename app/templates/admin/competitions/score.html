@@ -1,0 +1,376 @@
+﻿{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Score Submission - Admin{% endblock %}
+{% block page_title %}Score Submission{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.competitions_submissions', competition_id=competition.id) }}">Submissions</a><span class="breadcrumb-separator">/</span> <span>Score</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Admin Scoring Specific Styles */
+    .scoring-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--admin-border);
+    }
+    
+    .submission-info-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .submission-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--surface-1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--admin-primary);
+        border: 2px solid var(--admin-border);
+    }
+    
+    .submission-details h4 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--admin-text-primary);
+    }
+    
+    .submission-meta {
+        color: var(--admin-text-muted);
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+    
+    .criteria-grid {
+        display: grid;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .criteria-card {
+        background: var(--surface-1);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .criteria-card:hover {
+        border-color: var(--admin-primary);
+        background: var(--surface-2);
+    }
+    
+    .criteria-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .criteria-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--admin-text-primary);
+        margin: 0;
+    }
+    
+    .criteria-weight {
+        background: rgba(var(--particle-color), 0.1);
+        color: var(--admin-primary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border: 1px solid rgba(var(--particle-color), 0.3);
+    }
+    
+    .criteria-description {
+        color: var(--admin-text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+    
+    .scoring-input-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .scoring-input-group {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+    
+    .score-input-wrapper {
+        position: relative;
+    }
+    
+    .score-input-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--admin-text-secondary);
+    }
+    
+    .score-input {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm);
+        background: var(--admin-bg-tertiary);
+        color: var(--admin-text-primary);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .score-input:focus {
+        outline: none;
+        border-color: var(--admin-primary);
+        box-shadow: 0 0 0 3px rgba(0, 255, 255, 0.1);
+    }
+    
+    .score-max-indicator {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--admin-text-muted);
+        font-size: 0.85rem;
+    }
+    
+    .comment-input {
+        width: 100%;
+        min-height: 100px;
+        padding: 0.875rem 1rem;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm);
+        background: var(--admin-bg-tertiary);
+        color: var(--admin-text-primary);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        resize: vertical;
+        transition: all 0.3s ease;
+    }
+    
+    .comment-input:focus {
+        outline: none;
+        border-color: var(--admin-primary);
+        box-shadow: 0 0 0 3px rgba(0, 255, 255, 0.1);
+    }
+    
+    .scoring-footer {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--admin-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .total-score-preview {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .total-score-label {
+        color: var(--admin-text-muted);
+        font-size: 0.9rem;
+    }
+    
+    .total-score-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--admin-primary);
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .scoring-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .submission-preview {
+        margin-bottom: 1.5rem;
+    }
+    
+    .submission-preview-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--surface-1);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm);
+        color: var(--admin-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .submission-preview-link:hover {
+        background: var(--surface-2);
+        border-color: var(--admin-primary);
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="scoring-header">
+    <div class="submission-info-card">
+        <div class="submission-avatar">
+            <i class="fas fa-user-edit"></i>
+        </div>
+        <div class="submission-details">
+            <h4>{{ submission.member.full_name }}</h4>
+            <div class="submission-meta">
+                <i class="fas fa-trophy"></i> Scoring for {{ competition.title }}
+                <span class="mx-2">•</span>
+                <i class="fas fa-calendar"></i> {{ submission.submitted_at.strftime('%b %d, %Y %H:%M') }}
+            </div>
+        </div>
+    </div>
+    
+    <div class="submission-preview">
+        <span style="font-size: 0.9rem; color: var(--admin-text-muted);">Submission:</span>
+        {% if submission.submission_type in ['video', 'report'] %}
+            <a href="{{ url_for('static', filename='uploads/competitions/' + submission.submission_value) }}" target="_blank" class="submission-preview-link">
+                <i class="fas fa-download"></i> Download Submission
+            </a>
+        {% else %}
+            <a href="{{ submission.submission_value }}" target="_blank" class="submission-preview-link">
+                <i class="fas fa-external-link-alt"></i> View Submission
+            </a>
+        {% endif %}
+    </div>
+    
+    <p style="margin: 0; font-size: 0.9rem; color: var(--admin-text-secondary);">
+        Please score each criteria carefully. Your evaluation will help determine the final ranking.
+    </p>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5>Scoring Criteria</h5>
+        <p class="mb-0" style="font-size: 0.85rem; color: var(--admin-text-muted);">Total weight: 100%</p>
+    </div>
+    <div class="admin-card-body">
+        <form method="POST" class="admin-form">
+            <div class="criteria-grid">
+                {% for c in criteria %}
+                {% set existing = existing_scores.get(c.id) %}
+                <div class="criteria-card">
+                    <div class="criteria-header">
+                        <h6 class="criteria-title">{{ c.name }}</h6>
+                        <span class="criteria-weight">{{ c.weight_percent }}% weight</span>
+                    </div>
+                    
+                    {% if c.description %}
+                    <div class="criteria-description">
+                        {{ c.description }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="scoring-input-group">
+                        <div class="score-input-wrapper">
+                            <label class="score-input-label">Score (0-{{ c.max_points }})</label>
+                            <input type="number" 
+                                   step="0.1" 
+                                   min="0" 
+                                   max="{{ c.max_points }}"
+                                   class="score-input"
+                                   name="criteria_{{ c.id }}" 
+                                   value="{{ existing.score if existing else 0 }}"
+                                   required>
+                            <span class="score-max-indicator">max {{ c.max_points }}</span>
+                        </div>
+                        
+                        <div>
+                            <label class="score-input-label">Comments & Feedback</label>
+                            <textarea class="comment-input"
+                                      name="comment_{{ c.id }}"
+                                      placeholder="Provide constructive feedback (optional)">{{ existing.comment if existing else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="scoring-footer">
+                <div class="total-score-preview">
+                    <span class="total-score-label">Estimated Total:</span>
+                    <span class="total-score-value" id="totalScorePreview">0.0</span>
+                </div>
+                
+                <div class="scoring-actions">
+                    <a href="{{ url_for('admin.competitions_submissions', competition_id=competition.id) }}" 
+                       class="admin-btn admin-btn-outline">
+                        <i class="fas fa-arrow-left"></i> Back to Submissions
+                    </a>
+                    <button type="submit" class="admin-btn admin-btn-primary">
+                        <i class="fas fa-save"></i> Save All Scores
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Calculate and update total score preview
+    function updateTotalScore() {
+        let total = 0;
+        let totalWeight = 0;
+        
+        document.querySelectorAll('input[type="number"][name^="criteria_"]').forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            const max = parseFloat(input.max);
+            const name = input.name;
+            const criteriaId = name.replace('criteria_', '');
+            
+            // Find the weight for this criteria (this would need server-side data)
+            // For now, we'll assume equal weighting or get from data attributes
+            const weightElement = input.closest('.criteria-card').querySelector('.criteria-weight');
+            const weightText = weightElement.textContent;
+            const weight = parseFloat(weightText) || 0;
+            
+            // Calculate normalized score (0-100) based on max points
+            const normalizedScore = (value / max) * 100;
+            const weightedScore = (normalizedScore * weight) / 100;
+            
+            total += weightedScore;
+            totalWeight += weight;
+        });
+        
+        // Normalize to total weight of 100%
+        const normalizedTotal = totalWeight > 0 ? (total * 100) / totalWeight : 0;
+        
+        document.getElementById('totalScorePreview').textContent = normalizedTotal.toFixed(1);
+    }
+    
+    // Add event listeners to all score inputs
+    document.querySelectorAll('input[type="number"][name^="criteria_"]').forEach(input => {
+        input.addEventListener('input', updateTotalScore);
+        input.addEventListener('change', updateTotalScore);
+    });
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', updateTotalScore);
+</script>
+{% endblock %}

@@ -6,14 +6,835 @@
 
 {% block extra_head %}
 {{ super() }}
+<style>
+    /* Dashboard Specific Styles */
+    .dashboard-hero {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.75rem;
+        border: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .dashboard-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .welcome-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .welcome-subtitle {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        max-width: 600px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .stat-card {
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        padding: 1.25rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .stat-card:hover::before {
+        opacity: 1;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        font-family: 'Fira Code', monospace;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-trend {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    
+    .trend-up {
+        color: var(--success-color);
+    }
+    
+    .trend-down {
+        color: var(--error-color);
+    }
+    
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .activity-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .section-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .session-list {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+    
+    .session-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+    
+    .session-item:hover {
+        background: var(--surface-2);
+    }
+    
+    .session-item:last-child {
+        border-bottom: none;
+    }
+    
+    .session-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .session-details {
+        flex: 1;
+    }
+    
+    .session-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .session-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        flex-wrap: wrap;
+    }
+    
+    .session-mode {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        background: var(--surface-2);
+        border-radius: 12px;
+    }
+    
+    .empty-state {
+        padding: 2rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+        color: var(--primary-color);
+    }
+    
+    .empty-state h6 {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .rewards-section {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+    
+    .reward-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+    
+    .reward-item:hover {
+        background: var(--surface-2);
+    }
+    
+    .reward-item:last-child {
+        border-bottom: none;
+    }
+    
+    .reward-details {
+        flex: 1;
+    }
+    
+    .reward-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.1rem;
+    }
+    
+    .reward-meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .reward-points {
+        font-family: 'Fira Code', monospace;
+        font-weight: 700;
+        color: var(--primary-color);
+        font-size: 0.9rem;
+    }
+    
+    .team-section {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--border-color);
+        padding: 1.5rem;
+    }
+    
+    .team-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .team-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    
+    .team-details {
+        flex: 1;
+    }
+    
+    .team-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .team-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .team-rating i {
+        color: #FFD700;
+        font-size: 0.9rem;
+    }
+    
+    .team-members {
+        margin-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1rem;
+    }
+    
+    .team-member {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .team-member:last-child {
+        margin-bottom: 0;
+    }
+    
+    .member-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+    
+    .member-name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .member-role {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+        background: var(--surface-2);
+        border-radius: 10px;
+        color: var(--text-muted);
+        margin-left: auto;
+    }
+    
+    .member-role.leader {
+        background: rgba(0, 255, 255, 0.1);
+        color: var(--primary-color);
+    }
+    
+    .notice-section {
+        margin-top: 1.5rem;
+    }
+    
+    .notice-card {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+    
+    .notice-header {
+        background: var(--surface-2);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .notice-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .notice-item {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .notice-item:last-child {
+        border-bottom: none;
+    }
+    
+    .competition-notice {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .notice-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--error-color);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .notice-content {
+        flex: 1;
+    }
+    
+    .notice-competition {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .notice-reason {
+        font-size: 0.85rem;
+        color: var(--error-color);
+    }
+    
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .quick-action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1.25rem 0.75rem;
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .quick-action:hover {
+        background: var(--surface-2);
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    .action-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 1.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-action:hover .action-icon {
+        background: var(--primary-color);
+        color: var(--bg-primary);
+        transform: scale(1.1);
+    }
+    
+    .action-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .quick-actions {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block member_content %}
-<div class="admin-card">
-    <div class="admin-card-body">
-        <p>This feature is under maintenance. Dashboard content will be added here.</p>
+<div class="dashboard-hero">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h1 class="welcome-title">Welcome back, {{ member.full_name.split(' ')[0] }}!</h1>
+            <p class="welcome-subtitle">
+                Overview of your activity, points, and upcoming sessions. Track your progress and stay updated.
+            </p>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+            <i class="fas fa-calendar-day me-1"></i>
+            {{ current_date.strftime('%A, %b %d, %Y') }}
+        </div>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_points }}</div>
+            <div class="stat-label">Total Points</div>
+            <div class="stat-trend trend-up">
+                <i class="fas fa-arrow-up me-1"></i>
+                Earned from competitions
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">{{ competitions_count }}</div>
+            <div class="stat-label">Competitions</div>
+            <div class="stat-trend">
+                <i class="fas fa-trophy me-1"></i>
+                Participated in
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">{{ best_rank or '—' }}</div>
+            <div class="stat-label">Best Rank</div>
+            <div class="stat-trend">
+                <i class="fas fa-medal me-1"></i>
+                Highest achievement
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">{{ team_membership.team.name if team_membership else '—' }}</div>
+            <div class="stat-label">Team</div>
+            <div class="stat-trend">
+                {% if team_membership %}
+                <i class="fas fa-users me-1"></i>
+                {{ team_membership.team.rating }}/5 rating
+                {% else %}
+                <i class="fas fa-user-plus me-1"></i>
+                Join a team
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="quick-actions">
+        <a href="{{ url_for('member.competitions_weekly') }}" class="quick-action">
+            <div class="action-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h6 class="action-title">Competitions</h6>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Join & Compete</div>
+        </a>
+        
+        <a href="{{ url_for('member.competitions_rankings') }}" class="quick-action">
+            <div class="action-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h6 class="action-title">Rankings</h6>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">View Leaderboard</div>
+        </a>
+        
+        {% if upcoming_sessions %}
+        <a href="{{ url_for('member.sessions_timetable') }}" class="quick-action">
+            <div class="action-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h6 class="action-title">Sessions</h6>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ upcoming_sessions|length }} upcoming</div>
+        </a>
+        {% else %}
+        <a href="#" class="quick-action">
+            <div class="action-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h6 class="action-title">Sessions</h6>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">View schedule</div>
+        </a>
+        {% endif %}
+        
+        <a href="#" class="quick-action">
+            <div class="action-icon">
+                <i class="fas fa-cog"></i>
+            </div>
+            <h6 class="action-title">Settings</h6>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Update profile</div>
+        </a>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left Column: Upcoming Sessions & Activities -->
+    <div>
+        <div class="activity-section">
+            <div class="section-header">
+                <h5 class="section-title">Upcoming Sessions</h5>
+                <div class="section-actions">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">
+                        {{ upcoming_sessions|length }} scheduled
+                    </span>
+                </div>
+            </div>
+            
+            {% if upcoming_sessions %}
+            <div class="session-list">
+                {% for s in upcoming_sessions %}
+                <div class="session-item">
+                    <div class="session-icon">
+                        {% if s.mode == 'online' %}
+                            <i class="fas fa-video"></i>
+                        {% else %}
+                            <i class="fas fa-map-marker-alt"></i>
+                        {% endif %}
+                    </div>
+                    <div class="session-details">
+                        <div class="session-title">{{ s.topic }}</div>
+                        <div class="session-meta">
+                            <span>
+                                <i class="far fa-calendar me-1"></i>
+                                {{ s.session_date.strftime('%b %d, %Y') }}
+                            </span>
+                            <span>
+                                <i class="far fa-clock me-1"></i>
+                                {{ s.start_time.strftime('%H:%M') }}
+                            </span>
+                            <span class="session-mode">
+                                {% if s.mode == 'online' %}
+                                    <i class="fas fa-wifi"></i> Online
+                                {% else %}
+                                    <i class="fas fa-building"></i> On-site
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="session-list">
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <h6>No Upcoming Sessions</h6>
+                    <p style="font-size: 0.85rem;">Check back soon for scheduled sessions.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if disqualified_enrollments %}
+        <div class="notice-section">
+            <div class="notice-card">
+                <div class="notice-header">
+                    <h6 class="notice-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Competition Notices
+                    </h6>
+                </div>
+                {% for e in disqualified_enrollments %}
+                <div class="notice-item">
+                    <div class="competition-notice">
+                        <div class="notice-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="notice-content">
+                            <div class="notice-competition">{{ e.competition.title }}</div>
+                            <div class="notice-reason">
+                                {{ e.disqualified_reason or 'Contact admin for details.' }}
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                                <i class="far fa-clock me-1"></i>
+                                {{ e.updated_at.strftime('%b %d, %Y') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Column: Rewards & Team -->
+    <div>
+        <div class="activity-section">
+            <div class="section-header">
+                <h5 class="section-title">Recent Rewards</h5>
+                <div class="section-actions">
+                    <a href="#" style="font-size: 0.8rem; color: var(--primary-color); text-decoration: none;">
+                        View all <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+            
+            {% if recent_rewards %}
+            <div class="rewards-section">
+                {% for r in recent_rewards %}
+                <div class="reward-item">
+                    <div class="reward-details">
+                        <div class="reward-title">{{ r.reason }}</div>
+                        <div class="reward-meta">
+                            <i class="far fa-calendar me-1"></i>
+                            {{ r.created_at.strftime('%b %d, %Y') }}
+                            {% if r.competition %}
+                            <span class="mx-2">•</span>
+                            {{ r.competition.title }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="reward-points">+{{ r.points }} pts</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="rewards-section">
+                <div class="empty-state" style="padding: 2rem 1rem;">
+                    <i class="fas fa-gift"></i>
+                    <h6>No Rewards Yet</h6>
+                    <p style="font-size: 0.85rem;">Participate in competitions to earn points!</p>
+                    <a href="{{ url_for('member.competitions_weekly') }}" class="admin-btn admin-btn-outline admin-btn-sm mt-2">
+                        <i class="fas fa-arrow-right"></i> Join Competitions
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if team_membership %}
+        <div class="activity-section">
+            <div class="section-header">
+                <h5 class="section-title">Your Team</h5>
+                <div class="section-actions">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">
+                        {{ team_membership.team.members.count() }} members
+                    </span>
+                </div>
+            </div>
+            
+            <div class="team-section">
+                <div class="team-info">
+                    <div class="team-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="team-details">
+                        <div class="team-name">{{ team_membership.team.name }}</div>
+                        <div class="team-rating">
+                            {% for i in range(1, 6) %}
+                                <i class="fas fa-star {% if i <= team_membership.team.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endfor %}
+                            <span class="ms-2">{{ team_membership.team.rating }}/5</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="team-members">
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                        <i class="fas fa-users me-1"></i>
+                        Team Members
+                    </div>
+                    {% for tm in team_membership.team.members %}
+                    <div class="team-member">
+                        <div class="member-avatar">
+                            {{ tm.member.full_name[0]|upper }}
+                        </div>
+                        <div class="member-name">{{ tm.member.full_name }}</div>
+                        <span class="member-role {% if tm.is_leader %}leader{% endif %}">
+                            {{ 'Leader' if tm.is_leader else 'Member' }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('member.competitions_rankings') }}" class="admin-btn admin-btn-outline w-100">
+                        <i class="fas fa-chart-line"></i> View Team Rankings
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="activity-section">
+            <div class="section-header">
+                <h5 class="section-title">Team Membership</h5>
+            </div>
+            
+            <div class="team-section">
+                <div class="empty-state" style="padding: 1.5rem 1rem;">
+                    <i class="fas fa-user-plus"></i>
+                    <h6>Not in a Team</h6>
+                    <p style="font-size: 0.85rem;">Join a team to collaborate and compete together.</p>
+                    <div class="mt-2">
+                        <button class="admin-btn admin-btn-outline admin-btn-sm">
+                            <i class="fas fa-search"></i> Browse Teams
+                        </button>
+                        <button class="admin-btn admin-btn-primary admin-btn-sm ms-2">
+                            <i class="fas fa-plus"></i> Create Team
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
-
-

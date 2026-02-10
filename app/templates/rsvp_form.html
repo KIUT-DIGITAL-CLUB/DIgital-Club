@@ -24,14 +24,14 @@
                         <div class="row">
                             <div class="col-12 col-md-6 mb-3 mb-md-0">
                                 <p class="mb-2">
-                                    <i class="fas fa-clock me-2 text-muted"></i>
+                                    <i class="fas fa-clock me-2"></i>
                                     <strong>Date & Time:</strong><br>
                                     <span class="text-break">{{ event.event_date.strftime('%B %d, %Y at %I:%M %p') }}</span>
                                 </p>
                             </div>
                             <div class="col-12 col-md-6">
                                 <p class="mb-2">
-                                    <i class="fas fa-map-marker-alt me-2 text-muted"></i>
+                                    <i class="fas fa-map-marker-alt me-2"></i>
                                     <strong>Location:</strong><br>
                                     <span class="text-break">{{ event.location or 'TBA' }}</span>
                                 </p>
@@ -40,7 +40,7 @@
                         {% if event.description %}
                         <div class="mt-3">
                             <p class="mb-0">
-                                <i class="fas fa-info-circle me-2 text-muted"></i>
+                                <i class="fas fa-info-circle me-2"></i>
                                 <strong>Description:</strong><br>
                                 <span class="text-break">{{ event.description }}</span>
                             </p>

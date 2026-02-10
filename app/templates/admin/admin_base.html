@@ -145,6 +145,48 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Sessions -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="sessions">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Sessions</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-sessions">
+                    <a href="{{ url_for('admin.sessions_index') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.sessions_index', 'admin.sessions_week_add', 'admin.sessions_week_view', 'admin.sessions_session_add', 'admin.sessions_session_edit'] %}active{% endif %}">
+                        <i class="fas fa-calendar-week"></i>
+                        <span>Weekly Timetable</span>
+                    </a>
+                    <a href="{{ url_for('admin.sessions_reports') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.sessions_reports'] %}active{% endif %}">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Instructor Reports</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Competitions -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="competitions">
+                    <i class="fas fa-trophy"></i>
+                    <span>Competitions</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-competitions">
+                    <a href="{{ url_for('admin.competitions') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.competitions', 'admin.competitions_view', 'admin.competitions_add', 'admin.competitions_edit', 'admin.competitions_submissions'] %}active{% endif %}">
+                        <i class="fas fa-trophy"></i>
+                        <span>All Competitions</span>
+                    </a>
+                    <a href="{{ url_for('admin.competitions_weekly') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.competitions_weekly' %}active{% endif %}">
+                        <i class="fas fa-calendar-week"></i>
+                        <span>Weekly</span>
+                    </a>
+                    <a href="{{ url_for('admin.competitions_monthly') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.competitions_monthly' %}active{% endif %}">
+                        <i class="fas fa-calendar"></i>
+                        <span>Monthly</span>
+                    </a>
+                </div>
+            </div>
             
             <!-- Projects & Technology -->
             <div class="admin-nav-dropdown">
@@ -164,6 +206,12 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Teams -->
+            <a href="{{ url_for('admin.teams_index') }}" class="admin-nav-item {% if request.endpoint in ['admin.teams_index', 'admin.teams_view'] %}active{% endif %}">
+                <i class="fas fa-people-group"></i>
+                <span>Teams</span>
+            </a>
             
             <!-- Communication -->
             <div class="admin-nav-dropdown">

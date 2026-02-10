@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h2 class="mb-1">Edit Blog Post</h2>
-                    <p class="text-muted mb-0">Update your blog post content and settings</p>
+                    <p class="mb-0">Update your blog post content and settings</p>
                 </div>
             </div>
             
@@ -43,18 +43,18 @@
                                      alt="Current featured image" 
                                      style="max-width: 100%; max-height: 200px; border-radius: 10px; border: 2px solid var(--admin-border-color);">
                                 {% endif %}
-                                <p class="text-muted mt-2 mb-0"><i class="fas fa-check-circle text-success"></i> Current featured image</p>
+                                <p class="mt-2 mb-0"><i class="fas fa-check-circle text-success"></i> Current featured image</p>
                             </div>
                             {% endif %}
                             
                             <input type="url" class="admin-form-control" id="featured_image" name="featured_image" 
                                    value="{% if blog.featured_image and (blog.featured_image.startswith('http://') or blog.featured_image.startswith('https://')) %}{{ blog.featured_image }}{% endif %}"
                                    placeholder="https://example.com/image.jpg" onchange="previewImageFromUrl(event)">
-                            <small class="text-muted">Enter the URL of the featured image for this blog post</small>
+                            <small >Enter the URL of the featured image for this blog post</small>
                             
                             <!-- Image Preview -->
                             <div id="imagePreview" style="display: none; margin-top: 1rem;">
-                                <p class="text-muted mb-2"><i class="fas fa-eye"></i> New image preview:</p>
+                                <p class="mb-2"><i class="fas fa-eye"></i> New image preview:</p>
                                 <img id="preview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 10px; border: 2px solid var(--admin-border-color);">
                             </div>
                             
@@ -71,13 +71,13 @@
                         <div class="admin-form-group">
                             <label for="excerpt" class="admin-form-label">Excerpt</label>
                             <textarea class="admin-form-control" id="excerpt" name="excerpt" rows="3">{{ blog.excerpt or '' }}</textarea>
-                            <small class="text-muted">This will be shown in blog listings and previews.</small>
+                            <small >This will be shown in blog listings and previews.</small>
                         </div>
                         
                         <div class="admin-form-group">
                             <label for="content" class="admin-form-label">Content</label>
                             <textarea class="admin-form-control" id="content" name="content" rows="15" required>{{ blog.content }}</textarea>
-                            <small class="text-muted">You can use basic HTML tags for formatting: &lt;strong&gt;, &lt;em&gt;, &lt;p&gt;, &lt;h2&gt;, &lt;h3&gt;, &lt;ul&gt;, &lt;ol&gt;, &lt;li&gt;, etc.</small>
+                            <small >You can use basic HTML tags for formatting: &lt;strong&gt;, &lt;em&gt;, &lt;p&gt;, &lt;h2&gt;, &lt;h3&gt;, &lt;ul&gt;, &lt;ol&gt;, &lt;li&gt;, etc.</small>
                         </div>
                     </div>
                     
@@ -105,7 +105,7 @@
                                     <label for="tags" class="admin-form-label">Tags</label>
                                     <input type="text" class="admin-form-control" id="tags" name="tags" 
                                            value="{{ blog.tags or '' }}" placeholder="e.g., python, web development, tutorial">
-                                    <small class="text-muted">Separate tags with commas</small>
+                                    <small >Separate tags with commas</small>
                                 </div>
                                 
                                 <div class="admin-form-group">
@@ -115,7 +115,7 @@
                                             Published
                                         </label>
                                     </div>
-                                    <small class="text-muted">Uncheck to save as draft</small>
+                                    <small >Uncheck to save as draft</small>
                                 </div>
                                 
                                 <div class="admin-form-group">

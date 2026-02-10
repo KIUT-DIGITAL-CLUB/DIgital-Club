@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Edit Transaction</h2>
-        <p class="text-muted mb-0">Modify transaction details for {{ transaction.financial_period.name }}</p>
+        <p class="mb-0">Modify transaction details for {{ transaction.financial_period.name }}</p>
     </div>
     <div>
         <a href="{{ url_for('admin.financial_period_detail', period_id=transaction.financial_period_id) }}" class="admin-btn admin-btn-outline">
@@ -26,7 +26,7 @@
             </div>
             <div class="flex-grow-1">
                 <h5 class="mb-1">{{ transaction.description }}</h5>
-                <p class="mb-0 text-muted">
+                <p >
                     {{ transaction.transaction_date.strftime('%B %d, %Y') }} | 
                     <span class="{% if transaction.transaction_type == 'revenue' %}text-success{% else %}text-danger{% endif %}">
                         Tsh {{ "%.2f"|format(transaction.amount) }} {{ transaction.transaction_type.title() }}

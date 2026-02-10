@@ -51,25 +51,25 @@
             <div class="col-md-3">
                 <div class="admin-financial-stat">
                     <h6 class="text-success">Tsh {{ "%.2f"|format(current_revenue) }}</h6>
-                    <small class="text-muted">Revenue</small>
+                    <small >Revenue</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="admin-financial-stat">
                     <h6 class="text-danger">Tsh {{ "%.2f"|format(current_expenses) }}</h6>
-                    <small class="text-muted">Expenses</small>
+                    <small >Expenses</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="admin-financial-stat">
                     <h6 class="{% if current_balance >= 0 %}text-success{% else %}text-danger{% endif %}">Tsh {{ "%.2f"|format(current_balance) }}</h6>
-                    <small class="text-muted">Net Balance</small>
+                    <small >Net Balance</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="admin-financial-stat">
                     <h6 class="text-info">{{ current_period.start_date.strftime('%b %d') }} - {{ current_period.end_date.strftime('%b %d, %Y') }}</h6>
-                    <small class="text-muted">Period</small>
+                    <small >Period</small>
                 </div>
             </div>
         </div>
@@ -92,7 +92,7 @@
             </div>
             <div class="flex-grow-1">
                 <h5 class="mb-1">No Active Financial Period</h5>
-                <p class="mb-0 text-muted">Create a financial period to start tracking club finances.</p>
+                <p >Create a financial period to start tracking club finances.</p>
             </div>
             <div>
                 <a href="{{ url_for('admin.create_financial_period') }}" class="admin-btn admin-btn-primary">

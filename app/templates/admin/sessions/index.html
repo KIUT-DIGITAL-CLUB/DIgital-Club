@@ -1,0 +1,50 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Sessions{% endblock %}
+{% block page_title %}Sessions{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Sessions</span>{% endblock %}
+
+{% block admin_content %}
+<div class="admin-card mb-3">
+    <div class="admin-card-body d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-1">Weekly Timetables</h5>
+            <p class="mb-0">Create and publish weekly session schedules.</p>
+        </div>
+        <a href="{{ url_for('admin.sessions_week_add') }}" class="admin-btn admin-btn-primary">
+            <i class="fas fa-plus"></i> New Week
+        </a>
+    </div>
+</div>
+
+<div class="admin-table-responsive">
+    <table class="table admin-table">
+        <thead>
+            <tr>
+                <th>Week</th>
+                <th>Status</th>
+                <th>Published</th>
+                <th>Sessions</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for w in weeks %}
+            <tr>
+                <td>{{ w.week_start.strftime('%b %d') }} - {{ w.week_end.strftime('%b %d, %Y') }}</td>
+                <td><span class="admin-badge admin-badge-{{ 'success' if w.status == 'published' else 'secondary' }}">{{ w.status }}</span></td>
+                <td>{{ w.published_at.strftime('%b %d, %Y') if w.published_at else '-' }}</td>
+                <td>{{ w.sessions.count() }}</td>
+                <td class="text-end">
+                    <a href="{{ url_for('admin.sessions_week_view', week_id=w.id) }}" class="admin-btn admin-btn-outline admin-btn-sm">
+                        View
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center">No session weeks yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

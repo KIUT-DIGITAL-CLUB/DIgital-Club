@@ -6,12 +6,628 @@
 
 {% block extra_head %}
 {{ super() }}
+<style>
+    /* Instructors Specific Styles */
+    .instructors-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .instructors-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .instructors-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .instructor-stat {
+        text-align: center;
+        padding: 1rem;
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
+    }
+    
+    .instructor-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        font-family: 'Fira Code', monospace;
+        line-height: 1;
+    }
+    
+    .instructor-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .instructors-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .instructors-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .instructor-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        height: 100%;
+    }
+    
+    .instructor-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        border-color: var(--primary-color);
+    }
+    
+    .instructor-header {
+        padding: 1.5rem;
+        background: var(--surface-2);
+        border-bottom: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .instructor-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+    
+    .instructor-card:hover .instructor-header::before {
+        transform: scaleX(1);
+    }
+    
+    .instructor-profile {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .instructor-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 3px solid var(--border-color);
+        background: var(--surface-1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+        flex-shrink: 0;
+    }
+    
+    .instructor-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .instructor-avatar i {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+    }
+    
+    .instructor-basic-info {
+        flex: 1;
+    }
+    
+    .instructor-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+    
+    .instructor-title {
+        font-size: 0.85rem;
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .instructor-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        background: rgba(0, 255, 0, 0.1);
+        color: var(--success-color);
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+    
+    .instructor-body {
+        padding: 1.5rem;
+    }
+    
+    .instructor-details {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .detail-icon {
+        width: 20px;
+        color: var(--primary-color);
+        opacity: 0.8;
+        flex-shrink: 0;
+        text-align: center;
+    }
+    
+    .detail-content {
+        flex: 1;
+    }
+    
+    .detail-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.1rem;
+    }
+    
+    .detail-value {
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .instructor-expertise {
+        margin-bottom: 1.25rem;
+    }
+    
+    .expertise-title {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .expertise-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .expertise-tag {
+        padding: 0.25rem 0.75rem;
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+    }
+    
+    .expertise-tag:hover {
+        background: rgba(var(--particle-color), 0.1);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .instructor-footer {
+        padding: 1rem 1.5rem;
+        background: var(--surface-1);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .instructor-sessions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    
+    .instructor-contact {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .contact-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: var(--surface-2);
+        border: 1px solid var(--border-color);
+        border-radius: 50%;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .contact-button:hover {
+        background: var(--primary-color);
+        color: var(--bg-primary);
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+        color: var(--primary-color);
+    }
+    
+    .empty-state h5 {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-bar {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .filter-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-lg);
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+    
+    .filter-button:hover {
+        background: var(--surface-2);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .filter-button.active {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        border-color: transparent;
+    }
+</style>
 {% endblock %}
 
 {% block member_content %}
-<div class="admin-card">
-    <div class="admin-card-body">
-        <p>This feature is under maintenance. Instructors content will be here.</p>
+<div class="instructors-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h5 class="mb-1">Session Instructors</h5>
+            <p class="mb-0">
+                Meet our team of expert instructors and session leaders
+            </p>
+        </div>
+        {% if week %}
+        <div class="week-display">
+            <span class="week-badge">Week {{ week.week_number }}</span>
+            <span class="week-date-range">
+                {{ week.week_start.strftime('%b %d') }} - {{ week.week_end.strftime('%b %d') }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="instructors-stats">
+        <div class="instructor-stat">
+            <span class="instructor-value">{{ instructors|length }}</span>
+            <span class="instructor-label">Total Instructors</span>
+        </div>
+        <div class="instructor-stat">
+            <span class="instructor-value">
+                {% set active_instructors = instructors|selectattr('member.is_active', 'equalto', True)|list|length %}
+                {{ active_instructors }}
+            </span>
+            <span class="instructor-label">Active</span>
+        </div>
+        <div class="instructor-stat">
+            <span class="instructor-value">
+                {% set senior_instructors = instructors|selectattr('member.status', 'equalto', 'senior')|list|length %}
+                {{ senior_instructors }}
+            </span>
+            <span class="instructor-label">Senior</span>
+        </div>
+        <div class="instructor-stat">
+            <span class="instructor-value">
+                {% set junior_instructors = instructors|selectattr('member.status', 'equalto', 'junior')|list|length %}
+                {{ junior_instructors }}
+            </span>
+            <span class="instructor-label">Junior</span>
+        </div>
     </div>
 </div>
+
+{% if instructors %}
+<div class="filter-bar">
+    <span style="font-size: 0.85rem; color: var(--text-muted);">Filter:</span>
+    <a href="?filter=all" class="filter-button {% if request.args.get('filter', 'all') == 'all' %}active{% endif %}">
+        All ({{ instructors|length }})
+    </a>
+    <a href="?filter=active" class="filter-button {% if request.args.get('filter') == 'active' %}active{% endif %}">
+        Active ({{ active_instructors }})
+    </a>
+    <a href="?filter=senior" class="filter-button {% if request.args.get('filter') == 'senior' %}active{% endif %}">
+        Senior ({{ senior_instructors }})
+    </a>
+    <a href="?filter=junior" class="filter-button {% if request.args.get('filter') == 'junior' %}active{% endif %}">
+        Junior ({{ junior_instructors }})
+    </a>
+</div>
+
+<div class="instructors-grid">
+    {% for instructor in instructors %}
+    <div class="instructor-card">
+        <div class="instructor-header">
+            <div class="instructor-profile">
+                <div class="instructor-avatar">
+                    {% if instructor.member and instructor.member.profile_image %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' + instructor.member.profile_image) }}" 
+                             alt="{{ instructor.member.full_name }}" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <i class="fas fa-user" style="display: none;"></i>
+                    {% else %}
+                        <i class="fas fa-user"></i>
+                    {% endif %}
+                </div>
+                <div class="instructor-basic-info">
+                    <div class="instructor-name">{{ instructor.member.full_name if instructor.member else instructor.email }}</div>
+                    <div class="instructor-title">
+                        {% if instructor.member %}
+                            {{ instructor.member.title or (instructor.member.status|title + ' Instructor') }}
+                        {% else %}
+                            Instructor
+                        {% endif %}
+                    </div>
+                    {% if instructor.member and instructor.member.is_active %}
+                    <span class="instructor-status">
+                        <i class="fas fa-circle" style="font-size: 0.6rem;"></i> Active
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructor-body">
+            <div class="instructor-details">
+                {% if instructor.member %}
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-label">Course & Year</div>
+                        <div class="detail-value">
+                            {% if instructor.member.course and instructor.member.year %}
+                                {{ instructor.member.course }} • Year {{ instructor.member.year }}
+                            {% elif instructor.member.course %}
+                                {{ instructor.member.course }}
+                            {% elif instructor.member.year %}
+                                Year {{ instructor.member.year }}
+                            {% else %}
+                                Not specified
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-user-tag"></i>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-label">Member Status</div>
+                        <div class="detail-value">
+                            <span style="text-transform: capitalize;">{{ instructor.member.status }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-label">Contact Email</div>
+                        <div class="detail-value">{{ instructor.email }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if instructor.member and instructor.member.areas_of_interest %}
+            <div class="instructor-expertise">
+                <div class="expertise-title">Areas of Expertise</div>
+                <div class="expertise-tags">
+                    {% for expertise in instructor.member.areas_of_interest.split(',') %}
+                    <span class="expertise-tag">{{ expertise.strip() }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="instructor-footer">
+            <div class="instructor-sessions">
+                <i class="fas fa-calendar-alt"></i>
+                <span>
+                    {% set session_count = instructor.instructed_sessions|length %}
+                    {{ session_count }} session{{ 's' if session_count != 1 else '' }} taught
+                </span>
+            </div>
+            
+            <div class="instructor-contact">
+                {% if instructor.email %}
+                <a href="mailto:{{ instructor.email }}" class="contact-button" title="Send Email">
+                    <i class="fas fa-envelope"></i>
+                </a>
+                {% endif %}
+                
+                {% if instructor.member and instructor.member.linkedin %}
+                <a href="{{ instructor.member.linkedin }}" target="_blank" class="contact-button" title="LinkedIn Profile">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                {% endif %}
+                
+                {% if instructor.member and instructor.member.github %}
+                <a href="{{ instructor.member.github }}" target="_blank" class="contact-button" title="GitHub Profile">
+                    <i class="fab fa-github"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="admin-card mt-4">
+    <div class="admin-card-header">
+        <h5>Quick Links</h5>
+    </div>
+    <div class="admin-card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <a href="{{ url_for('member.sessions_timetable') }}" class="admin-btn admin-btn-outline w-100">
+                    <i class="fas fa-calendar-week"></i> View Timetable
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{{ url_for('member.competitions_rankings') }}" class="admin-btn admin-btn-outline w-100">
+                    <i class="fas fa-ranking-star"></i> Rankings
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="admin-card">
+    <div class="admin-card-body">
+        <div class="empty-state">
+            <i class="fas fa-users-slash"></i>
+            <h5>No Instructors Available</h5>
+            <p class="mb-0">
+                {% if request.args.get('filter') %}
+                    No instructors match the selected filter.
+                {% else %}
+                    There are no instructors available at the moment.<br>
+                    Check back soon for updates!
+                {% endif %}
+            </p>
+            <div class="mt-3">
+                <a href="{{ url_for('member.timetable') }}" class="admin-btn admin-btn-primary">
+                    <i class="fas fa-calendar"></i> View Timetable
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Filter functionality
+    document.querySelectorAll('.filter-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const filter = button.getAttribute('href').split('=')[1];
+            
+            // Update URL without page reload (for demo purposes)
+            // In a real implementation, this would filter the list
+            document.querySelectorAll('.filter-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            button.classList.add('active');
+            
+            // Show loading state
+            const grid = document.querySelector('.instructors-grid');
+            if (grid) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="loading" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
+                        <h5>Loading Instructors...</h5>
+                    </div>
+                `;
+                
+                // Simulate loading delay
+                setTimeout(() => {
+                    // In a real implementation, this would be an AJAX request
+                    // For now, we'll just reload the page with the filter parameter
+                    window.location.href = button.getAttribute('href');
+                }, 500);
+            }
+        });
+    });
+    
+    // Add hover effect to expertise tags
+    document.querySelectorAll('.expertise-tag').forEach(tag => {
+        tag.addEventListener('mouseenter', () => {
+            tag.style.transform = 'translateY(-2px)';
+        });
+        
+        tag.addEventListener('mouseleave', () => {
+            tag.style.transform = 'translateY(0)';
+        });
+    });
+</script>
 {% endblock %}

@@ -1,0 +1,728 @@
+﻿{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}{{ competition.title }} - Admin{% endblock %}
+{% block page_title %}{{ competition.title }}{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.competitions') }}">Competitions</a><span class="breadcrumb-separator">/</span> <span>Detail</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Admin Competition Detail Specific Styles */
+    .admin-competition-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--admin-border);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .admin-competition-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .competition-meta-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .meta-stat {
+        text-align: center;
+        padding: 1rem;
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--admin-border);
+    }
+    
+    .meta-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--admin-primary);
+        font-family: 'Fira Code', monospace;
+        line-height: 1;
+    }
+    
+    .meta-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--admin-text-muted);
+        margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .competition-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .competition-description-box {
+        background: var(--surface-1);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    .competition-description-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--admin-text-muted);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .admin-quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .quick-action-card {
+        background: var(--surface-1);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm);
+        padding: 1.25rem;
+        text-decoration: none;
+        color: var(--admin-text-primary);
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .quick-action-card:hover {
+        border-color: var(--admin-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .quick-action-icon {
+        font-size: 1.5rem;
+        color: var(--admin-primary);
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+    
+    .quick-action-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .quick-action-desc {
+        font-size: 0.8rem;
+        color: var(--admin-text-muted);
+    }
+    
+    .admin-form-inline {
+        background: var(--surface-1);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .admin-form-inline .row {
+        margin-bottom: 0.5rem;
+    }
+    
+    .admin-form-inline .admin-form-label {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .admin-form-inline .admin-form-control {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .admin-form-inline button[type="submit"] {
+        margin-top: 0.5rem;
+    }
+    
+    .list-item-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .list-item-content {
+        flex: 1;
+    }
+    
+    .countdown-admin {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--surface-1);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-md);
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .countdown-admin i {
+        color: var(--admin-primary);
+    }
+    
+    .deadline-info {
+        font-size: 0.85rem;
+        color: var(--admin-text-muted);
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .competition-meta-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .admin-quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-competition-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <h5 class="mb-1">{{ competition.title }}</h5>
+            <div class="competition-badges">
+                <span class="admin-badge admin-badge-secondary">{{ competition.category }}</span>
+                <span class="admin-badge admin-badge-info">{{ competition.frequency.title() }}</span>
+                <span class="admin-badge admin-badge-primary">Level {{ competition.level }}</span>
+                {% if competition.status == 'published' %}
+                    <span class="admin-badge admin-badge-success">Published</span>
+                {% elif competition.status == 'judging' %}
+                    <span class="admin-badge admin-badge-info">Judging</span>
+                {% elif competition.status == 'finalized' %}
+                    <span class="admin-badge admin-badge-primary">Finalized</span>
+                {% else %}
+                    <span class="admin-badge admin-badge-secondary">Draft</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="countdown-admin" data-end="{{ competition.ends_at.isoformat() }}">
+            <i class="fas fa-hourglass-half"></i>
+            <span class="countdown-label">--d --h --m --s</span>
+        </div>
+    </div>
+    
+    <div class="deadline-info">
+        <i class="fas fa-clock me-1"></i>
+        Deadline: {{ competition.ends_at.strftime('%A, %b %d, %Y at %H:%M') }} (server time)
+    </div>
+    
+    <div class="competition-meta-stats">
+        <div class="meta-stat">
+            <span class="meta-value">{{ competition.status.title() }}</span>
+            <span class="meta-label">Status</span>
+        </div>
+        <div class="meta-stat">
+            <span class="meta-value">{{ competition.frequency.title() }}</span>
+            <span class="meta-label">Frequency</span>
+        </div>
+        <div class="meta-stat">
+            <span class="meta-value">{{ competition.level }}</span>
+            <span class="meta-label">Level</span>
+        </div>
+        <div class="meta-stat">
+            <span class="meta-value">{{ submissions_count }}</span>
+            <span class="meta-label">Submissions</span>
+        </div>
+        <div class="meta-stat">
+            <span class="meta-value">{{ enrollments_count }}</span>
+            <span class="meta-label">Enrollments</span>
+        </div>
+    </div>
+    
+    <div class="competition-description-box">
+        <span class="competition-description-label">Challenge Brief</span>
+        <div>{{ competition.description }}</div>
+    </div>
+    
+    <div class="admin-quick-actions-grid">
+        <a href="{{ url_for('admin.competitions_edit', competition_id=competition.id) }}" class="quick-action-card">
+            <span class="quick-action-icon">
+                <i class="fas fa-pen"></i>
+            </span>
+            <div class="quick-action-title">Edit Competition</div>
+            <div class="quick-action-desc">Modify details & settings</div>
+        </a>
+        
+        <a href="{{ url_for('admin.competitions_submissions', competition_id=competition.id) }}" class="quick-action-card">
+            <span class="quick-action-icon">
+                <i class="fas fa-list"></i>
+            </span>
+            <div class="quick-action-title">View Submissions</div>
+            <div class="quick-action-desc">Review all entries</div>
+        </a>
+        
+        <a href="{{ url_for('admin.competitions_enrollments', competition_id=competition.id) }}" class="quick-action-card">
+            <span class="quick-action-icon">
+                <i class="fas fa-user-check"></i>
+            </span>
+            <div class="quick-action-title">Enrollments</div>
+            <div class="quick-action-desc">Manage participants</div>
+        </a>
+        
+        <a href="{{ url_for('admin.competitions_leaderboard', competition_id=competition.id) }}" class="quick-action-card">
+            <span class="quick-action-icon">
+                <i class="fas fa-trophy"></i>
+            </span>
+            <div class="quick-action-title">Leaderboard</div>
+            <div class="quick-action-desc">Finalize & publish results</div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5>Judges Panel</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">Assign judges to evaluate submissions</p>
+            </div>
+            <div class="admin-card-body">
+                <div class="admin-form-inline">
+                    <form method="POST" action="{{ url_for('admin.competitions_judges', competition_id=competition.id) }}">
+                        <div class="row g-2">
+                            <div class="col-md-8">
+                                <label class="admin-form-label">Select Judge</label>
+                                <select name="user_id" class="admin-form-control" required>
+                                    <option value="">Choose a user...</option>
+                                    {% for u in users %}
+                                    <option value="{{ u.id }}">{{ u.email }} ({{ u.full_name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="admin-form-label">Chair Role</label>
+                                <div class="form-check mt-2">
+                                    <input type="checkbox" class="form-check-input" id="is_chair" name="is_chair">
+                                    <label class="form-check-label" for="is_chair" style="font-size: 0.85rem;">Set as Chair</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="admin-btn admin-btn-outline">
+                                    <i class="fas fa-user-plus"></i> Add Judge
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="mt-3">
+                    <h6 class="mb-2" style="font-size: 0.9rem;">Assigned Judges ({{ judges|length }})</h6>
+                    {% if judges %}
+                    <div class="list-group">
+                        {% for j in judges %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center" style="background: var(--surface-1); border-color: var(--admin-border);">
+                            <div class="list-item-content">
+                                <div class="d-flex align-items-center gap-2">
+                                    <strong style="font-size: 0.9rem;">{{ j.judge.email }}</strong>
+                                    {% if j.is_chair %}
+                                    <span class="admin-badge admin-badge-primary" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">Chair</span>
+                                    {% endif %}
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--admin-text-muted);">
+                                    {{ j.judge.full_name }}
+                                </div>
+                            </div>
+                            <div class="list-item-actions">
+                                <form method="POST" action="{{ url_for('admin.competitions_judges_remove', competition_id=competition.id, judge_id=j.id) }}">
+                                    <button type="submit" class="admin-btn admin-btn-outline admin-btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert-card alert-info" style="padding: 1rem; border-radius: var(--border-radius-sm); background: rgba(0, 255, 255, 0.1); border: 1px solid var(--admin-primary); color: var(--admin-primary);">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No judges assigned yet. Add judges to begin scoring.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h5>Scoring Criteria</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">Total weight: {{ criteria_total }}%</p>
+            </div>
+            <div class="admin-card-body">
+                <div class="admin-form-inline">
+                    <form method="POST" action="{{ url_for('admin.competitions_criteria_add', competition_id=competition.id) }}">
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <label class="admin-form-label">Criterion Name</label>
+                                <input type="text" name="name" class="admin-form-control" placeholder="e.g., Innovation" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="admin-form-label">Max Points</label>
+                                <input type="number" name="max_points" class="admin-form-control" value="10" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="admin-form-label">Weight %</label>
+                                <input type="number" name="weight_percent" class="admin-form-control" value="0" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="admin-form-label">Description</label>
+                                <input type="text" name="description" class="admin-form-control" placeholder="Brief description (optional)">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="admin-btn admin-btn-outline">
+                                    <i class="fas fa-plus-circle"></i> Add Criterion
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="mt-3">
+                    <h6 class="mb-2" style="font-size: 0.9rem;">Criteria List ({{ criteria|length }})</h6>
+                    {% if criteria %}
+                    <div class="list-group">
+                        {% for c in criteria %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center" style="background: var(--surface-1); border-color: var(--admin-border);">
+                            <div class="list-item-content">
+                                <strong style="font-size: 0.9rem;">{{ c.name }}</strong>
+                                <div style="font-size: 0.8rem; color: var(--admin-text-muted);">
+                                    {{ c.description }}
+                                </div>
+                                <div class="mt-1">
+                                    <span class="admin-badge admin-badge-secondary" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">
+                                        Weight: {{ c.weight_percent }}%
+                                    </span>
+                                    <span class="admin-badge admin-badge-info" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; margin-left: 0.25rem;">
+                                        Max: {{ c.max_points }} pts
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="list-item-actions">
+                                <form method="POST" action="{{ url_for('admin.competitions_criteria_delete', competition_id=competition.id, criteria_id=c.id) }}">
+                                    <button type="submit" class="admin-btn admin-btn-outline admin-btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert-card alert-info" style="padding: 1rem; border-radius: var(--border-radius-sm); background: rgba(0, 255, 255, 0.1); border: 1px solid var(--admin-primary); color: var(--admin-primary);">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No criteria defined yet. Add criteria for scoring submissions.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5>Competition Rules</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">Submission & eligibility rules</p>
+            </div>
+            <div class="admin-card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Submission Type</div>
+                            <div class="info-value">{{ competition.submission_type|title }}</div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Max File Size</div>
+                            <div class="info-value">{{ competition.submission_max_mb }} MB</div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Eligibility Rule</div>
+                            <div class="info-value">{{ competition.eligibility_rule|title }}</div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Eligibility Years</div>
+                            <div class="info-value">{{ competition.eligibility_years or 'All' }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" {% if competition.requires_paid_membership %}checked{% endif %} disabled>
+                        <label class="form-check-label" style="font-size: 0.9rem;">
+                            Paid Membership Required
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h5>Rewards & Prizes</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">Configure awards for winners</p>
+            </div>
+            <div class="admin-card-body">
+                <div class="admin-form-inline">
+                    <form method="POST" action="{{ url_for('admin.competitions_rewards_add', competition_id=competition.id) }}">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <label class="admin-form-label">Award Type</label>
+                                <select name="reward_type" class="admin-form-control">
+                                    <option value="position">By Position</option>
+                                    <option value="percent">By Percentile</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="admin-form-label">From Rank</label>
+                                <input type="number" name="rank_from" class="admin-form-control" value="1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="admin-form-label">To Rank</label>
+                                <input type="number" name="rank_to" class="admin-form-control" value="1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="admin-form-label">Percent %</label>
+                                <input type="number" name="percent" class="admin-form-control" value="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="admin-form-label">Points</label>
+                                <input type="number" name="points" class="admin-form-control" value="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="admin-form-label">Prize Title</label>
+                                <input type="text" name="prize_title" class="admin-form-control" placeholder="e.g., Gold Medal">
+                            </div>
+                            <div class="col-12">
+                                <label class="admin-form-label">Prize Description</label>
+                                <input type="text" name="prize_description" class="admin-form-control" placeholder="Additional details">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="admin-btn admin-btn-outline">
+                                    <i class="fas fa-gift"></i> Add Reward
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="mt-3">
+                    <h6 class="mb-2" style="font-size: 0.9rem;">Configured Rewards ({{ rewards|length }})</h6>
+                    {% if rewards %}
+                    <div class="list-group">
+                        {% for r in rewards %}
+                        <div class="list-group-item" style="background: var(--surface-1); border-color: var(--admin-border);">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong style="font-size: 0.9rem;">
+                                        {% if r.reward_type == 'percent' %}
+                                            Top {{ r.percent }}%
+                                        {% else %}
+                                            Positions {{ r.rank_from }} - {{ r.rank_to }}
+                                        {% endif %}
+                                    </strong>
+                                    <div class="mt-1">
+                                        <span class="admin-badge admin-badge-primary" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">
+                                            {{ r.points }} points
+                                        </span>
+                                        {% if r.prize_title %}
+                                        <span class="admin-badge admin-badge-success" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; margin-left: 0.25rem;">
+                                            {{ r.prize_title }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    {% if r.prize_description %}
+                                    <div style="font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+                                        {{ r.prize_description }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <form method="POST" action="{{ url_for('admin.competitions_rewards_delete', competition_id=competition.id, reward_id=r.id) }}">
+                                        <button type="submit" class="admin-btn admin-btn-outline admin-btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert-card alert-info" style="padding: 1rem; border-radius: var(--border-radius-sm); background: rgba(0, 255, 255, 0.1); border: 1px solid var(--admin-primary); color: var(--admin-primary);">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No rewards configured. Add rewards to incentivize participants.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h5>Sponsors</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">Manage competition sponsors</p>
+            </div>
+            <div class="admin-card-body">
+                <div class="admin-form-inline">
+                    <form method="POST" action="{{ url_for('admin.competitions_sponsors', competition_id=competition.id) }}">
+                        <div class="row g-2">
+                            <div class="col-md-8">
+                                <label class="admin-form-label">Select Sponsor</label>
+                                <select name="sponsor_id" class="admin-form-control" required>
+                                    <option value="">Choose a sponsor...</option>
+                                    {% for s in sponsors_all %}
+                                    <option value="{{ s.id }}">{{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="admin-form-label">Primary</label>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="is_primary" name="is_primary">
+                                    <label class="form-check-label" for="is_primary" style="font-size: 0.85rem;">Set as Primary</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="admin-btn admin-btn-outline">
+                                    <i class="fas fa-plus"></i> Add Sponsor
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="mt-3">
+                    <h6 class="mb-2" style="font-size: 0.9rem;">Current Sponsors ({{ sponsors|length }})</h6>
+                    {% if sponsors %}
+                    <div class="list-group">
+                        {% for link in sponsors %}
+                        <div class="list-group-item d-flex align-items-center" style="background: var(--surface-1); border-color: var(--admin-border);">
+                            {% if link.sponsor.logo %}
+                            <img src="{{ link.sponsor.logo }}" alt="{{ link.sponsor.name }}" style="width: 40px; height: 40px; object-fit: contain; border-radius: var(--border-radius-sm); margin-right: 1rem; border: 1px solid var(--admin-border); background: white; padding: 0.25rem;">
+                            {% else %}
+                            <div style="width: 40px; height: 40px; background: var(--surface-2); border-radius: var(--border-radius-sm); display: flex; align-items: center; justify-content: center; margin-right: 1rem; color: var(--admin-text-muted);">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <strong style="font-size: 0.9rem;">{{ link.sponsor.name }}</strong>
+                                {% if link.is_primary %}
+                                <span class="admin-badge admin-badge-primary" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; margin-left: 0.5rem;">Primary</span>
+                                {% endif %}
+                                {% if link.sponsor.website %}
+                                <div style="font-size: 0.8rem;">
+                                    <a href="{{ link.sponsor.website }}" target="_blank" style="color: var(--admin-primary);">{{ link.sponsor.website }}</a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert-card alert-info" style="padding: 1rem; border-radius: var(--border-radius-sm); background: rgba(0, 255, 255, 0.1); border: 1px solid var(--admin-primary); color: var(--admin-primary);">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No sponsors assigned. Add sponsors to increase competition visibility.
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-3">
+                    <h6 class="mb-2" style="font-size: 0.9rem;">Create New Sponsor</h6>
+                    <form method="POST" action="{{ url_for('admin.competitions_sponsors_add') }}" class="admin-form-inline">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="admin-form-label">Sponsor Name</label>
+                                <input type="text" name="name" class="admin-form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="admin-form-label">Website</label>
+                                <input type="text" name="website" class="admin-form-control" placeholder="https://...">
+                            </div>
+                            <div class="col-12">
+                                <label class="admin-form-label">Logo URL</label>
+                                <input type="text" name="logo" class="admin-form-control" placeholder="https://.../logo.png">
+                            </div>
+                            <div class="col-12">
+                                <label class="admin-form-label">Description</label>
+                                <input type="text" name="description" class="admin-form-control" placeholder="Brief description">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="admin-btn admin-btn-outline">
+                                    <i class="fas fa-plus-circle"></i> Create Sponsor
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Countdown Timer
+    document.querySelectorAll('[data-end]').forEach(el => {
+        const end = new Date(el.dataset.end);
+        const label = el.querySelector('.countdown-label');
+        function tick() {
+            const diff = end - new Date();
+            if (diff <= 0) {
+                label.textContent = 'Closed';
+                return;
+            }
+            const totalSeconds = Math.floor(diff / 1000);
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const mins = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            label.textContent = `${days}d ${hours}h ${mins}m ${secs}s`;
+        }
+        tick();
+        setInterval(tick, 1000);
+    });
+</script>
+{% endblock %}
