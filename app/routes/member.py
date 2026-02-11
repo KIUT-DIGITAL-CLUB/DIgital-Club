@@ -31,10 +31,41 @@ from app.id_generator import generate_digital_id, delete_digital_id
 import os
 import json
 from datetime import datetime
+from sqlalchemy import inspect
+from sqlalchemy.exc import SQLAlchemyError
 
 def _normalize_name(value):
     parts = [p for p in (value or '').strip().split() if p]
     return ' '.join([p[:1].upper() + p[1:].lower() for p in parts])
+
+
+def _sessions_tables_available():
+    try:
+        table_names = set(inspect(db.engine).get_table_names())
+        return 'session_week' in table_names and 'session_schedule' in table_names
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.exception('Failed to inspect sessions tables')
+        return False
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Failed to inspect sessions tables')
+        return False
+
+
+def _latest_published_session_week():
+    if not _sessions_tables_available():
+        return None
+    try:
+        return SessionWeek.query.filter_by(status='published').order_by(SessionWeek.week_start.desc()).first()
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.exception('Failed to load latest published session week')
+        return None
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Failed to load latest published session week')
+        return None
 
 @member_bp.route('/')
 @login_required
@@ -53,7 +84,7 @@ def dashboard():
     ).scalar()
     team_membership = TeamMember.query.filter_by(member_id=member.id).first()
     upcoming_sessions = []
-    week = SessionWeek.query.filter_by(status='published').order_by(SessionWeek.week_start.desc()).first()
+    week = _latest_published_session_week()
     if week:
         upcoming_sessions = week.sessions.order_by(SessionSchedule.session_date.asc(), SessionSchedule.start_time.asc()).limit(5).all()
     recent_rewards = member.reward_transactions.order_by(RewardTransaction.created_at.desc()).limit(5).all()
@@ -508,7 +539,7 @@ def competitions_rankings():
 @member_bp.route('/sessions/timetable')
 @login_required
 def sessions_timetable():
-    week = SessionWeek.query.filter_by(status='published').order_by(SessionWeek.week_start.desc()).first()
+    week = _latest_published_session_week()
     sessions_by_day = []
     if week:
         sessions = week.sessions.order_by(SessionSchedule.session_date.asc(), SessionSchedule.start_time.asc()).all()
@@ -528,7 +559,7 @@ def sessions_timetable():
 @member_bp.route('/sessions/instructors')
 @login_required
 def sessions_instructors():
-    week = SessionWeek.query.filter_by(status='published').order_by(SessionWeek.week_start.desc()).first()
+    week = _latest_published_session_week()
     instructors = []
     if week:
         sessions = week.sessions.all()

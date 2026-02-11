@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -86,11 +87,11 @@ def create_app():
     @app.context_processor
     def inject_guards():
         try:
-            from datetime import datetime
             from app.models import CompetitionGuard
             today = datetime.now().date()
             guards = CompetitionGuard.query.filter(CompetitionGuard.week_end >= today).order_by(CompetitionGuard.week_start.desc()).all()
         except Exception:
+            db.session.rollback()
             guards = []
         return {'guards_week': guards, 'current_year': datetime.now().year}
     
