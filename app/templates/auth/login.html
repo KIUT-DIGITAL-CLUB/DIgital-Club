@@ -70,14 +70,14 @@
                 <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
             </div>
             
-            <!-- {% if turnstile_site_key %} -->
+            {% if turnstile_site_key %}
             <div class="turnstile-wrap">
                 <div class="small text-muted mb-2">Please verify you are human to continue.</div>
-                <div id="turnstile-container" data-sitekey="0x4AAAAAACbGg9lKucTmaxSh"></div>
+                <div id="turnstile-container" data-sitekey="{{ turnstile_site_key }}"></div>
             </div>
-            <!-- {% else %}
+            {% else %}
             <div class="small text-danger mb-2">Human verification is not configured. Please contact admin.</div>
-            {% endif %} -->
+            {% endif %}
             <button type="submit" class="btn-primary" id="loginSubmit" style="width: 100%; margin-bottom: 1rem;">
                 <i class="fas fa-rocket"></i> Sign In
             </button>
