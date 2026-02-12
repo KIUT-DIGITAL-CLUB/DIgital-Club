@@ -280,29 +280,37 @@
                     <td>
                         <div class="btn-group">
                             <a href="{{ url_for('admin.member_detail', member_id=member.id) }}" 
-                               class="admin-btn admin-btn-sm admin-btn-primary">
-                                <i class="fas fa-eye"></i> View
+                               class="admin-btn admin-btn-sm admin-btn-primary" title="View member">
+                                <i class="fas fa-eye"></i>
                             </a>
                             <a href="{{ url_for('admin.add_payment', member_id=member.id) }}" 
-                               class="admin-btn admin-btn-sm admin-btn-success">
-                                <i class="fas fa-dollar-sign"></i> Add Payment
+                               class="admin-btn admin-btn-sm admin-btn-success" title="Add payment">
+                                <i class="fas fa-dollar-sign"></i>
                             </a>
                             <a href="{{ url_for('admin.add_points', member_id=member.id) }}" 
-                               class="admin-btn admin-btn-sm admin-btn-info">
-                                <i class="fas fa-plus"></i> Add Points
+                               class="admin-btn admin-btn-sm admin-btn-info" title="Add points">
+                                <i class="fas fa-plus"></i>
                             </a>
                             {% if member.user.role != 'admin' %}
                             <form method="POST" action="{{ url_for('admin.promote_member', member_id=member.id) }}" class="d-inline">
-                                <button type="submit" class="admin-btn admin-btn-sm admin-btn-warning" 
-                                        onclick="return confirm('Promote {{ member.full_name }} to admin?')">
-                                    <i class="fas fa-user-shield"></i> Make Admin
+                                <button
+                                    type="submit"
+                                    class="admin-btn admin-btn-sm admin-btn-warning js-confirm-submit"
+                                    data-confirm="{{ ('Promote ' ~ member.full_name ~ ' to admin?')|e }}"
+                                    title="Make admin"
+                                >
+                                    <i class="fas fa-user-shield"></i>
                                 </button>
                             </form>
                             {% elif not member.user.is_super_admin %}
                             <form method="POST" action="{{ url_for('admin.demote_member', member_id=member.id) }}" class="d-inline">
-                                <button type="submit" class="admin-btn admin-btn-sm admin-btn-secondary" 
-                                        onclick="return confirm('Demote {{ member.full_name }} to regular member?')">
-                                    <i class="fas fa-user"></i> Revoke Admin
+                                <button
+                                    type="submit"
+                                    class="admin-btn admin-btn-sm admin-btn-secondary js-confirm-submit"
+                                    data-confirm="{{ ('Demote ' ~ member.full_name ~ ' to regular member?')|e }}"
+                                    title="Revoke admin"
+                                >
+                                    <i class="fas fa-user"></i>
                                 </button>
                             </form>
                             {% else %}
@@ -311,6 +319,30 @@
                                 <i class="fas fa-crown"></i> Super Admin
                             </button>
                             {% endif %}
+                            <form id="toggle-active-form-{{ member.id }}" method="POST" action="{{ url_for('admin.toggle_member_active', member_id=member.id) }}" class="d-inline">
+                                <input type="hidden" name="admin_password" value="">
+                                <button
+                                    type="button"
+                                    class="admin-btn admin-btn-sm js-protected-submit {% if member.user.is_active_account %}admin-btn-warning{% else %}admin-btn-success{% endif %}"
+                                    data-form-id="toggle-active-form-{{ member.id }}"
+                                    data-confirm="{{ ((('Deactivate' if member.user.is_active_account else 'Activate') ~ ' account for ' ~ member.full_name ~ '?'))|e }}"
+                                    title="{{ 'Deactivate account' if member.user.is_active_account else 'Activate account' }}"
+                                >
+                                    <i class="fas {% if member.user.is_active_account %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                </button>
+                            </form>
+                            <form id="delete-account-form-{{ member.id }}" method="POST" action="{{ url_for('admin.delete_member_account', member_id=member.id) }}" class="d-inline">
+                                <input type="hidden" name="admin_password" value="">
+                                <button
+                                    type="button"
+                                    class="admin-btn admin-btn-sm admin-btn-danger js-protected-submit"
+                                    data-form-id="delete-account-form-{{ member.id }}"
+                                    data-confirm="{{ ('Delete account and all related data for ' ~ member.full_name ~ '? This cannot be undone.')|e }}"
+                                    title="Delete account"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
@@ -346,5 +378,45 @@
     <p>Try adjusting your filters or search criteria.</p>
 </div>
 {% endif %}
+<script>
+function submitProtectedAction(formId, confirmText) {
+    if (!window.confirm(confirmText)) {
+        return false;
+    }
+    const password = window.prompt('Enter your current admin password to confirm:');
+    if (!password) {
+        return false;
+    }
+    const form = document.getElementById(formId);
+    if (!form) {
+        return false;
+    }
+    const input = form.querySelector('input[name="admin_password"]');
+    if (!input) {
+        return false;
+    }
+    input.value = password;
+    form.submit();
+    return false;
+}
+
+document.querySelectorAll('.js-confirm-submit').forEach(function (btn) {
+    btn.addEventListener('click', function (event) {
+        var msg = btn.getAttribute('data-confirm') || 'Are you sure?';
+        if (!window.confirm(msg)) {
+            event.preventDefault();
+        }
+    });
+});
+
+document.querySelectorAll('.js-protected-submit').forEach(function (btn) {
+    btn.addEventListener('click', function (event) {
+        event.preventDefault();
+        var formId = btn.getAttribute('data-form-id');
+        var msg = btn.getAttribute('data-confirm') || 'Are you sure?';
+        submitProtectedAction(formId, msg);
+    });
+});
+</script>
 {% endblock %}
 

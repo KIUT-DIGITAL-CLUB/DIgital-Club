@@ -11,6 +11,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(20000))  # Increased to 256 to accommodate scrypt hashes
     role = db.Column(db.String(20), default='student')  # admin or student
     is_approved = db.Column(db.Boolean, default=False)
+    is_active_account = db.Column(db.Boolean, default=True, nullable=False)
     is_super_admin = db.Column(db.Boolean, default=False)  # Super admin cannot be demoted
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -22,6 +23,11 @@ class User(UserMixin, db.Model):
     
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    @property
+    def is_active(self):
+        # Flask-Login uses this to allow/block authentication.
+        return bool(self.is_active_account)
     
     def __repr__(self):
         return f'<User {self.email}>'

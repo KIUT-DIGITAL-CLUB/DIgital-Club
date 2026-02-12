@@ -1114,6 +1114,59 @@ def send_rsvp_notification(rsvp, status):
 # MEMBER MANAGEMENT ROUTES
 # ============================================================================
 
+def _verify_admin_password_or_redirect(member_id):
+    admin_password = (request.form.get('admin_password') or '').strip()
+    if not admin_password:
+        flash('Admin password is required for this action.', 'error')
+        return redirect(url_for('admin.members'))
+    if not current_user.check_password(admin_password):
+        flash('Invalid admin password.', 'error')
+        return redirect(url_for('admin.members'))
+    return None
+
+
+def _delete_member_account_data(user):
+    """Delete student account data safely across related tables."""
+    member = user.member
+    if member:
+        member_id = member.id
+
+        # Remove score rows tied to this member's submissions first.
+        submission_ids = [sid for (sid,) in db.session.query(CompetitionSubmission.id).filter_by(member_id=member_id).all()]
+        if submission_ids:
+            CompetitionScore.query.filter(CompetitionScore.submission_id.in_(submission_ids)).delete(synchronize_session=False)
+
+        CompetitionSubmission.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+        CompetitionWinner.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+        CompetitionGuard.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+        CompetitionEnrollment.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+        TeamMember.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+        MembershipPayment.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+        MemberTrophy.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+        RewardTransaction.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+        RSVP.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+        Project.query.filter_by(member_id=member_id).delete(synchronize_session=False)
+
+        db.session.delete(member)
+
+    # Remove user-linked technical/assignment rows.
+    CompetitionScore.query.filter_by(judge_id=user.id).delete(synchronize_session=False)
+    CompetitionJudge.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+    CompetitionEnrollment.query.filter_by(disqualified_by=user.id).update({'disqualified_by': None}, synchronize_session=False)
+    RSVP.query.filter_by(approved_by=user.id).update({'approved_by': None}, synchronize_session=False)
+    RSVP.query.filter_by(checked_in_by=user.id).update({'checked_in_by': None}, synchronize_session=False)
+    SessionReport.query.filter_by(winner_user_id=user.id).update({'winner_user_id': None}, synchronize_session=False)
+    SessionReport.query.filter_by(approved_by=user.id).update({'approved_by': None}, synchronize_session=False)
+
+    # If this user instructed sessions, remove reports then sessions.
+    session_ids = [sid for (sid,) in db.session.query(SessionSchedule.id).filter_by(instructor_user_id=user.id).all()]
+    if session_ids:
+        SessionReport.query.filter(SessionReport.session_id.in_(session_ids)).delete(synchronize_session=False)
+        SessionSchedule.query.filter(SessionSchedule.id.in_(session_ids)).delete(synchronize_session=False)
+    SessionReport.query.filter_by(instructor_user_id=user.id).delete(synchronize_session=False)
+
+    db.session.delete(user)
+
 @admin_bp.route('/members')
 @login_required
 @admin_required
@@ -1518,6 +1571,68 @@ def demote_member(member_id):
     db.session.commit()
     
     flash(f'{member.full_name} has been demoted to regular member.', 'success')
+    return redirect(url_for('admin.members'))
+
+
+@admin_bp.route('/members/<int:member_id>/toggle-active', methods=['POST'])
+@login_required
+@admin_required
+def toggle_member_active(member_id):
+    redirect_resp = _verify_admin_password_or_redirect(member_id)
+    if redirect_resp:
+        return redirect_resp
+
+    member = Member.query.get_or_404(member_id)
+    user = member.user
+    if not user:
+        flash('Member account not found.', 'error')
+        return redirect(url_for('admin.members'))
+    if user.id == current_user.id:
+        flash('You cannot deactivate your own account.', 'error')
+        return redirect(url_for('admin.members'))
+    if user.is_super_admin:
+        flash('Super admin account cannot be deactivated.', 'error')
+        return redirect(url_for('admin.members'))
+
+    user.is_active_account = not bool(user.is_active_account)
+    db.session.commit()
+    state = 'activated' if user.is_active_account else 'deactivated'
+    flash(f'{member.full_name} account has been {state}.', 'success')
+    return redirect(url_for('admin.members'))
+
+
+@admin_bp.route('/members/<int:member_id>/delete-account', methods=['POST'])
+@login_required
+@admin_required
+def delete_member_account(member_id):
+    redirect_resp = _verify_admin_password_or_redirect(member_id)
+    if redirect_resp:
+        return redirect_resp
+
+    member = Member.query.get_or_404(member_id)
+    user = member.user
+    if not user:
+        flash('Member account not found.', 'error')
+        return redirect(url_for('admin.members'))
+    if user.id == current_user.id:
+        flash('You cannot delete your own account.', 'error')
+        return redirect(url_for('admin.members'))
+    if user.is_super_admin:
+        flash('Super admin account cannot be deleted.', 'error')
+        return redirect(url_for('admin.members'))
+    if user.role == 'admin':
+        flash('Admin accounts cannot be deleted from this page. Demote first if needed.', 'error')
+        return redirect(url_for('admin.members'))
+
+    try:
+        display_name = member.full_name
+        _delete_member_account_data(user)
+        db.session.commit()
+        flash(f'{display_name} account and related records were deleted.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception('Failed deleting member account')
+        flash(f'Failed to delete account: {exc}', 'error')
     return redirect(url_for('admin.members'))
 
 

@@ -1,6 +1,6 @@
-from flask import Flask
+from flask import Flask, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user, logout_user
 from flask_migrate import Migrate
 import os
 from datetime import datetime
@@ -43,6 +43,36 @@ def _migrate_password_hash_column():
         # Silently fail - migration is optional and might fail if column doesn't exist yet
         pass
 
+
+def _migrate_user_active_account_column():
+    """Compatibility migration: add user.is_active_account if missing."""
+    try:
+        from sqlalchemy import inspect, text
+
+        inspector = inspect(db.engine)
+        if 'user' not in inspector.get_table_names():
+            return
+
+        cols = {c['name'] for c in inspector.get_columns('user')}
+        if 'is_active_account' in cols:
+            return
+
+        db_uri = str(db.engine.url)
+        with db.engine.connect() as conn:
+            if 'postgresql' in db_uri:
+                conn.execute(
+                    text('ALTER TABLE "user" ADD COLUMN is_active_account BOOLEAN NOT NULL DEFAULT TRUE')
+                )
+            else:
+                # SQLite and others
+                conn.execute(
+                    text('ALTER TABLE "user" ADD COLUMN is_active_account BOOLEAN NOT NULL DEFAULT 1')
+                )
+            conn.commit()
+    except Exception:
+        # Keep startup resilient; proper Alembic migration still exists.
+        pass
+
 def create_app():
     app = Flask(__name__)
     
@@ -71,6 +101,7 @@ def create_app():
     with app.app_context():
         # Keep this compatibility migration for existing databases.
         _migrate_password_hash_column()
+        _migrate_user_active_account_column()
     
     # Configure login manager
     login_manager.login_view = 'auth.login'
@@ -94,6 +125,13 @@ def create_app():
             db.session.rollback()
             guards = []
         return {'guards_week': guards, 'current_year': datetime.now().year}
+
+    @app.before_request
+    def enforce_active_accounts():
+        if current_user.is_authenticated and not getattr(current_user, 'is_active_account', True):
+            logout_user()
+            flash('Your account has been deactivated. Please contact an administrator.', 'error')
+            return redirect(url_for('auth.login'))
     
     # User loader for Flask-Login
     from app.models import User

@@ -128,6 +128,9 @@ def login():
         user = User.query.filter_by(email=email).first()
         
         if user and user.check_password(password):
+            if not user.is_active_account:
+                flash('Your account has been deactivated. Please contact an administrator.', 'error')
+                return render_template('auth/login.html')
             if not user.is_approved and user.role == 'student':
                 flash('Your account is pending admin approval.', 'warning')
                 return render_template('auth/approval_pending.html')
