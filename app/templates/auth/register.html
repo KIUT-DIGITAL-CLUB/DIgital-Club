@@ -721,6 +721,16 @@
                 </div>
             </div>
             
+            <!-- Verification -->
+            <div id="turnstile-wrap" style="display:none; margin-bottom: 0.75rem;">
+                {% if turnstile_site_key %}
+                <div class="small text-muted mb-2">Please verify you are human to continue.</div>
+                <div id="turnstile-container"></div>
+                {% else %}
+                <div class="small text-danger">Human verification is not configured. Please contact admin.</div>
+                {% endif %}
+            </div>
+
             <!-- Navigation Buttons -->
             <div class="form-navigation">
                 <button type="button" class="btn-nav btn-previous" id="prevBtn" style="display: none;">
@@ -839,9 +849,17 @@
             nextBtn.style.display = 'none';
             submitBtn.style.display = 'flex';
             submitBtn.style.flex = '1';
+            const turnstileWrap = document.getElementById('turnstile-wrap');
+            if (turnstileWrap) {
+                turnstileWrap.style.display = 'block';
+            }
         } else {
             nextBtn.style.display = 'flex';
             submitBtn.style.display = 'none';
+            const turnstileWrap = document.getElementById('turnstile-wrap');
+            if (turnstileWrap) {
+                turnstileWrap.style.display = 'none';
+            }
         }
     }
     
@@ -939,4 +957,43 @@
         });
     });
 </script>
+{% if turnstile_site_key %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script>
+    var turnstileToken = '';
+    function getTurnstileTheme() {
+        var rootTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        return rootTheme === 'light' ? 'light' : 'dark';
+    }
+    function renderTurnstile() {
+        var mount = document.getElementById('turnstile-container');
+        if (!mount || !window.turnstile) return;
+        mount.innerHTML = '';
+        window.turnstile.render(mount, {
+            sitekey: {{ turnstile_site_key|tojson }},
+            theme: getTurnstileTheme(),
+            callback: function (token) {
+                turnstileToken = token || '';
+                var submitBtn = document.getElementById('submitBtn');
+                if (submitBtn) submitBtn.disabled = !turnstileToken;
+            },
+            'expired-callback': function () {
+                turnstileToken = '';
+                var submitBtn = document.getElementById('submitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+            }
+        });
+    }
+    window.addEventListener('load', function () {
+        renderTurnstile();
+        var observer = new MutationObserver(function () { renderTurnstile(); });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) submitBtn.disabled = true;
+    });
+</script>
+{% endif %}
 {% endblock %}

@@ -81,6 +81,11 @@
                 <span>Rankings</span>
             </a>
 
+            <a href="{{ url_for('member.events') }}" class="admin-nav-item {% if request.endpoint in ['member.events', 'member.event_rsvp'] %}active{% endif %}">
+                <i class="fas fa-calendar-check"></i>
+                <span>Events</span>
+            </a>
+
             {% set profile_endpoints = [
                 'member.profile',
                 'member.edit_profile',

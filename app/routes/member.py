@@ -25,6 +25,7 @@ from app.models import (
     SessionReport,
     Team,
     TeamMember,
+    Event,
 )
 from app import db
 from app.id_generator import generate_digital_id, delete_digital_id
@@ -603,6 +604,80 @@ def competitions_rankings():
         team_members=team_members,
         my_entry=my_entry,
     )
+
+
+@member_bp.route('/events')
+@login_required
+def events():
+    member = current_user.member
+    now = datetime.utcnow()
+    query = Event.query.filter(Event.target_audience.in_(['members', 'paid_members']))
+    if not (member and member.has_valid_membership()):
+        query = query.filter(Event.target_audience == 'members')
+    events_all = query.order_by(Event.event_date.asc()).all()
+    upcoming_events = [e for e in events_all if e.event_date >= now]
+    past_events = [e for e in events_all if e.event_date < now]
+
+    my_rsvps = {}
+    if member and events_all:
+        rsvps = RSVP.query.filter(
+            RSVP.member_id == member.id,
+            RSVP.event_id.in_([e.id for e in events_all]),
+        ).all()
+        my_rsvps = {r.event_id: r for r in rsvps}
+
+    return render_template(
+        'member/events.html',
+        upcoming_events=upcoming_events,
+        past_events=past_events,
+        my_rsvps=my_rsvps,
+        now=now,
+    )
+
+
+@member_bp.route('/events/<int:event_id>/rsvp', methods=['POST'])
+@login_required
+def event_rsvp(event_id):
+    event = Event.query.get_or_404(event_id)
+    member = current_user.member
+    if not member:
+        flash('Please complete your profile first.', 'warning')
+        return redirect(url_for('member.profile'))
+    if event.target_audience not in ['members', 'paid_members']:
+        flash('This event RSVP is available on the public events page.', 'warning')
+        return redirect(url_for('member.events'))
+    if event.target_audience == 'paid_members' and not member.has_valid_membership():
+        flash('This event requires an active paid membership.', 'error')
+        return redirect(url_for('member.events'))
+
+    existing = RSVP.query.filter_by(event_id=event.id, member_id=member.id).first()
+    if existing:
+        flash('You already submitted RSVP for this event.', 'info')
+        return redirect(url_for('member.events'))
+
+    if event.max_attendees:
+        approved_count = RSVP.query.filter_by(event_id=event.id, status='approved').count()
+        if approved_count >= event.max_attendees:
+            flash('This event is at capacity.', 'error')
+            return redirect(url_for('member.events'))
+
+    rsvp = RSVP(
+        event_id=event.id,
+        member_id=member.id,
+        full_name=member.full_name or current_user.email,
+        email=current_user.email,
+        phone=member.phone,
+        course=member.course,
+        year=member.year,
+        dietary_requirements=(request.form.get('dietary_requirements') or '').strip() or None,
+        emergency_contact=(request.form.get('emergency_contact') or '').strip() or None,
+        emergency_phone=(request.form.get('emergency_phone') or '').strip() or None,
+        additional_notes=(request.form.get('additional_notes') or '').strip() or None,
+    )
+    db.session.add(rsvp)
+    db.session.commit()
+    flash('RSVP submitted. You will be notified after review.', 'success')
+    return redirect(url_for('member.events'))
 
 
 @member_bp.route('/sessions/timetable')

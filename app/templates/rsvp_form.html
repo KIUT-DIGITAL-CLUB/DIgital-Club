@@ -2,251 +2,644 @@
 
 {% block title %}RSVP - {{ event.title }} - Digital Club{% endblock %}
 
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Public RSVP Page - Enhanced Modern Design */
+    .rsvp-page {
+        padding: 7rem 0 4rem;
+        background-color: var(--bg-primary);
+    }
+    
+    /* Event Header Card */
+    .event-header-card {
+        background: var(--gradient-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+    
+    .event-header-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
+    
+    .event-title-lg {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        font-family: 'Fira Code', monospace;
+    }
+    
+    .event-meta-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+    
+    .event-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .event-meta-item i {
+        color: var(--primary-color);
+        width: 18px;
+        text-align: center;
+    }
+    
+    .event-badges {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+    }
+    
+    .event-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border: 1px solid;
+    }
+    
+    .badge-category {
+        background: rgba(var(--particle-color), 0.1);
+        color: var(--primary-color);
+        border-color: rgba(var(--particle-color), 0.3);
+    }
+    
+    .badge-public {
+        background: rgba(0, 255, 0, 0.1);
+        color: var(--success-color);
+        border-color: rgba(0, 255, 0, 0.3);
+    }
+    
+    /* RSVP Card */
+    .rsvp-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+    
+    .rsvp-card-header {
+        background: var(--surface-1);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .rsvp-card-header h4 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .rsvp-card-header p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 0;
+    }
+    
+    .rsvp-card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Event Summary */
+    .event-summary {
+        background: var(--surface-1);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .event-summary-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+    }
+    
+    .event-summary-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .event-summary-description {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+        line-height: 1.6;
+    }
+    
+    /* Form Styles */
+    .rsvp-form {
+        width: 100%;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+    
+    .form-group-full {
+        grid-column: 1 / -1;
+    }
+    
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.4rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        background-color: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 255, 255, 0.1);
+    }
+    
+    .form-control::placeholder {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    /* Conditional Fields */
+    .conditional-fields {
+        background: var(--surface-1);
+        border-radius: var(--border-radius-sm);
+        padding: 1rem;
+        margin-top: 0.5rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .conditional-fields.hidden {
+        display: none;
+    }
+    
+    /* Turnstile */
+    .turnstile-container {
+        margin: 1.25rem 0 0.75rem;
+        display: flex;
+        justify-content: center;
+    }
+    
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-rsvp {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 2rem;
+        border-radius: var(--border-radius-xl);
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        box-shadow: 0 2px 8px rgba(0, 255, 255, 0.2);
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+    }
+    
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+    
+    .btn-secondary:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        background: rgba(0, 255, 255, 0.05);
+    }
+    
+    .rsvp-note {
+        margin-top: 1.25rem;
+        padding: 1rem;
+        background: rgba(var(--particle-color), 0.05);
+        border-radius: var(--border-radius-sm);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        border: 1px dashed var(--border-color);
+    }
+    
+    .rsvp-note i {
+        color: var(--primary-color);
+        margin-right: 0.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .rsvp-page {
+            padding: 6rem 0 2rem;
+        }
+        
+        .event-header-card {
+            padding: 1.5rem;
+        }
+        
+        .event-title-lg {
+            font-size: 1.5rem;
+        }
+        
+        .event-meta-bar {
+            gap: 1rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-rsvp {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .event-title-lg {
+            font-size: 1.25rem;
+        }
+        
+        .rsvp-card-header {
+            padding: 1rem 1.25rem;
+        }
+        
+        .rsvp-card-body {
+            padding: 1.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-3 py-md-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-8">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white text-center py-3 py-md-4">
-                    <h2 class="mb-0 h4 h2-md">
-                        <i class="fas fa-calendar-check me-2"></i>
-                        RSVP for Event
-                    </h2>
-                </div>
-                
-                <div class="card-body p-3 p-md-5">
-                    <!-- Event Information -->
-                    <div class="event-info mb-4 p-3 p-md-4 bg-light rounded">
-                        <h4 class="text-primary mb-3 h5 h4-md">
-                            <i class="fas fa-calendar-alt me-2"></i>
-                            {{ event.title }}
-                        </h4>
-                        <div class="row">
-                            <div class="col-12 col-md-6 mb-3 mb-md-0">
-                                <p class="mb-2">
-                                    <i class="fas fa-clock me-2"></i>
-                                    <strong>Date & Time:</strong><br>
-                                    <span class="text-break">{{ event.event_date.strftime('%B %d, %Y at %I:%M %p') }}</span>
-                                </p>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <p class="mb-2">
-                                    <i class="fas fa-map-marker-alt me-2"></i>
-                                    <strong>Location:</strong><br>
-                                    <span class="text-break">{{ event.location or 'TBA' }}</span>
-                                </p>
-                            </div>
+<section class="rsvp-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Event Header -->
+                <div class="event-header-card">
+                    <h1 class="event-title-lg">{{ event.title }}</h1>
+                    
+                    <div class="event-meta-bar">
+                        <div class="event-meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>{{ event.event_date.strftime('%A, %B %d, %Y') }}</span>
                         </div>
-                        {% if event.description %}
-                        <div class="mt-3">
-                            <p class="mb-0">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>Description:</strong><br>
-                                <span class="text-break">{{ event.description }}</span>
-                            </p>
+                        <div class="event-meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ event.event_date.strftime('%H:%M') }}</span>
+                        </div>
+                        <div class="event-meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ event.location or 'Location TBA' }}</span>
+                        </div>
+                        {% if event.max_attendees %}
+                        <div class="event-meta-item">
+                            <i class="fas fa-users"></i>
+                            <span>{{ event.attendees_count if event.attendees_count is defined else 0 }} / {{ event.max_attendees }} spots</span>
                         </div>
                         {% endif %}
                     </div>
-
-                    <!-- RSVP Form -->
-                    <form method="POST" class="needs-validation" novalidate>
-                        <div class="row">
-                            <!-- Personal Information -->
-                            <div class="col-12">
-                                <h5 class="text-primary mb-3 h6 h5-md">
-                                    <i class="fas fa-user me-2"></i>
-                                    Personal Information
-                                </h5>
+                    
+                    <div class="event-badges">
+                        <span class="event-badge badge-category">
+                            <i class="fas fa-tag"></i> {{ event.category|title }}
+                        </span>
+                        <span class="event-badge badge-public">
+                            <i class="fas fa-globe"></i> Public Event
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- RSVP Card -->
+                <div class="rsvp-card">
+                    <div class="rsvp-card-header">
+                        <h4><i class="fas fa-calendar-check"></i> RSVP Registration</h4>
+                        <p>Please fill out the form below to register for this event.</p>
+                    </div>
+                    
+                    <div class="rsvp-card-body">
+                        <!-- Event Summary (for quick reference) -->
+                        <div class="event-summary">
+                            <div class="event-summary-title">{{ event.title }}</div>
+                            <div class="event-summary-details">
+                                <span><i class="fas fa-calendar"></i> {{ event.event_date.strftime('%b %d, %Y') }}</span>
+                                <span><i class="fas fa-clock"></i> {{ event.event_date.strftime('%H:%M') }}</span>
+                                <span><i class="fas fa-location-dot"></i> {{ event.location or 'TBA' }}</span>
                             </div>
-                            
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-lg" id="full_name" name="full_name" required>
-                                <div class="invalid-feedback">
-                                    Please provide your full name.
-                                </div>
+                            {% if event.description %}
+                            <div class="event-summary-description">
+                                {{ event.description[:300] }}{% if event.description|length > 300 %}...{% endif %}
                             </div>
-                            
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control form-control-lg" id="email" name="email" required>
-                                <div class="invalid-feedback">
-                                    Please provide a valid email address.
-                                </div>
-                            </div>
-                            
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="phone" class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control form-control-lg" id="phone" name="phone">
-                            </div>
-                            
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="course" class="form-label">Course/Program</label>
-                                <input type="text" class="form-control form-control-lg" id="course" name="course" placeholder="e.g., Computer Science">
-                            </div>
-                            
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="year" class="form-label">Year of Study</label>
-                                <select class="form-select form-select-lg" id="year" name="year">
-                                    <option value="">Select Year</option>
-                                    <option value="Year 1">Year 1</option>
-                                    <option value="Year 2">Year 2</option>
-                                    <option value="Year 3">Year 3</option>
-                                    <option value="Year 4">Year 4</option>
-                                    <option value="Graduate">Graduate</option>
-                                    <option value="Postgraduate">Postgraduate</option>
-                                </select>
-                            </div>
-                            
-                            <!-- Emergency Contact -->
-                            <div class="col-12 mt-4">
-                                <h5 class="text-primary mb-3 h6 h5-md">
-                                    <i class="fas fa-phone me-2"></i>
-                                    Emergency Contact
-                                </h5>
-                            </div>
-                            
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="emergency_contact" class="form-label">Emergency Contact Name</label>
-                                <input type="text" class="form-control form-control-lg" id="emergency_contact" name="emergency_contact">
-                            </div>
-                            
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="emergency_phone" class="form-label">Emergency Contact Phone</label>
-                                <input type="tel" class="form-control form-control-lg" id="emergency_phone" name="emergency_phone">
-                            </div>
-                            
-                            <!-- Additional Information -->
-                            <div class="col-12 mt-4">
-                                <h5 class="text-primary mb-3 h6 h5-md">
-                                    <i class="fas fa-utensils me-2"></i>
-                                    Additional Information
-                                </h5>
-                            </div>
-                            
-                            <div class="col-12 mb-3">
-                                <label for="dietary_requirements" class="form-label">Dietary Requirements</label>
-                                <textarea class="form-control form-control-lg" id="dietary_requirements" name="dietary_requirements" rows="2" placeholder="Any allergies or dietary restrictions?"></textarea>
-                            </div>
-                            
-                            <div class="col-12 mb-4">
-                                <label for="additional_notes" class="form-label">Additional Notes</label>
-                                <textarea class="form-control form-control-lg" id="additional_notes" name="additional_notes" rows="3" placeholder="Any other information you'd like to share?"></textarea>
-                            </div>
+                            {% endif %}
                         </div>
                         
-                        <!-- Submit Button -->
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary btn-lg px-4 px-md-5 w-100 w-md-auto">
-                                <i class="fas fa-paper-plane me-2"></i>
-                                Submit RSVP
-                            </button>
-                        </div>
-                    </form>
-                    
-                    <!-- Information Notice -->
-                    <div class="alert alert-info mt-4 p-3 p-md-4" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Important:</strong> Your RSVP will be reviewed by our admin team. You will receive an email/SMS notification once your RSVP is approved or rejected. If approved, you'll receive an acceptance code that you must bring to the event.
+                        <!-- RSVP Form -->
+                        <form method="POST" class="rsvp-form" novalidate>
+                            <div class="form-grid">
+                                <!-- Full Name -->
+                                <div class="form-group">
+                                    <label class="form-label" for="full_name">Full Name *</label>
+                                    <input type="text" class="form-control" id="full_name" name="full_name" required placeholder="Enter your full name">
+                                </div>
+                                
+                                <!-- Email -->
+                                <div class="form-group">
+                                    <label class="form-label" for="email">Email Address *</label>
+                                    <input type="email" class="form-control" id="email" name="email" required placeholder="you@example.com">
+                                </div>
+                                
+                                <!-- Phone -->
+                                <div class="form-group">
+                                    <label class="form-label" for="phone">Phone Number *</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" required placeholder="+1234567890">
+                                </div>
+                                
+                                <!-- Attendance Type -->
+                                <div class="form-group">
+                                    <label class="form-label" for="attendee_type">Attendance Type *</label>
+                                    <select class="form-control" id="attendee_type" name="attendee_type" required>
+                                        <option value="" disabled selected>Select your status</option>
+                                        <option value="student">Student</option>
+                                        <option value="non_student">Not a Student</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Conditional Fields - Student -->
+                            <div id="student_fields" class="conditional-fields hidden">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label" for="study_field">Field of Study *</label>
+                                        <select class="form-control" id="study_field" name="study_field">
+                                            <option value="" disabled selected>Select your field</option>
+                                            <option value="Computing and IT">Computing and IT</option>
+                                            <option value="Engineering">Engineering</option>
+                                            <option value="Health and Medicine">Health and Medicine</option>
+                                            <option value="Business and Economics">Business and Economics</option>
+                                            <option value="Education">Education</option>
+                                            <option value="Law and Governance">Law and Governance</option>
+                                            <option value="Science and Mathematics">Science and Mathematics</option>
+                                            <option value="Agriculture and Environment">Agriculture and Environment</option>
+                                            <option value="Arts and Humanities">Arts and Humanities</option>
+                                            <option value="Hospitality and Tourism">Hospitality and Tourism</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="study_year">Year of Study *</label>
+                                        <select class="form-control" id="study_year" name="study_year">
+                                            <option value="" disabled selected>Select year</option>
+                                            <option value="Year 1">Year 1</option>
+                                            <option value="Year 2">Year 2</option>
+                                            <option value="Year 3">Year 3</option>
+                                            <option value="Year 4">Year 4</option>
+                                            <option value="Year 5">Year 5</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Conditional Fields - Non-Student -->
+                            <div id="non_student_fields" class="conditional-fields hidden">
+                                <div class="form-group">
+                                    <label class="form-label" for="non_student_role">You Are *</label>
+                                    <select class="form-control" id="non_student_role" name="non_student_role">
+                                        <option value="" disabled selected>Select your role</option>
+                                        <option value="staff">University Staff</option>
+                                        <option value="guest">Guest / External</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Emergency Contact Information -->
+                            <div class="form-grid mt-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="emergency_contact">Emergency Contact Name</label>
+                                    <input type="text" class="form-control" id="emergency_contact" name="emergency_contact" placeholder="Contact person">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="emergency_phone">Emergency Contact Phone</label>
+                                    <input type="tel" class="form-control" id="emergency_phone" name="emergency_phone" placeholder="Emergency number">
+                                </div>
+                            </div>
+                            
+                            <!-- Dietary Requirements -->
+                            <div class="form-group mt-3">
+                                <label class="form-label" for="dietary_requirements">Dietary Requirements</label>
+                                <textarea class="form-control" id="dietary_requirements" name="dietary_requirements" rows="2" placeholder="Any allergies, dietary restrictions, or preferences"></textarea>
+                            </div>
+                            
+                            <!-- Additional Notes -->
+                            <div class="form-group mt-3">
+                                <label class="form-label" for="additional_notes">Additional Notes</label>
+                                <textarea class="form-control" id="additional_notes" name="additional_notes" rows="2" placeholder="Anything else we should know?"></textarea>
+                            </div>
+                            
+                            <!-- Turnstile Verification -->
+                            {% if turnstile_site_key %}
+                            <div class="form-group mt-3">
+                                <div class="form-label">Human Verification</div>
+                                <div class="turnstile-container" id="turnstile-container" data-sitekey="{{ turnstile_site_key }}"></div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning mt-3">
+                                <i class="fas fa-exclamation-triangle"></i> Human verification is not configured. Please contact the administrator.
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Form Actions -->
+                            <div class="form-actions">
+                                <button type="submit" class="btn-rsvp btn-primary" id="rsvpSubmit" disabled>
+                                    <i class="fas fa-paper-plane"></i> Submit RSVP
+                                </button>
+                                <a href="{{ url_for('main.events') }}" class="btn-rsvp btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Events
+                                </a>
+                            </div>
+                            
+                            <!-- RSVP Note -->
+                            <div class="rsvp-note">
+                                <i class="fas fa-info-circle"></i>
+                                Your RSVP will be reviewed by the event organizer. You will receive an email confirmation upon approval.
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<style>
-/* Mobile-specific styles */
-@media (max-width: 767.98px) {
-    .h4 {
-        font-size: 1.25rem;
-    }
-    
-    .h5 {
-        font-size: 1.1rem;
-    }
-    
-    .h6 {
-        font-size: 1rem;
-    }
-    
-    .form-control-lg,
-    .form-select-lg {
-        font-size: 16px; /* Prevents zoom on iOS */
-        padding: 0.75rem 1rem;
-    }
-    
-    .btn-lg {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-    }
-    
-    .card-body {
-        padding: 1rem !important;
-    }
-    
-    .event-info {
-        padding: 1rem !important;
-    }
-    
-    .alert {
-        font-size: 0.9rem;
-    }
-}
-
-/* Desktop-specific styles */
-@media (min-width: 768px) {
-    .h2-md {
-        font-size: 2rem;
-    }
-    
-    .h4-md {
-        font-size: 1.5rem;
-    }
-    
-    .h5-md {
-        font-size: 1.25rem;
-    }
-}
-
-/* Touch-friendly improvements */
-.form-control,
-.form-select {
-    min-height: 44px; /* iOS recommended touch target */
-}
-
-.btn {
-    min-height: 44px;
-}
-
-/* Better spacing for mobile */
-@media (max-width: 767.98px) {
-    .mb-3 {
-        margin-bottom: 1rem !important;
-    }
-    
-    .mt-4 {
-        margin-top: 1.5rem !important;
-    }
-}
-</style>
-
+<!-- Turnstile Script -->
+{% if turnstile_site_key %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script>
-// Bootstrap form validation
-(function() {
-    'use strict';
-    window.addEventListener('load', function() {
-        var forms = document.getElementsByClassName('needs-validation');
-        var validation = Array.prototype.filter.call(forms, function(form) {
-            form.addEventListener('submit', function(event) {
-                if (form.checkValidity() === false) {
-                    event.preventDefault();
-                    event.stopPropagation();
+    (function() {
+        'use strict';
+        
+        // Turnstile configuration
+        var turnstileWidgetId = null;
+        var rsvpTurnstileToken = '';
+        
+        function getTurnstileTheme() {
+            return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        }
+        
+        function renderTurnstile() {
+            var mount = document.getElementById('turnstile-container');
+            if (!mount || !window.turnstile) return;
+            
+            // Clear previous widget
+            mount.innerHTML = '';
+            
+            var sitekey = mount.getAttribute('data-sitekey');
+            if (!sitekey) return;
+            turnstileWidgetId = window.turnstile.render(mount, {
+                sitekey: sitekey,
+                theme: getTurnstileTheme(),
+                callback: function(token) {
+                    rsvpTurnstileToken = token || '';
+                    var btn = document.getElementById('rsvpSubmit');
+                    if (btn) btn.disabled = !rsvpTurnstileToken;
+                },
+                'expired-callback': function() {
+                    rsvpTurnstileToken = '';
+                    var btn = document.getElementById('rsvpSubmit');
+                    if (btn) btn.disabled = true;
                 }
-                form.classList.add('was-validated');
-            }, false);
+            });
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', function() {
+            renderTurnstile();
+            
+            // Disable submit button initially
+            var btn = document.getElementById('rsvpSubmit');
+            if (btn) btn.disabled = true;
+            
+            // Watch for theme changes
+            var observer = new MutationObserver(function() {
+                if (turnstileWidgetId !== null) {
+                    renderTurnstile();
+                }
+            });
+            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
         });
-    }, false);
-})();
+    })();
+</script>
+{% endif %}
+
+<!-- Conditional Fields Script -->
+<script>
+    (function() {
+        var typeSelect = document.getElementById('attendee_type');
+        var studentFields = document.getElementById('student_fields');
+        var nonStudentFields = document.getElementById('non_student_fields');
+        var studyField = document.getElementById('study_field');
+        var studyYear = document.getElementById('study_year');
+        var nonStudentRole = document.getElementById('non_student_role');
+        
+        function toggleFields() {
+            var value = typeSelect.value;
+            
+            // Hide all conditional fields first
+            studentFields.classList.add('hidden');
+            nonStudentFields.classList.add('hidden');
+            
+            // Remove required attributes
+            if (studyField) studyField.required = false;
+            if (studyYear) studyYear.required = false;
+            if (nonStudentRole) nonStudentRole.required = false;
+            
+            // Show and set required based on selection
+            if (value === 'student') {
+                studentFields.classList.remove('hidden');
+                if (studyField) studyField.required = true;
+                if (studyYear) studyYear.required = true;
+            } else if (value === 'non_student') {
+                nonStudentFields.classList.remove('hidden');
+                if (nonStudentRole) nonStudentRole.required = true;
+            }
+        }
+        
+        if (typeSelect) {
+            typeSelect.addEventListener('change', toggleFields);
+            // Initial call to set correct state
+            toggleFields();
+        }
+    })();
 </script>
 {% endblock %}

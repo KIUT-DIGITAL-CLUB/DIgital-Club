@@ -63,6 +63,7 @@
                     <th>Category</th>
                     <th>Date & Time</th>
                     <th>Location</th>
+                    <th>Audience</th>
                     <th>RSVPs</th>
                     <th>Actions</th>
                 </tr>
@@ -113,6 +114,15 @@
                         <span class="admin-badge admin-badge-secondary">{{ event.location or 'TBA' }}</span>
                         {% if event.max_attendees %}
                         <br><small >Max: {{ event.max_attendees }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if event.target_audience == 'everyone' %}
+                            <span class="admin-badge admin-badge-success">Public</span>
+                        {% elif event.target_audience == 'members' %}
+                            <span class="admin-badge admin-badge-primary">Members</span>
+                        {% else %}
+                            <span class="admin-badge admin-badge-warning">Paid Members</span>
                         {% endif %}
                     </td>
                     <td>

@@ -42,6 +42,12 @@
         text-align: center;
         margin-top: 2rem;
     }
+    .turnstile-wrap {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin: 1rem 0;
+    }
 </style>
 {% endblock %}
 
@@ -53,7 +59,7 @@
             <p>Sign in to your Digital Club account</p>
         </div>
         
-        <form method="POST">
+        <form method="POST" id="loginForm">
             <div class="form-group">
                 <label class="form-label">Email Address</label>
                 <input type="email" name="email" class="form-control" placeholder="your.email@kiut.ac.tz" required>
@@ -64,7 +70,15 @@
                 <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
             </div>
             
-            <button type="submit" class="btn-primary" style="width: 100%; margin-bottom: 1rem;">
+            {% if turnstile_site_key %}
+            <div class="turnstile-wrap">
+                <div class="small text-muted mb-2">Please verify you are human to continue.</div>
+                <div id="turnstile-container" data-sitekey="{{ turnstile_site_key }}"></div>
+            </div>
+            {% else %}
+            <div class="small text-danger mb-2">Human verification is not configured. Please contact admin.</div>
+            {% endif %}
+            <button type="submit" class="btn-primary" id="loginSubmit" style="width: 100%; margin-bottom: 1rem;">
                 <i class="fas fa-rocket"></i> Sign In
             </button>
         </form>
@@ -85,4 +99,57 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if turnstile_site_key %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script>
+    var loginTurnstileToken = '';
+    function getTurnstileTheme() {
+        var rootTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        return rootTheme === 'light' ? 'light' : 'dark';
+    }
+    function renderTurnstile() {
+        var mount = document.getElementById('turnstile-container');
+        if (!mount || !window.turnstile) return;
+        mount.innerHTML = '';
+        var sitekey = mount.getAttribute('data-sitekey');
+        if (!sitekey) return;
+        window.turnstile.render(mount, {
+            sitekey: sitekey,
+            theme: getTurnstileTheme(),
+            callback: function (token) {
+                loginTurnstileToken = token || '';
+                var btn = document.getElementById('loginSubmit');
+                if (btn) btn.disabled = !loginTurnstileToken;
+            },
+            'expired-callback': function () {
+                loginTurnstileToken = '';
+                var btn = document.getElementById('loginSubmit');
+                if (btn) btn.disabled = true;
+            }
+        });
+    }
+    window.addEventListener('load', function () {
+        renderTurnstile();
+        var observer = new MutationObserver(function () { renderTurnstile(); });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var btn = document.getElementById('loginSubmit');
+        if (btn) btn.disabled = true;
+        var form = document.getElementById('loginForm');
+        if (form) {
+            form.addEventListener('submit', function () {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
 {% endblock %}

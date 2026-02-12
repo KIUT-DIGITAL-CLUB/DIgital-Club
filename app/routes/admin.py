@@ -9,12 +9,17 @@ from app.models import (
     FinancialTransaction, Competition, CompetitionJudge, CompetitionCriteria,
     CompetitionSubmission, CompetitionScore, CompetitionReward,
     CompetitionSponsor, CompetitionSponsorLink, CompetitionWinner, CompetitionGuard,
-    CompetitionEnrollment, SessionWeek, SessionSchedule, SessionReport, Team, TeamMember
+    CompetitionEnrollment, SessionWeek, SessionSchedule, SessionReport, Team, TeamMember,
+    DailyActiveUser
 )
 from app import db
 from app.utils import get_notification_service
 from app.pdf_generator import generate_member_ids_pdf
 from datetime import datetime, timedelta
+try:
+    from zoneinfo import ZoneInfo
+except Exception:  # pragma: no cover
+    ZoneInfo = None
 import os
 import json
 import csv
@@ -40,6 +45,12 @@ def dashboard():
     pending_approvals = User.query.filter_by(role='student', is_approved=False).count()
     upcoming_events = Event.query.filter(Event.event_date >= datetime.utcnow()).count()
     newsletter_subscribers = Newsletter.query.filter_by(is_active=True).count()
+    try:
+        today_local = datetime.utcnow().date()
+        daily_active_users = DailyActiveUser.query.filter_by(activity_date=today_local).count()
+    except Exception:
+        daily_active_users = 0
+    recent_active_users = DailyActiveUser.query.order_by(DailyActiveUser.last_seen_at.desc()).limit(10).all()
     
     # Get financial statistics
     current_period = FinancialPeriod.query.filter_by(status='open').first()
@@ -56,6 +67,8 @@ def dashboard():
                          pending_approvals=pending_approvals,
                          upcoming_events=upcoming_events,
                          newsletter_subscribers=newsletter_subscribers,
+                         daily_active_users=daily_active_users,
+                         recent_active_users=recent_active_users,
                          recent_news=recent_news,
                          pending_users=pending_users,
                          current_period=current_period,
@@ -202,6 +215,7 @@ def add_event():
         location = request.form.get('location')
         category = request.form.get('category', 'workshop')
         max_attendees = request.form.get('max_attendees', type=int)
+        target_audience = request.form.get('target_audience', 'everyone')
         
         # Handle image upload
         image = None
@@ -228,7 +242,8 @@ def add_event():
             location=location,
             category=category,
             image=image,
-            max_attendees=max_attendees
+            max_attendees=max_attendees,
+            target_audience=target_audience
         )
         db.session.add(event)
         db.session.commit()
@@ -414,6 +429,7 @@ def edit_event(event_id):
         event.location = request.form.get('location')
         event.category = request.form.get('category', 'workshop')
         event.max_attendees = request.form.get('max_attendees', type=int)
+        event.target_audience = request.form.get('target_audience', 'everyone')
         
         # Handle image removal
         if 'remove_image' in request.form:

@@ -1,8 +1,11 @@
-from flask import render_template, request, flash, redirect, url_for, jsonify
+from flask import render_template, request, flash, redirect, url_for, jsonify, current_app
 from app.routes import main_bp
 from app.models import News, Event, Project, Gallery, Topic, Member, Leader, Newsletter, Blog, RSVP, User, Technology
 from app import db
 from datetime import datetime
+import urllib.parse
+import urllib.request
+import json
 
 @main_bp.route('/')
 def index():
@@ -11,7 +14,10 @@ def index():
         latest_news = News.query.order_by(News.published_date.desc()).limit(3).all()
         
         # Get upcoming events (next 3)
-        upcoming_events = Event.query.filter(Event.event_date >= datetime.utcnow()).order_by(Event.event_date.asc()).limit(3).all()
+        upcoming_events = Event.query.filter(
+            Event.event_date >= datetime.utcnow(),
+            Event.target_audience == 'everyone'
+        ).order_by(Event.event_date.asc()).limit(3).all()
         
         # Get featured projects (limit to 3)
         featured_projects = Project.query.order_by(Project.created_at.desc()).limit(3).all()
@@ -202,7 +208,7 @@ def events():
         # Get filter parameters
         category_filter = request.args.get('category', '')
         
-        query = Event.query
+        query = Event.query.filter(Event.target_audience == 'everyone')
         
         # Apply category filter
         if category_filter:
@@ -223,10 +229,10 @@ def events():
         
         # Get category counts for the category cards
         category_counts = {
-            'workshop': Event.query.filter_by(category='workshop').count(),
-            'hackathon': Event.query.filter_by(category='hackathon').count(),
-            'tech_talk': Event.query.filter_by(category='tech_talk').count(),
-            'social_event': Event.query.filter_by(category='social_event').count()
+            'workshop': Event.query.filter_by(category='workshop', target_audience='everyone').count(),
+            'hackathon': Event.query.filter_by(category='hackathon', target_audience='everyone').count(),
+            'tech_talk': Event.query.filter_by(category='tech_talk', target_audience='everyone').count(),
+            'social_event': Event.query.filter_by(category='social_event', target_audience='everyone').count()
         }
         
         # Get events for calendar (all events with dates)
@@ -406,10 +412,37 @@ def blog_post(slug):
     
     return render_template('blog_post.html', blog=blog, related_posts=related_posts)
 
+def _verify_turnstile(response_token, remote_ip=None):
+    secret = current_app.config.get('TURNSTILE_SECRET_KEY', '')
+    if not secret or not response_token:
+        return False
+    try:
+        payload = {
+            'secret': secret,
+            'response': response_token,
+        }
+        if remote_ip:
+            payload['remoteip'] = remote_ip
+        data = urllib.parse.urlencode(payload).encode('utf-8')
+        req = urllib.request.Request(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            data=data,
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+            return bool(result.get('success'))
+    except Exception:
+        return False
+
+
 # RSVP Routes
 @main_bp.route('/events/<int:event_id>/rsvp', methods=['GET', 'POST'])
 def event_rsvp(event_id):
     event = Event.query.get_or_404(event_id)
+    if event.target_audience != 'everyone':
+        flash('This event RSVP is only available in the member panel.', 'warning')
+        return redirect(url_for('main.events'))
     
     if request.method == 'POST':
         # Get form data
@@ -422,30 +455,64 @@ def event_rsvp(event_id):
         emergency_contact = request.form.get('emergency_contact')
         emergency_phone = request.form.get('emergency_phone')
         additional_notes = request.form.get('additional_notes')
+        turnstile_token = (request.form.get('cf-turnstile-response') or '').strip()
         
+        attendee_type = (request.form.get('attendee_type') or '').strip()
+        study_field = (request.form.get('study_field') or '').strip()
+        study_year = (request.form.get('study_year') or '').strip()
+        non_student_role = (request.form.get('non_student_role') or '').strip()
+
         # Validation
-        if not all([full_name, email]):
-            flash('Please fill in all required fields.', 'error')
-            return render_template('rsvp_form.html', event=event)
+        if not all([full_name, email, phone]):
+            flash('Please fill in all required fields, including phone number.', 'error')
+            return render_template('rsvp_form.html', event=event, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
+
+        if attendee_type not in ['student', 'non_student']:
+            flash('Please select your attendance type.', 'error')
+            return render_template('rsvp_form.html', event=event, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
+
+        if attendee_type == 'student':
+            if not study_field or not study_year:
+                flash('Please select your field of study and year.', 'error')
+                return render_template('rsvp_form.html', event=event, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
+        else:
+            if non_student_role not in ['staff', 'guest']:
+                flash('Please select staff or guest.', 'error')
+                return render_template('rsvp_form.html', event=event, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
+
+        if not current_app.config.get('TURNSTILE_SITE_KEY') or not current_app.config.get('TURNSTILE_SECRET_KEY'):
+            flash('Cloudflare Turnstile is not configured yet. Please contact admin.', 'error')
+            return render_template('rsvp_form.html', event=event, turnstile_site_key='')
+
+        if not _verify_turnstile(turnstile_token, request.remote_addr):
+            flash('Please complete the human verification and try again.', 'error')
+            return render_template('rsvp_form.html', event=event, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
         
         # Check if already RSVP'd
-        existing_rsvp = RSVP.query.filter_by(event_id=event_id, email=email).first()
+        existing_rsvp = RSVP.query.filter(
+            RSVP.event_id == event_id,
+            db.or_(RSVP.email == email, RSVP.phone == phone)
+        ).first()
         if existing_rsvp:
             flash('You have already RSVP\'d for this event.', 'warning')
-            return redirect(url_for('main.event_rsvp_status', event_id=event_id, email=email))
+            return redirect(url_for('main.events'))
         
         # Try to link with member if exists
         member = Member.query.join(Member.user).filter(Member.user.has(email=email)).first()
         
-        # Create RSVP with member_id (use 0 as default for non-members to avoid NULL constraint)
+        # Create RSVP with linked member when available.
         rsvp = RSVP(
             event_id=event_id,
-            member_id=member.id if member else 0,  # Use 0 for non-members
+            member_id=member.id if member else None,
             full_name=full_name,
             email=email,
             phone=phone,
             course=course,
             year=year,
+            attendee_type=attendee_type,
+            study_field=study_field if attendee_type == 'student' else None,
+            study_year=study_year if attendee_type == 'student' else None,
+            non_student_role=non_student_role if attendee_type == 'non_student' else None,
             dietary_requirements=dietary_requirements,
             emergency_contact=emergency_contact,
             emergency_phone=emergency_phone,
@@ -456,23 +523,9 @@ def event_rsvp(event_id):
         db.session.commit()
         
         flash('RSVP submitted successfully! You will receive an email/SMS once approved.', 'success')
-        return redirect(url_for('main.event_rsvp_status', event_id=event_id, email=email))
+        return redirect(url_for('main.events'))
     
-    return render_template('rsvp_form.html', event=event)
+    return render_template('rsvp_form.html', event=event, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
 
-@main_bp.route('/events/<int:event_id>/rsvp/status')
-def event_rsvp_status(event_id):
-    event = Event.query.get_or_404(event_id)
-    email = request.args.get('email')
-    
-    if not email:
-        flash('Email parameter is required.', 'error')
-        return redirect(url_for('main.events'))
-    
-    rsvp = RSVP.query.filter_by(event_id=event_id, email=email).first()
-    if not rsvp:
-        flash('No RSVP found for this email.', 'error')
-        return redirect(url_for('main.events'))
-    
-    return render_template('rsvp_status.html', rsvp=rsvp, event=event)
+## RSVP status page removed. Use flash notifications on events listing instead.
 

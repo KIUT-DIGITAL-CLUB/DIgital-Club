@@ -1,10 +1,14 @@
-from flask import Flask, flash, redirect, url_for
+from flask import Flask, flash, redirect, url_for, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, logout_user
 from flask_migrate import Migrate
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+try:
+    from zoneinfo import ZoneInfo
+except Exception:  # pragma: no cover
+    ZoneInfo = None
 
 load_dotenv()
 
@@ -73,6 +77,57 @@ def _migrate_user_active_account_column():
         # Keep startup resilient; proper Alembic migration still exists.
         pass
 
+
+def _migrate_event_target_audience_column():
+    """Compatibility migration: add event.target_audience if missing."""
+    try:
+        from sqlalchemy import inspect, text
+
+        inspector = inspect(db.engine)
+        if 'event' not in inspector.get_table_names():
+            return
+
+        cols = {c['name'] for c in inspector.get_columns('event')}
+        if 'target_audience' in cols:
+            return
+
+        db_uri = str(db.engine.url)
+        with db.engine.connect() as conn:
+            if 'postgresql' in db_uri:
+                conn.execute(
+                    text("ALTER TABLE event ADD COLUMN target_audience VARCHAR(20) NOT NULL DEFAULT 'everyone'")
+                )
+            else:
+                conn.execute(
+                    text("ALTER TABLE event ADD COLUMN target_audience VARCHAR(20) NOT NULL DEFAULT 'everyone'")
+                )
+            conn.commit()
+    except Exception:
+        pass
+
+
+def _migrate_rsvp_attendee_fields():
+    """Compatibility migration: add RSVP attendee fields if missing."""
+    try:
+        from sqlalchemy import inspect, text
+
+        inspector = inspect(db.engine)
+        if 'rsvp' not in inspector.get_table_names():
+            return
+        cols = {c['name'] for c in inspector.get_columns('rsvp')}
+        with db.engine.connect() as conn:
+            if 'attendee_type' not in cols:
+                conn.execute(text("ALTER TABLE rsvp ADD COLUMN attendee_type VARCHAR(20)"))
+            if 'study_field' not in cols:
+                conn.execute(text("ALTER TABLE rsvp ADD COLUMN study_field VARCHAR(100)"))
+            if 'study_year' not in cols:
+                conn.execute(text("ALTER TABLE rsvp ADD COLUMN study_year VARCHAR(20)"))
+            if 'non_student_role' not in cols:
+                conn.execute(text("ALTER TABLE rsvp ADD COLUMN non_student_role VARCHAR(30)"))
+            conn.commit()
+    except Exception:
+        pass
+
 def create_app():
     app = Flask(__name__)
     
@@ -84,6 +139,9 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+    app.config['TURNSTILE_SITE_KEY'] = os.environ.get('TURNSTILE_SITE_KEY', '')
+    app.config['TURNSTILE_SECRET_KEY'] = os.environ.get('TURNSTILE_SECRET_KEY', '')
+    app.config['APP_TIMEZONE'] = os.environ.get('APP_TIMEZONE', 'UTC')
     
     # URL generation (for emails, etc.)
     # In production, set SERVER_NAME and PREFERRED_URL_SCHEME via environment variables:
@@ -102,6 +160,8 @@ def create_app():
         # Keep this compatibility migration for existing databases.
         _migrate_password_hash_column()
         _migrate_user_active_account_column()
+        _migrate_event_target_audience_column()
+        _migrate_rsvp_attendee_fields()
     
     # Configure login manager
     login_manager.login_view = 'auth.login'
@@ -132,6 +192,39 @@ def create_app():
             logout_user()
             flash('Your account has been deactivated. Please contact an administrator.', 'error')
             return redirect(url_for('auth.login'))
+
+    def _get_app_timezone():
+        return None
+
+    @app.before_request
+    def track_daily_active_users():
+        if not current_user.is_authenticated:
+            return
+        if request.endpoint == 'static' or request.path.startswith('/static/'):
+            return
+        if not (request.path.startswith('/admin') or request.path.startswith('/member')):
+            return
+        try:
+            from app.models import DailyActiveUser
+            local_date = datetime.utcnow().date()
+            now_utc = datetime.utcnow()
+            entry = DailyActiveUser.query.filter_by(
+                user_id=current_user.id,
+                activity_date=local_date
+            ).first()
+            if entry:
+                entry.last_seen_at = now_utc
+            else:
+                entry = DailyActiveUser(
+                    user_id=current_user.id,
+                    activity_date=local_date,
+                    first_seen_at=now_utc,
+                    last_seen_at=now_utc
+                )
+                db.session.add(entry)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
     
     # User loader for Flask-Login
     from app.models import User

@@ -32,6 +32,23 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.email}>'
 
+class DailyActiveUser(db.Model):
+    __tablename__ = 'daily_active_user'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    activity_date = db.Column(db.Date, nullable=False, index=True)
+    first_seen_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    last_seen_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship('User', backref='daily_active_logs')
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'activity_date', name='uq_daily_active_user'),
+    )
+
+    def __repr__(self):
+        return f'<DailyActiveUser {self.user_id} {self.activity_date}>'
+
 class Member(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -208,6 +225,7 @@ class Event(db.Model):
     category = db.Column(db.String(50), default='workshop')  # hackathon, workshop, tech_talk, social_event
     image = db.Column(db.String(200))  # Event banner image
     max_attendees = db.Column(db.Integer)  # Optional capacity limit
+    target_audience = db.Column(db.String(20), default='everyone', nullable=False)  # everyone, members, paid_members
     allows_check_in = db.Column(db.Boolean, default=True)  # Enable attendance tracking
     check_in_points = db.Column(db.Integer, default=0)  # Points awarded for attending
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -350,6 +368,10 @@ class RSVP(db.Model):
     phone = db.Column(db.String(20))
     course = db.Column(db.String(100))
     year = db.Column(db.String(20))
+    attendee_type = db.Column(db.String(20))  # student, non_student
+    study_field = db.Column(db.String(100))
+    study_year = db.Column(db.String(20))
+    non_student_role = db.Column(db.String(30))  # staff, guest
     dietary_requirements = db.Column(db.Text)
     emergency_contact = db.Column(db.String(100))
     emergency_phone = db.Column(db.String(20))

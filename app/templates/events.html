@@ -1,21 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}Events - Digital Club - KIUT{% endblock %}
+{% block title %}Public Events - Digital Club{% endblock %}
 
 {% block extra_head %}
+{{ super() }}
 <style>
+    /* Public Events Page - Enhanced Modern Design */
+    .events-page {
+        padding: 7rem 0 4rem;
+        background-color: var(--bg-primary);
+    }
+    
     /* Hero Section */
     .events-hero {
-        min-height: 40vh;
-        padding: 8rem 0 5rem;
-        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-quaternary) 50%, var(--bg-primary) 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        background: var(--gradient-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 2rem 2rem;
+        margin-bottom: 2.5rem;
         position: relative;
         overflow: hidden;
-        text-align: center;
-        border-bottom: 1px solid var(--border-color);
+        backdrop-filter: blur(10px);
     }
     
     .events-hero::before {
@@ -23,195 +28,89 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        background: 
-            radial-gradient(circle at 20% 50%, rgba(var(--particle-color), 0.12) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(var(--particle-color), 0.08) 0%, transparent 50%);
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+        opacity: 0.8;
     }
     
     .events-hero h1 {
-        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-size: 2rem;
         font-weight: 700;
-        background: var(--gradient-primary);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 1.5rem;
-    }
-    
-    .events-hero p {
-        font-size: 1.3rem;
-        color: var(--text-secondary);
-        max-width: 800px;
-        margin: 0 auto;
-        line-height: 1.7;
-    }
-    
-    /* Content Section */
-    .events-section {
-        padding: 6rem 0;
-        position: relative;
-    }
-    
-    .section-title {
-        text-align: center;
-        font-size: clamp(2rem, 4vw, 3rem);
-        margin-bottom: 3rem;
-        color: var(--text-primary);
-    }
-    
-    .section-subtitle {
-        text-align: center;
-        color: var(--text-secondary);
-        font-size: 1.2rem;
-        margin-bottom: 4rem;
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
-        line-height: 1.7;
-    }
-    
-    /* Navigation Tabs */
-    .events-nav {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        margin-bottom: 4rem;
-        flex-wrap: wrap;
-    }
-    
-    .nav-tab {
-        padding: 1rem 2rem;
-        background: var(--surface-2);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius-lg);
-        color: var(--text-secondary);
-        text-decoration: none;
-        transition: all var(--transition-normal);
-        cursor: pointer;
-        font-weight: 500;
-        font-size: 1rem;
-    }
-    
-    .nav-tab:hover {
-        background: var(--surface-3);
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-        transform: translateY(-2px);
-    }
-    
-    .nav-tab.active {
-        background: var(--gradient-primary);
-        color: var(--bg-primary);
-        border-color: transparent;
-        box-shadow: 0 5px 20px var(--shadow-color);
-    }
-    
-    /* Countdown Timer */
-    .countdown-section {
-        background: linear-gradient(135deg, rgba(var(--particle-color), 0.15) 0%, rgba(var(--particle-color), 0.08) 100%);
-        border: 1px solid rgba(var(--particle-color), 0.25);
-        border-radius: var(--border-radius-md);
-        padding: 3rem;
-        margin-bottom: 4rem;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .countdown-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--gradient-primary);
-    }
-    
-    .countdown-title {
-        font-size: 1.5rem;
-        color: var(--text-primary);
-        margin-bottom: 1rem;
-        font-weight: 600;
-    }
-    
-    .countdown-subtitle {
-        color: var(--text-secondary);
-        margin-bottom: 2rem;
-        font-size: 1.1rem;
-    }
-    
-    .countdown-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 1.5rem;
-        max-width: 600px;
-        margin: 0 auto;
-    }
-    
-    .countdown-item {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius-md);
-        padding: 1.5rem;
-        text-align: center;
-        transition: transform var(--transition-normal);
-    }
-    
-    .countdown-item:hover {
-        transform: translateY(-5px);
-    }
-    
-    .countdown-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        display: block;
         margin-bottom: 0.5rem;
+        color: var(--text-primary);
         font-family: 'Fira Code', monospace;
     }
     
-    .countdown-label {
-        font-size: 0.9rem;
+    .events-hero p {
+        font-size: 1rem;
         color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        max-width: 700px;
+        margin-bottom: 0;
+    }
+    
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
         font-weight: 600;
+        color: var(--text-primary);
+        font-family: 'Fira Code', monospace;
+        margin: 0;
     }
     
-    /* Events Content Tabs */
-    .events-content {
-        display: none;
-        animation: fadeIn 0.5s ease;
+    .section-count {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        background: var(--surface-1);
+        padding: 0.35rem 0.85rem;
+        border-radius: 50px;
+        border: 1px solid var(--border-color);
     }
     
-    .events-content.active {
-        display: block;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    /* Upcoming Events Grid */
+    /* Events Grid */
     .events-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: 2.5rem;
-        margin-bottom: 4rem;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
     }
     
+    @media (max-width: 992px) {
+        .events-grid {
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .events-grid {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+    }
+    
+    /* Event Card */
     .event-card {
         background: var(--card-bg);
         border: 1px solid var(--border-color);
         border-radius: var(--border-radius-md);
-        padding: 2rem;
-        transition: all var(--transition-normal);
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        backdrop-filter: blur(10px);
+        height: 100%;
     }
     
     .event-card::before {
@@ -220,1183 +119,371 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 1px;
+        height: 3px;
         background: var(--gradient-primary);
-        opacity: 0;
-        transition: opacity var(--transition-normal);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
     }
     
     .event-card:hover {
-        transform: translateY(-8px);
+        transform: translateY(-5px);
         border-color: var(--primary-color);
-        box-shadow: 0 20px 40px var(--shadow-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
     
     .event-card:hover::before {
-        opacity: 1;
+        transform: scaleX(1);
     }
     
+    /* Card Header */
     .event-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 1.5rem;
+        gap: 0.75rem;
     }
     
+    .event-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1.4;
+        font-family: 'Fira Code', monospace;
+    }
+    
+    /* Badges */
     .event-badges {
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
+        margin-bottom: 0.25rem;
     }
     
-    .event-category {
-        display: inline-block;
-        padding: 0.4rem 1rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        background: rgba(var(--particle-color), 0.15);
-        color: var(--primary-color);
-        border: 1px solid rgba(var(--particle-color), 0.3);
-    }
-    
-    .category-workshop {
-        background: rgba(0, 255, 255, 0.15);
-        color: var(--primary-color);
-    }
-    
-    .category-hackathon {
-        background: rgba(255, 0, 255, 0.15);
-        color: var(--secondary-color);
-    }
-    
-    .category-talk {
-        background: rgba(255, 255, 0, 0.15);
-        color: var(--accent-color);
-    }
-    
-    .category-social {
-        background: rgba(0, 255, 0, 0.15);
-        color: #00ff00;
-    }
-    
-    .event-status {
-        display: inline-block;
-        padding: 0.4rem 1rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-    
-    .status-upcoming {
-        background: rgba(0, 255, 0, 0.15);
-        color: #00ff00;
-        border: 1px solid rgba(0, 255, 0, 0.3);
-    }
-    
-    .status-ongoing {
-        background: rgba(255, 255, 0, 0.15);
-        color: var(--accent-color);
-        border: 1px solid rgba(255, 255, 0, 0.3);
-    }
-    
-    .status-completed {
-        background: rgba(128, 128, 128, 0.15);
-        color: var(--text-muted);
-        border: 1px solid rgba(128, 128, 128, 0.3);
-    }
-    
-    .event-image {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        border-radius: var(--border-radius-sm);
-        margin-bottom: 1.5rem;
-        border: 1px solid var(--border-color);
-    }
-    
-    .event-title {
-        font-size: 1.5rem;
-        color: var(--text-primary);
-        margin-bottom: 1rem;
-        font-weight: 600;
-    }
-    
-    .event-details {
-        margin-bottom: 1.5rem;
-    }
-    
-    .event-detail {
-        display: flex;
+    .event-badge {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 50px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        display: inline-flex;
         align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 0.5rem;
-        color: var(--text-secondary);
+        gap: 0.25rem;
+        border: 1px solid;
     }
     
-    .event-detail i {
-        color: var(--primary-color);
-        width: 16px;
-    }
-    
-    .event-description {
-        color: var(--text-secondary);
-        line-height: 1.6;
-        margin-bottom: 1.5rem;
-        font-size: 0.95rem;
-    }
-    
-    .event-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-    
-    /* Calendar View */
-    .calendar-container {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius-md);
-        padding: 2rem;
-        margin-bottom: 3rem;
-        backdrop-filter: blur(10px);
-    }
-    
-    .calendar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-    
-    .calendar-nav {
-        background: var(--surface-2);
-        border: 1px solid var(--border-color);
-        color: var(--primary-color);
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all var(--transition-normal);
-    }
-    
-    .calendar-nav:hover {
-        background: var(--surface-3);
-        border-color: var(--primary-color);
-        transform: scale(1.1);
-    }
-    
-    .calendar-title {
-        font-size: 1.5rem;
-        color: var(--text-primary);
-        font-weight: 600;
-        text-align: center;
-    }
-    
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 0.5rem;
-    }
-    
-    .calendar-day-header {
-        text-align: center;
-        padding: 1rem 0.5rem;
-        color: var(--text-muted);
-        font-weight: 600;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-    }
-    
-    .calendar-day {
-        aspect-ratio: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: var(--border-radius-sm);
-        cursor: pointer;
-        transition: all var(--transition-normal);
-        position: relative;
-        font-size: 0.95rem;
-        color: var(--text-primary);
-        background: var(--surface-1);
-        border: 1px solid transparent;
-    }
-    
-    .calendar-day:hover {
+    .badge-category {
         background: rgba(var(--particle-color), 0.1);
-        border-color: var(--border-color);
-    }
-    
-    .calendar-day.has-event {
-        background: rgba(var(--particle-color), 0.15);
         color: var(--primary-color);
-        font-weight: 600;
         border-color: rgba(var(--particle-color), 0.3);
     }
     
-    .calendar-day.has-event::after {
-        content: '';
-        position: absolute;
-        bottom: 5px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 6px;
-        height: 6px;
-        background: var(--primary-color);
-        border-radius: 50%;
+    .badge-status-upcoming {
+        background: rgba(0, 255, 0, 0.1);
+        color: var(--success-color);
+        border-color: rgba(0, 255, 0, 0.3);
     }
     
-    .calendar-day.today {
-        background: var(--gradient-primary);
-        color: var(--bg-primary);
-        border-color: transparent;
+    .badge-status-past {
+        background: rgba(255, 170, 0, 0.1);
+        color: var(--warning-color);
+        border-color: rgba(255, 170, 0, 0.3);
     }
     
-    .calendar-day.other-month {
-        color: var(--text-muted);
-        opacity: 0.5;
-        background: transparent;
-    }
-    
-    /* Categories Grid */
-    .categories-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 2rem;
-        margin-bottom: 4rem;
-    }
-    
-    .category-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius-md);
-        padding: 2.5rem 2rem;
-        text-align: center;
-        transition: all var(--transition-normal);
-    }
-    
-    .category-card:hover {
-        transform: translateY(-5px);
-        border-color: var(--primary-color);
-        box-shadow: 0 15px 35px var(--shadow-color);
-    }
-    
-    .category-icon {
-        font-size: 3rem;
+    .badge-public {
+        background: rgba(var(--particle-color), 0.1);
         color: var(--primary-color);
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 80px;
+        border-color: rgba(var(--particle-color), 0.3);
     }
     
-    .category-name {
-        font-size: 1.5rem;
-        color: var(--text-primary);
-        margin-bottom: 1rem;
-        font-weight: 600;
-    }
-    
-    .category-description {
+    /* Event Description */
+    .event-description {
+        font-size: 0.85rem;
         color: var(--text-secondary);
         line-height: 1.6;
-        margin-bottom: 1.5rem;
-        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
     
-    .category-stats {
-        background: rgba(var(--particle-color), 0.12);
-        border: 1px solid rgba(var(--particle-color), 0.2);
-        border-radius: var(--border-radius-sm);
-        padding: 1.2rem;
-        margin-bottom: 1.5rem;
+    /* Event Meta */
+    .event-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        margin-bottom: 0.5rem;
     }
     
-    .category-count {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        margin-bottom: 0.3rem;
-        font-family: 'Fira Code', monospace;
-    }
-    
-    .category-label {
-        font-size: 0.9rem;
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
         color: var(--text-secondary);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+    }
+    
+    .meta-item i {
+        width: 16px;
+        color: var(--primary-color);
+        font-size: 0.9rem;
+        text-align: center;
+    }
+    
+    .meta-highlight {
+        background: var(--surface-1);
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--border-radius-sm);
+        border-left: 3px solid var(--primary-color);
+        margin-top: 0.25rem;
+    }
+    
+    /* Event Actions */
+    .event-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+    
+    .btn-event {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.25rem;
+        border-radius: var(--border-radius-xl);
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: var(--gradient-primary);
+        color: var(--bg-primary);
+        box-shadow: 0 2px 8px rgba(0, 255, 255, 0.2);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+        color: var(--bg-primary);
+    }
+    
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+    
+    .btn-outline:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        background: rgba(0, 255, 255, 0.05);
     }
     
     /* Empty State */
     .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
+        background: var(--surface-1);
+        border: 1px dashed var(--border-color);
         border-radius: var(--border-radius-md);
+        padding: 3rem 2rem;
+        text-align: center;
+        color: var(--text-muted);
+        margin-bottom: 2rem;
     }
     
     .empty-state i {
-        font-size: 4rem;
-        color: var(--text-muted);
-        margin-bottom: 1.5rem;
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+        opacity: 0.5;
     }
     
-    .empty-state h3 {
-        color: var(--text-secondary);
-        margin-bottom: 1rem;
-        font-size: 1.5rem;
+    .empty-state h5 {
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
     }
     
     .empty-state p {
+        font-size: 0.9rem;
         color: var(--text-muted);
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
+        max-width: 400px;
+        margin: 0 auto;
     }
     
-    /* Modal Styles */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 10000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.85);
-        backdrop-filter: blur(10px);
-        animation: fadeIn 0.3s ease;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-    }
-    
-    .modal.active {
-        display: flex;
-    }
-    
-    .modal-content {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius-md);
-        padding: 2.5rem;
-        max-width: 700px;
-        width: 100%;
-        max-height: 85vh;
-        overflow-y: auto;
-        animation: slideUp 0.3s ease;
-        position: relative;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-    }
-    
-    .modal-content::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    .modal-content::-webkit-scrollbar-track {
-        background: var(--surface-1);
-        border-radius: 10px;
-    }
-    
-    .modal-content::-webkit-scrollbar-thumb {
-        background: var(--primary-color);
-        border-radius: 10px;
-    }
-    
-    .modal-content::-webkit-scrollbar-thumb:hover {
-        background: var(--secondary-color);
-    }
-    
-    .modal-close {
-        position: absolute;
-        top: 1.5rem;
-        right: 1.5rem;
-        background: var(--surface-2);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 1.2rem;
-        transition: all var(--transition-normal);
-        z-index: 1;
-    }
-    
-    .modal-close:hover {
-        background: var(--surface-3);
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-        transform: rotate(90deg);
-    }
-    
-    .modal-header {
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .modal-date {
-        font-size: 1.5rem;
-        color: var(--primary-color);
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-    
-    .modal-count {
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-    }
-    
-    .modal-events {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-    
-    .modal-event {
-        background: var(--surface-1);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius-sm);
-        padding: 1.5rem;
-        transition: all var(--transition-normal);
-    }
-    
-    .modal-event:hover {
-        border-color: var(--primary-color);
-        transform: translateX(5px);
-    }
-    
-    .modal-event-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-    
-    .modal-event-title {
-        font-size: 1.3rem;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-    }
-    
-    .modal-event-info {
-        color: var(--text-secondary);
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.95rem;
-    }
-    
-    .modal-event-description {
-        color: var(--text-secondary);
-        line-height: 1.6;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border-color);
-        font-size: 0.95rem;
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(50px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Responsive */
+    /* Responsive Adjustments */
     @media (max-width: 768px) {
+        .events-page {
+            padding: 6rem 0 2rem;
+        }
+        
         .events-hero {
-            padding: 6rem 0 4rem;
-            min-height: 30vh;
+            padding: 1.5rem;
         }
         
-        .events-section {
-            padding: 4rem 0;
+        .events-hero h1 {
+            font-size: 1.75rem;
         }
         
-        .events-nav {
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
             gap: 0.5rem;
         }
         
-        .nav-tab {
-            padding: 0.8rem 1.5rem;
+        .event-card {
+            padding: 1.25rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .events-hero h1 {
+            font-size: 1.5rem;
+        }
+        
+        .events-hero p {
             font-size: 0.9rem;
         }
         
-        .events-grid,
-        .categories-grid {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
+        .event-title {
+            font-size: 1rem;
         }
         
-        .event-card,
-        .category-card {
-            padding: 1.5rem;
+        .event-actions {
+            flex-direction: column;
         }
         
-        .countdown-section {
-            padding: 2rem;
-        }
-        
-        .countdown-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-        
-        .countdown-number {
-            font-size: 2rem;
-        }
-        
-        .calendar-grid {
-            gap: 0.3rem;
-        }
-        
-        .calendar-day-header {
-            padding: 0.8rem 0.3rem;
-            font-size: 0.8rem;
-        }
-        
-        .calendar-day {
-            font-size: 0.85rem;
-        }
-        
-        .modal-content {
-            padding: 1.5rem;
+        .btn-event {
+            width: 100%;
+            justify-content: center;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="events-hero">
+<section class="events-page">
     <div class="container">
-        <h1 data-aos="fade-up">Events Calendar</h1>
-        <p data-aos="fade-up" data-aos-delay="200">
-            Join our exciting workshops, hackathons, tech talks, and networking events
-        </p>
-    </div>
-</section>
+        <!-- Hero Section -->
+        <div class="events-hero">
+            <h1>Public Events</h1>
+            <p>Open to everyone – no membership required. Join us for workshops, seminars, and networking opportunities.</p>
+        </div>
 
-<!-- Events Section -->
-<section class="events-section">
-    <div class="container">
-        <!-- Navigation Tabs -->
-        <div class="events-nav" data-aos="fade-up">
-            <div class="nav-tab active" data-tab="upcoming">Upcoming Events</div>
-            <div class="nav-tab" data-tab="calendar">Calendar View</div>
-            <div class="nav-tab" data-tab="past">Past Events</div>
-            <div class="nav-tab" data-tab="categories">Categories</div>
+        <!-- Upcoming Events Section -->
+        <div class="section-header">
+            <h5 class="section-title">Upcoming Events</h5>
+            <span class="section-count">{{ upcoming_events|length }} event{{ 's' if upcoming_events|length != 1 else '' }}</span>
         </div>
-        
-        <!-- Countdown Timer -->
-        {% if upcoming_events and upcoming_events|length > 0 %}
-        <div class="countdown-section" data-aos="fade-up" data-aos-delay="200">
-            <h2 class="countdown-title">Next Major Event</h2>
-            <p class="countdown-subtitle">
-                {{ upcoming_events[0].title }} • {{ upcoming_events[0].event_date.strftime('%B %d, %Y') }}
-                {% if upcoming_events[0].location %} • {{ upcoming_events[0].location }}{% endif %}
-            </p>
-            <div class="countdown-grid">
-                <div class="countdown-item">
-                    <span class="countdown-number" id="days">00</span>
-                    <span class="countdown-label">Days</span>
+
+        {% if upcoming_events %}
+        <div class="events-grid">
+            {% for event in upcoming_events %}
+            <article class="event-card">
+                <div class="event-badges">
+                    <span class="event-badge badge-category">
+                        <i class="fas fa-tag"></i> {{ event.category|title }}
+                    </span>
+                    <span class="event-badge badge-status-upcoming">
+                        <i class="fas fa-circle"></i> Upcoming
+                    </span>
+                    <span class="event-badge badge-public">
+                        <i class="fas fa-globe"></i> Public
+                    </span>
                 </div>
-                <div class="countdown-item">
-                    <span class="countdown-number" id="hours">00</span>
-                    <span class="countdown-label">Hours</span>
+
+                <h6 class="event-title">{{ event.title }}</h6>
+
+                {% if event.description %}
+                <div class="event-description">
+                    {{ event.description[:200] }}{% if event.description|length > 200 %}...{% endif %}
                 </div>
-                <div class="countdown-item">
-                    <span class="countdown-number" id="minutes">00</span>
-                    <span class="countdown-label">Minutes</span>
-                </div>
-                <div class="countdown-item">
-                    <span class="countdown-number" id="seconds">00</span>
-                    <span class="countdown-label">Seconds</span>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        
-        <!-- Upcoming Events Content -->
-        <div class="events-content active" id="upcoming-events" data-aos="fade-up">
-            <h2 class="section-title">Upcoming Events</h2>
-            <p class="section-subtitle">
-                Don't miss these exciting opportunities to learn, network, and grow your skills
-            </p>
-            
-            {% if upcoming_events %}
-            <div class="events-grid">
-                {% for event in upcoming_events %}
-                <div class="event-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-                    {% if event.image %}
-                    <img src="{{ url_for('static', filename=event.image) }}" 
-                         alt="{{ event.title }}" 
-                         class="event-image">
-                    {% endif %}
-                    
-                    <div class="event-header">
-                        <div class="event-badges">
-                            <span class="event-category category-{{ event.category or 'workshop' }}">
-                                {% if event.category == 'tech_talk' %}
-                                    Tech Talk
-                                {% elif event.category == 'social_event' %}
-                                    Social Event
-                                {% else %}
-                                    {{ event.category|title }}
-                                {% endif %}
-                            </span>
-                            <span class="event-status status-upcoming">Upcoming</span>
-                        </div>
+                {% endif %}
+
+                <div class="event-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>{{ event.event_date.strftime('%A, %b %d, %Y') }}</span>
                     </div>
-                    
-                    <h3 class="event-title">{{ event.title }}</h3>
-                    
-                    <div class="event-details">
-                        <div class="event-detail">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>{{ event.event_date.strftime('%B %d, %Y at %I:%M %p') }}</span>
-                        </div>
-                        
-                        {% if event.location %}
-                        <div class="event-detail">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>{{ event.location }}</span>
-                        </div>
-                        {% endif %}
-                        
-                        {% if event.max_attendees %}
-                        <div class="event-detail">
-                            <i class="fas fa-users"></i>
-                            <span>Max Attendees: {{ event.max_attendees }}</span>
-                        </div>
-                        {% endif %}
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ event.event_date.strftime('%H:%M') }}</span>
                     </div>
-                    
-                    {% if event.description %}
-                    <p class="event-description">
-                        {{ event.description[:200] }}{% if event.description|length > 200 %}...{% endif %}
-                    </p>
-                    {% endif %}
-                    
-                    <div class="event-actions">
-                        <a href="{{ url_for('main.event_rsvp', event_id=event.id) }}" 
-                           class="btn-primary" style="flex: 1;">
-                            <i class="fas fa-calendar-plus"></i> RSVP
-                        </a>
-                        <button class="btn-secondary" style="flex: 1;" 
-                                onclick="shareEvent('{{ event.title }}', '{{ url_for('main.events', _external=True) }}')">
-                            <i class="fas fa-share-alt"></i> Share
-                        </button>
+                    <div class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ event.location or 'Location TBA' }}</span>
                     </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state">
-                <i class="fas fa-calendar-alt"></i>
-                <h3>No Upcoming Events</h3>
-                <p>Check back soon for exciting workshops and events!</p>
-                <a href="{{ url_for('main.contact') }}" class="btn-primary">
-                    <i class="fas fa-envelope"></i> Suggest an Event
-                </a>
-            </div>
-            {% endif %}
-        </div>
-        
-        <!-- Calendar View Content -->
-        <div class="events-content" id="calendar-events">
-            <h2 class="section-title" data-aos="fade-up">Calendar View</h2>
-            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
-                Browse events by month and see what's happening each day
-            </p>
-            
-            <div class="calendar-container" data-aos="fade-up" data-aos-delay="400">
-                <div class="calendar-header">
-                    <button class="calendar-nav" id="prev-month">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <h3 class="calendar-title" id="calendar-title">March 2024</h3>
-                    <button class="calendar-nav" id="next-month">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-                <div class="calendar-grid" id="calendar-grid">
-                    <!-- Calendar will be populated by JavaScript -->
-                </div>
-            </div>
-        </div>
-        
-        <!-- Past Events Content -->
-        <div class="events-content" id="past-events">
-            <h2 class="section-title" data-aos="fade-up">Past Events</h2>
-            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
-                Relive our successful events and see what we've accomplished
-            </p>
-            
-            {% if past_events %}
-            <div class="events-grid" data-aos="fade-up" data-aos-delay="400">
-                {% for event in past_events %}
-                <div class="event-card">
-                    {% if event.image %}
-                    <img src="{{ url_for('static', filename=event.image) }}" 
-                         alt="{{ event.title }}" 
-                         class="event-image" style="opacity: 0.7;">
-                    {% endif %}
-                    
-                    <div class="event-header">
-                        <div class="event-badges">
-                            <span class="event-category category-{{ event.category or 'workshop' }}">
-                                {% if event.category == 'tech_talk' %}
-                                    Tech Talk
-                                {% elif event.category == 'social_event' %}
-                                    Social Event
-                                {% else %}
-                                    {{ event.category|title }}
-                                {% endif %}
-                            </span>
-                            <span class="event-status status-completed">Completed</span>
-                        </div>
-                    </div>
-                    
-                    <h3 class="event-title">{{ event.title }}</h3>
-                    
-                    <div class="event-details">
-                        <div class="event-detail">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>{{ event.event_date.strftime('%B %d, %Y') }}</span>
-                        </div>
-                        
-                        {% if event.location %}
-                        <div class="event-detail">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>{{ event.location }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    {% if event.description %}
-                    <p class="event-description">
-                        {{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}
-                    </p>
-                    {% endif %}
-                    
-                    <div class="event-actions">
-                        <a href="{{ url_for('main.gallery') }}" class="btn-secondary" style="flex: 1;">
-                            <i class="fas fa-images"></i> View Gallery
-                        </a>
-                        <button class="btn-secondary" style="flex: 1;" 
-                                onclick="shareEvent('{{ event.title }}', '{{ url_for('main.events', _external=True) }}')">
-                            <i class="fas fa-share-alt"></i> Share
-                        </button>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state">
-                <i class="fas fa-calendar-check"></i>
-                <h3>No Past Events</h3>
-                <p>Past events will appear here once they're completed.</p>
-            </div>
-            {% endif %}
-        </div>
-        
-        <!-- Categories Content -->
-        <div class="events-content" id="categories-events">
-            <h2 class="section-title" data-aos="fade-up">Event Categories</h2>
-            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
-                Explore our different types of events and find what interests you most
-            </p>
-            
-            <div class="categories-grid" data-aos="fade-up" data-aos-delay="400">
-                <div class="category-card">
-                    <div class="category-icon">
-                        <i class="fas fa-code"></i>
-                    </div>
-                    <h3 class="category-name">Workshops</h3>
-                    <p class="category-description">
-                        Hands-on learning sessions covering various technologies and programming languages.
-                    </p>
-                    <div class="category-stats">
-                        <div class="category-count">{{ category_counts.workshop or 0 }}</div>
-                        <div class="category-label">Total Workshops</div>
-                    </div>
-                    <a href="{{ url_for('main.events', category='workshop') }}" class="btn-primary">
-                        <i class="fas fa-calendar"></i> View Workshops
-                    </a>
-                </div>
-                
-                <div class="category-card">
-                    <div class="category-icon">
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                    <h3 class="category-name">Hackathons</h3>
-                    <p class="category-description">
-                        Intensive coding competitions where teams build innovative solutions in limited time.
-                    </p>
-                    <div class="category-stats">
-                        <div class="category-count">{{ category_counts.hackathon or 0 }}</div>
-                        <div class="category-label">Total Hackathons</div>
-                    </div>
-                    <a href="{{ url_for('main.events', category='hackathon') }}" class="btn-primary">
-                        <i class="fas fa-calendar"></i> View Hackathons
-                    </a>
-                </div>
-                
-                <div class="category-card">
-                    <div class="category-icon">
-                        <i class="fas fa-microphone"></i>
-                    </div>
-                    <h3 class="category-name">Tech Talks</h3>
-                    <p class="category-description">
-                        Inspiring presentations by industry experts and alumni sharing their experiences.
-                    </p>
-                    <div class="category-stats">
-                        <div class="category-count">{{ category_counts.tech_talk or 0 }}</div>
-                        <div class="category-label">Total Tech Talks</div>
-                    </div>
-                    <a href="{{ url_for('main.events', category='tech_talk') }}" class="btn-primary">
-                        <i class="fas fa-calendar"></i> View Tech Talks
-                    </a>
-                </div>
-                
-                <div class="category-card">
-                    <div class="category-icon">
+                    {% if event.max_attendees %}
+                    <div class="meta-item">
                         <i class="fas fa-users"></i>
+                        <span>{{ event.attendees_count if event.attendees_count is defined else 0 }} / {{ event.max_attendees }} spots</span>
                     </div>
-                    <h3 class="category-name">Social Events</h3>
-                    <p class="category-description">
-                        Networking events, game nights, and social gatherings to build community connections.
-                    </p>
-                    <div class="category-stats">
-                        <div class="category-count">{{ category_counts.social_event or 0 }}</div>
-                        <div class="category-label">Total Social Events</div>
-                    </div>
-                    <a href="{{ url_for('main.events', category='social_event') }}" class="btn-primary">
-                        <i class="fas fa-calendar"></i> View Social Events
+                    {% endif %}
+                </div>
+
+                <div class="event-actions">
+                    <a href="{{ url_for('main.event_rsvp', event_id=event.id) }}" class="btn-event btn-primary">
+                        <i class="fas fa-paper-plane"></i> RSVP Now
                     </a>
                 </div>
-            </div>
+            </article>
+            {% endfor %}
         </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h5>No Upcoming Events</h5>
+            <p>There are no public events scheduled at the moment. Check back soon for new opportunities!</p>
+        </div>
+        {% endif %}
+
+        <!-- Past Events Section -->
+        <div class="section-header mt-4">
+            <h5 class="section-title">Past Events</h5>
+            <span class="section-count">{{ past_events|length }} event{{ 's' if past_events|length != 1 else '' }}</span>
+        </div>
+
+        {% if past_events %}
+        <div class="events-grid">
+            {% for event in past_events %}
+            <article class="event-card">
+                <div class="event-badges">
+                    <span class="event-badge badge-category">
+                        <i class="fas fa-tag"></i> {{ event.category|title }}
+                    </span>
+                    <span class="event-badge badge-status-past">
+                        <i class="fas fa-history"></i> Past
+                    </span>
+                </div>
+
+                <h6 class="event-title">{{ event.title }}</h6>
+
+                <div class="event-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>{{ event.event_date.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ event.location or 'Location TBA' }}</span>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <h5>No Past Events</h5>
+            <p>There are no past public events to display.</p>
+        </div>
+        {% endif %}
     </div>
 </section>
-
-<!-- Event Details Modal -->
-<div id="eventModal" class="modal">
-    <div class="modal-content">
-        <button class="modal-close" onclick="closeModal()">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="modal-header">
-            <div class="modal-date" id="modalDate">Date</div>
-            <div class="modal-count" id="modalEventCount">Events</div>
-        </div>
-        <div class="modal-events" id="modalEventsContainer">
-            <!-- Events will be dynamically inserted here -->
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-    // Initialize AOS animations
-    AOS.init({
-        duration: 1000,
-        once: true,
-        offset: 100
-    });
-
-    // Events Navigation Tabs
-    const navTabs = document.querySelectorAll('.nav-tab');
-    const eventContents = document.querySelectorAll('.events-content');
-
-    navTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const targetTab = tab.getAttribute('data-tab');
-            
-            // Remove active class from all tabs and contents
-            navTabs.forEach(t => t.classList.remove('active'));
-            eventContents.forEach(c => c.classList.remove('active'));
-            
-            // Add active class to clicked tab and corresponding content
-            tab.classList.add('active');
-            document.getElementById(targetTab + '-events').classList.add('active');
-            
-            // Refresh animations
-            AOS.refresh();
-        });
-    });
-
-    // Share Event Function
-    function shareEvent(title, url) {
-        if (navigator.share) {
-            navigator.share({
-                title: title,
-                text: 'Check out this event from Digital Club!',
-                url: url
-            }).catch((error) => console.log('Error sharing:', error));
-        } else {
-            // Fallback for browsers that don't support Web Share API
-            const tempInput = document.createElement('input');
-            tempInput.value = url;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            alert('Event link copied to clipboard!');
-        }
-    }
-
-    // Countdown Timer
-    function updateCountdown() {
-        {% if upcoming_events and upcoming_events|length > 0 %}
-        const eventDate = new Date('{{ upcoming_events[0].event_date.strftime('%Y-%m-%dT%H:%M:%S') }}').getTime();
-        const now = new Date().getTime();
-        const distance = eventDate - now;
-
-        if (distance > 0) {
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            document.getElementById('days').textContent = days.toString().padStart(2, '0');
-            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
-        } else {
-            document.getElementById('countdown-timer').innerHTML = '<h3>Event Started!</h3>';
-        }
-        {% else %}
-        document.getElementById('countdown-timer').innerHTML = '<h3>No Upcoming Events</h3><p>Check back soon!</p>';
-        {% endif %}
-    }
-
-    // Update countdown every second
-    setInterval(updateCountdown, 1000);
-    updateCountdown(); // Initial call
-
-    // Calendar Functionality
-    let currentDate = new Date();
-    const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-    function generateCalendar() {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        
-        document.getElementById('calendar-title').textContent = `${monthNames[month]} ${year}`;
-        
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startingDayOfWeek = firstDay.getDay();
-        
-        const calendarGrid = document.getElementById('calendar-grid');
-        calendarGrid.innerHTML = '';
-        
-        // Add day headers
-        dayNames.forEach(day => {
-            const dayHeader = document.createElement('div');
-            dayHeader.className = 'calendar-day-header';
-            dayHeader.textContent = day;
-            calendarGrid.appendChild(dayHeader);
-        });
-        
-        // Add empty cells for days before the first day of the month
-        for (let i = 0; i < startingDayOfWeek; i++) {
-            const emptyDay = document.createElement('div');
-            emptyDay.className = 'calendar-day other-month';
-            emptyDay.textContent = new Date(year, month, -startingDayOfWeek + i + 1).getDate();
-            calendarGrid.appendChild(emptyDay);
-        }
-        
-        // Get events for this month
-        const monthStr = (month + 1).toString().padStart(2, '0');
-        const yearStr = year.toString();
-        const eventsThisMonth = calendarEventsData.filter(event => {
-            return event.date.startsWith(`${yearStr}-${monthStr}`);
-        });
-        
-        // Add days of the month
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayElement = document.createElement('div');
-            dayElement.className = 'calendar-day';
-            dayElement.textContent = day;
-            
-            // Mark today
-            const today = new Date();
-            if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
-                dayElement.classList.add('today');
-            }
-            
-            // Check if this day has events
-            const dayStr = day.toString().padStart(2, '0');
-            const dateStr = `${yearStr}-${monthStr}-${dayStr}`;
-            const dayEvents = eventsThisMonth.filter(event => event.date === dateStr);
-            
-            if (dayEvents.length > 0) {
-                dayElement.classList.add('has-event');
-                dayElement.title = dayEvents.map(e => `${e.time} - ${e.title}`).join('\n');
-                dayElement.style.cursor = 'pointer';
-                
-                // Add click handler to show events for this day
-                dayElement.addEventListener('click', () => {
-                    showDayEvents(dayEvents, dateStr);
-                });
-            }
-            
-            calendarGrid.appendChild(dayElement);
-        }
-        
-        // Add empty cells for days after the last day of the month
-        const remainingCells = 42 - (startingDayOfWeek + daysInMonth);
-        for (let i = 1; i <= remainingCells; i++) {
-            const emptyDay = document.createElement('div');
-            emptyDay.className = 'calendar-day other-month';
-            emptyDay.textContent = i;
-            calendarGrid.appendChild(emptyDay);
-        }
-    }
-
-    function showDayEvents(events, dateStr) {
-        const modal = document.getElementById('eventModal');
-        const modalDate = document.getElementById('modalDate');
-        const modalEventCount = document.getElementById('modalEventCount');
-        const modalEventsContainer = document.getElementById('modalEventsContainer');
-        
-        // Format the date nicely
-        const date = new Date(dateStr);
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        const formattedDate = date.toLocaleDateString('en-US', options);
-        
-        modalDate.textContent = formattedDate;
-        modalEventCount.textContent = `${events.length} Event${events.length > 1 ? 's' : ''} on this day`;
-        
-        // Clear previous events
-        modalEventsContainer.innerHTML = '';
-        
-        // Add events to modal
-        events.forEach(event => {
-            const eventDiv = document.createElement('div');
-            eventDiv.className = 'modal-event';
-            
-            // Determine event status
-            const eventDate = new Date(event.date + 'T' + event.time);
-            const now = new Date();
-            const isPast = eventDate < now;
-            const statusClass = isPast ? 'status-completed' : 'status-upcoming';
-            const statusText = isPast ? 'Completed' : 'Upcoming';
-            
-            // Determine category class
-            const categoryClass = `category-${event.category || 'workshop'}`;
-            let categoryLabel = event.category || 'workshop';
-            if (event.category === 'tech_talk') categoryLabel = 'Tech Talk';
-            else if (event.category === 'social_event') categoryLabel = 'Social Event';
-            else categoryLabel = categoryLabel.charAt(0).toUpperCase() + categoryLabel.slice(1);
-            
-            eventDiv.innerHTML = `
-                <div class="modal-event-header">
-                    <div class="event-badges">
-                        <span class="event-category ${categoryClass}">${categoryLabel}</span>
-                        <span class="event-status ${statusClass}">${statusText}</span>
-                    </div>
-                </div>
-                <div class="modal-event-title">${event.title}</div>
-                <div class="modal-event-info">
-                    <i class="fas fa-clock"></i>
-                    <span>${event.time}</span>
-                </div>
-                ${event.location ? `
-                <div class="modal-event-info">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>${event.location}</span>
-                </div>
-                ` : ''}
-                ${event.max_attendees ? `
-                <div class="modal-event-info">
-                    <i class="fas fa-users"></i>
-                    <span>Max Attendees: ${event.max_attendees}</span>
-                </div>
-                ` : ''}
-                ${event.description ? `
-                <div class="modal-event-description">
-                    ${event.description}
-                </div>
-                ` : ''}
-                ${!isPast ? `
-                <div style="margin-top: 1.5rem;">
-                    <a href="/event/rsvp/${event.id}" class="btn-primary" style="text-decoration: none; display: inline-block;">
-                        <i class="fas fa-calendar-plus"></i> RSVP for this event
-                    </a>
-                </div>
-                ` : ''}
-            `;
-            
-            modalEventsContainer.appendChild(eventDiv);
-        });
-        
-        // Show modal
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    
-    function closeModal() {
-        const modal = document.getElementById('eventModal');
-        modal.classList.remove('active');
-        document.body.style.overflow = 'auto';
-    }
-    
-    // Close modal when clicking outside
-    document.getElementById('eventModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
-    });
-    
-    // Close modal with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeModal();
-        }
-    });
-
-    // Calendar navigation
-    document.getElementById('prev-month').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        generateCalendar();
-    });
-
-    document.getElementById('next-month').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        generateCalendar();
-    });
-
-    // Calendar events data from backend
-    const calendarEventsData = {{ calendar_events|tojson|safe }};
-
-    // Initialize calendar
-    generateCalendar();
-</script>
 {% endblock %}

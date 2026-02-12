@@ -10,6 +10,9 @@ from app.id_generator import generate_digital_id
 from app.utils import get_notification_service
 from app.member_requirements import ALLOWED_COURSES, ALLOWED_YEARS, is_allowed_course, is_allowed_year
 from datetime import datetime
+import urllib.parse
+import urllib.request
+import json
 
 
 def _get_serializer():
@@ -55,6 +58,30 @@ def _is_safe_next_url(target):
     parsed = urlparse(target)
     return parsed.scheme == '' and parsed.netloc == '' and target.startswith('/')
 
+
+def _verify_turnstile(response_token, remote_ip=None):
+    secret = current_app.config.get('TURNSTILE_SECRET_KEY', '')
+    if not secret or not response_token:
+        return False
+    try:
+        payload = {
+            'secret': secret,
+            'response': response_token,
+        }
+        if remote_ip:
+            payload['remoteip'] = remote_ip
+        data = urllib.parse.urlencode(payload).encode('utf-8')
+        req = urllib.request.Request(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            data=data,
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+            return bool(result.get('success'))
+    except Exception:
+        return False
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -72,7 +99,7 @@ def register():
         # Validation
         if not all([email, password, confirm_password, full_name, phone, course, year]):
             flash('Please fill in all required fields.', 'error')
-            return render_template('auth/register.html', allowed_courses=ALLOWED_COURSES, allowed_years=ALLOWED_YEARS)
+            return render_template('auth/register.html', allowed_courses=ALLOWED_COURSES, allowed_years=ALLOWED_YEARS, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
         
         if password != confirm_password:
             flash('Passwords do not match.', 'error')
@@ -88,7 +115,15 @@ def register():
         
         if User.query.filter_by(email=email).first():
             flash('Email already registered.', 'error')
-            return render_template('auth/register.html', allowed_courses=ALLOWED_COURSES, allowed_years=ALLOWED_YEARS)
+            return render_template('auth/register.html', allowed_courses=ALLOWED_COURSES, allowed_years=ALLOWED_YEARS, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
+
+        if not current_app.config.get('TURNSTILE_SITE_KEY') or not current_app.config.get('TURNSTILE_SECRET_KEY'):
+            flash('Cloudflare Turnstile is not configured yet. Please contact admin.', 'error')
+            return render_template('auth/register.html', allowed_courses=ALLOWED_COURSES, allowed_years=ALLOWED_YEARS, turnstile_site_key='')
+
+        if not _verify_turnstile((request.form.get('cf-turnstile-response') or '').strip(), request.remote_addr):
+            flash('Please complete the human verification and try again.', 'error')
+            return render_template('auth/register.html', allowed_courses=ALLOWED_COURSES, allowed_years=ALLOWED_YEARS, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
         
         # Create user
         user = User(email=email, role='student', is_approved=False)
@@ -114,7 +149,7 @@ def register():
         flash('Registration successful! Your account is pending admin approval.', 'success')
         return redirect(url_for('auth.login'))
     
-    return render_template('auth/register.html', allowed_courses=ALLOWED_COURSES, allowed_years=ALLOWED_YEARS)
+    return render_template('auth/register.html', allowed_courses=ALLOWED_COURSES, allowed_years=ALLOWED_YEARS, turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -124,6 +159,15 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
+        turnstile_token = (request.form.get('cf-turnstile-response') or '').strip()
+
+        if not current_app.config.get('TURNSTILE_SITE_KEY') or not current_app.config.get('TURNSTILE_SECRET_KEY'):
+            flash('Cloudflare Turnstile is not configured yet. Please contact admin.', 'error')
+            return render_template('auth/login.html', turnstile_site_key='')
+
+        if not _verify_turnstile(turnstile_token, request.remote_addr):
+            flash('Please complete the human verification and try again.', 'error')
+            return render_template('auth/login.html', turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
         
         user = User.query.filter_by(email=email).first()
         
@@ -159,7 +203,7 @@ def login():
         else:
             flash('Invalid email or password.', 'error')
     
-    return render_template('auth/login.html')
+    return render_template('auth/login.html', turnstile_site_key=current_app.config.get('TURNSTILE_SITE_KEY', ''))
 
 @auth_bp.route('/logout')
 @login_required

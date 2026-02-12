@@ -1,0 +1,124 @@
+{% extends "member/member_base.html" %}
+
+{% block title %}Events - Digital Club{% endblock %}
+{% block page_title %}Events{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Events</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem; }
+    @media (max-width: 768px) { .events-grid { grid-template-columns: 1fr; } }
+    .event-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+    .event-title { font-size: 1rem; margin: 0; color: var(--text-primary); font-family: 'Fira Code', monospace; }
+    .event-meta { font-size: 0.84rem; color: var(--text-secondary); display: grid; gap: 0.35rem; }
+    .event-meta i { width: 14px; color: var(--primary-color); }
+    .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .section-title { margin: 0; font-size: 1.05rem; color: var(--text-primary); }
+    .event-actions { display: flex; gap: 0.55rem; flex-wrap: wrap; margin-top: 0.25rem; }
+    .empty-state {
+        padding: 1.2rem; border: 1px dashed var(--border-color); border-radius: var(--border-radius-md);
+        text-align: center; color: var(--text-muted); background: var(--surface-1);
+    }
+    .event-description { font-size: 0.83rem; color: var(--text-muted); line-height: 1.45; }
+    .event-audience { font-size: 0.75rem; }
+</style>
+{% endblock %}
+
+{% block member_content %}
+<div class="admin-card mb-3">
+    <div class="admin-card-body">
+        <h5 class="mb-1">Members Events</h5>
+        <p class="mb-0 text-muted">Only member-only and paid-member events appear here. Public events remain on the public Events page.</p>
+    </div>
+</div>
+
+<div class="section-head">
+    <h6 class="section-title">Upcoming ({{ upcoming_events|length }})</h6>
+</div>
+{% if upcoming_events %}
+<div class="events-grid mb-4">
+    {% for event in upcoming_events %}
+    {% set my = my_rsvps.get(event.id) %}
+    <div class="event-card">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <h6 class="event-title">{{ event.title }}</h6>
+            {% if event.target_audience == 'paid_members' %}
+            <span class="admin-badge admin-badge-warning event-audience">Paid Members</span>
+            {% else %}
+            <span class="admin-badge admin-badge-primary event-audience">Members</span>
+            {% endif %}
+        </div>
+        {% if event.description %}
+        <div class="event-description">{{ event.description[:170] }}{% if event.description|length > 170 %}...{% endif %}</div>
+        {% endif %}
+        <div class="event-meta">
+            <div><i class="fas fa-clock"></i> {{ event.event_date.strftime('%a, %b %d, %Y %H:%M') }}</div>
+            <div><i class="fas fa-map-marker-alt"></i> {{ event.location or 'TBA' }}</div>
+            {% if event.max_attendees %}<div><i class="fas fa-users"></i> Max attendees: {{ event.max_attendees }}</div>{% endif %}
+        </div>
+        <div class="event-actions">
+            {% if my %}
+                {% if my.status == 'approved' %}
+                <span class="admin-badge admin-badge-success">RSVP Approved</span>
+                {% elif my.status == 'rejected' %}
+                <span class="admin-badge admin-badge-danger">RSVP Rejected</span>
+                {% else %}
+                <span class="admin-badge admin-badge-warning">RSVP Pending</span>
+                {% endif %}
+            {% else %}
+            <form method="POST" action="{{ url_for('member.event_rsvp', event_id=event.id) }}">
+                <button type="submit" class="admin-btn admin-btn-primary admin-btn-sm">
+                    <i class="fas fa-paper-plane"></i> RSVP
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state mb-4">No upcoming member events.</div>
+{% endif %}
+
+<div class="section-head">
+    <h6 class="section-title">Past ({{ past_events|length }})</h6>
+</div>
+{% if past_events %}
+<div class="events-grid">
+    {% for event in past_events %}
+    {% set my = my_rsvps.get(event.id) %}
+    <div class="event-card">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <h6 class="event-title">{{ event.title }}</h6>
+            <span class="admin-badge admin-badge-secondary event-audience">Past</span>
+        </div>
+        <div class="event-meta">
+            <div><i class="fas fa-clock"></i> {{ event.event_date.strftime('%a, %b %d, %Y %H:%M') }}</div>
+            <div><i class="fas fa-map-marker-alt"></i> {{ event.location or 'TBA' }}</div>
+        </div>
+        {% if my %}
+            {% if my.status == 'approved' %}
+            <span class="admin-badge admin-badge-success">You RSVP'd (approved)</span>
+            {% elif my.status == 'rejected' %}
+            <span class="admin-badge admin-badge-danger">You RSVP'd (rejected)</span>
+            {% else %}
+            <span class="admin-badge admin-badge-warning">You RSVP'd (pending)</span>
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">No past member events.</div>
+{% endif %}
+{% endblock %}
+

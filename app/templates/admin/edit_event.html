@@ -35,6 +35,16 @@
                     </select>
                     <small >Select the type of event</small>
                 </div>
+
+                <div class="admin-form-group">
+                    <label for="target_audience" class="admin-form-label">Audience</label>
+                    <select class="admin-form-control" id="target_audience" name="target_audience" required>
+                        <option value="everyone" {% if event.target_audience == 'everyone' %}selected{% endif %}>Everyone (Public)</option>
+                        <option value="members" {% if event.target_audience == 'members' %}selected{% endif %}>Members Only</option>
+                        <option value="paid_members" {% if event.target_audience == 'paid_members' %}selected{% endif %}>Paid Members Only</option>
+                    </select>
+                    <small>Control where this event appears and who can RSVP.</small>
+                </div>
                 
                 <div class="admin-form-group">
                     <label for="description" class="admin-form-label">Event Description</label>
