@@ -1,4 +1,4 @@
-from flask import render_template, request, flash, redirect, url_for, current_app
+from flask import render_template, request, flash, redirect, url_for, current_app, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
@@ -9,7 +9,7 @@ from app import db
 from app.id_generator import generate_digital_id
 from app.utils import get_notification_service
 from app.member_requirements import ALLOWED_COURSES, ALLOWED_YEARS, is_allowed_course, is_allowed_year
-from datetime import datetime
+from datetime import datetime, timedelta
 import urllib.parse
 import urllib.request
 import json
@@ -179,7 +179,11 @@ def login():
                 flash('Your account is pending admin approval.', 'warning')
                 return render_template('auth/approval_pending.html')
             
-            login_user(user)
+            # Keep users signed in across browser restarts for up to 30 days.
+            session_lifetime = current_app.config.get('REMEMBER_COOKIE_DURATION', timedelta(days=30))
+            login_user(user, remember=True, duration=session_lifetime)
+            # Make the session itself long-lived as well.
+            session.permanent = True
             
             # Auto-generate digital ID if member doesn't have one
             if user.member and user.member.needs_id_regeneration():
