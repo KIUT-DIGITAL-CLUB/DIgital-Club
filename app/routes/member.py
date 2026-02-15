@@ -150,6 +150,8 @@ def dashboard():
     if week:
         upcoming_sessions = week.sessions.order_by(SessionSchedule.session_date.asc(), SessionSchedule.start_time.asc()).limit(5).all()
     recent_rewards = member.reward_transactions.order_by(RewardTransaction.created_at.desc()).limit(5).all()
+    membership_status = member.get_membership_status()
+    latest_membership_payment = member.get_latest_payment()
     return render_template(
         'member/dashboard.html',
         member=member,
@@ -160,6 +162,8 @@ def dashboard():
         team_membership=team_membership,
         upcoming_sessions=upcoming_sessions,
         recent_rewards=recent_rewards,
+        membership_status=membership_status,
+        latest_membership_payment=latest_membership_payment,
         current_date=datetime.now(),
     )
 
