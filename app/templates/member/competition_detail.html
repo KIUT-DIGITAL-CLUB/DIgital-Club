@@ -1001,10 +1001,14 @@
                 <h5>Leaderboard</h5>
             </div>
             <div class="admin-card-body">
-                <p class="mb-3">See current rankings and track your position.</p>
+                {% if competition.status == 'finalized' %}
+                <p class="mb-3">See final rankings and your position.</p>
                 <a href="{{ url_for('member.competition_leaderboard', competition_id=competition.id) }}" class="admin-btn admin-btn-outline w-100">
                     <i class="fas fa-list-ol"></i> View Leaderboard
                 </a>
+                {% else %}
+                <p class="mb-0">Leaderboard will be visible after results are finalized.</p>
+                {% endif %}
             </div>
         </div>
 
@@ -1015,10 +1019,17 @@
                 <h5>Judge Panel</h5>
             </div>
             <div class="admin-card-body">
-                <p class="mb-3">Score submissions assigned to you.</p>
+                {% if competition.status == 'finalized' %}
+                <p class="mb-3">Competition is finalized. Scores are locked.</p>
+                <a href="{{ url_for('member.competition_leaderboard', competition_id=competition.id) }}" class="admin-btn admin-btn-outline w-100">
+                    <i class="fas fa-list-ol"></i> View Final Leaderboard
+                </a>
+                {% else %}
+                <p class="mb-3">Scoring is ongoing. Review submissions and score assigned entries.</p>
                 <a href="{{ url_for('member.competition_leaderboard', competition_id=competition.id) }}" class="admin-btn admin-btn-outline w-100">
                     <i class="fas fa-pen"></i> Open Scoring Panel
                 </a>
+                {% endif %}
             </div>
         </div>
         {% endif %}
