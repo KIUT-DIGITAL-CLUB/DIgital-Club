@@ -355,7 +355,11 @@
 {% block member_content %}
 <div class="leaderboard-header">
     <h5 class="mb-2">Leaderboard - {{ competition.title }}</h5>
-    <p class="mb-0">Current rankings based on submitted scores. Final rankings may change until assessment period ends.</p>
+    {% if competition.status == 'finalized' %}
+    <p class="mb-0">Final rankings and winners for this competition.</p>
+    {% else %}
+    <p class="mb-0">Judge scoring view. Rankings are provisional until competition finalization.</p>
+    {% endif %}
 </div>
 
 {% if my_submission %}

@@ -959,10 +959,13 @@ def competition_leaderboard(competition_id):
     competition = Competition.query.get_or_404(competition_id)
     if competition.status in ['draft', 'cancelled']:
         abort(404)
+    is_judge = _member_is_judge(competition.id, current_user.id) is not None
+    if competition.status != 'finalized' and not is_judge:
+        flash('Leaderboard will be available after competition finalization.', 'info')
+        return redirect(url_for('member.competition_detail', competition_id=competition.id))
     submissions_query = competition.submissions.filter(CompetitionSubmission.status != 'disqualified').order_by(CompetitionSubmission.final_score.desc())
     page = request.args.get('page', 1, type=int)
     submissions_page = submissions_query.paginate(page=page, per_page=20, error_out=False)
-    is_judge = _member_is_judge(competition.id, current_user.id) is not None
     rewards = competition.rewards.order_by(CompetitionReward.id.asc()).all()
     badges = _build_reward_badges(rewards, submissions_page.total)
     member = current_user.member
