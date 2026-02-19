@@ -853,6 +853,19 @@
                 <h5 class="section-title">Your Submission</h5>
             </div>
             <div class="admin-card-body">
+                {% if enrollment and enrollment.admin_notice and enrollment.status != 'disqualified' %}
+                <div class="alert-card alert-warning mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div>
+                            <strong>Admin Notice</strong>
+                            <div class="mt-1">{{ enrollment.admin_notice }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 {% if enrollment and enrollment.status == 'disqualified' %}
                 <div class="alert-card alert-danger">
                     <div class="d-flex align-items-center">

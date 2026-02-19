@@ -128,6 +128,27 @@ def _migrate_rsvp_attendee_fields():
     except Exception:
         pass
 
+
+def _migrate_competition_enrollment_notice_fields():
+    """Compatibility migration: add competition enrollment notice fields if missing."""
+    try:
+        from sqlalchemy import inspect, text
+
+        inspector = inspect(db.engine)
+        if 'competition_enrollment' not in inspector.get_table_names():
+            return
+        cols = {c['name'] for c in inspector.get_columns('competition_enrollment')}
+        with db.engine.connect() as conn:
+            if 'admin_notice' not in cols:
+                conn.execute(text("ALTER TABLE competition_enrollment ADD COLUMN admin_notice TEXT"))
+            if 'admin_notice_by' not in cols:
+                conn.execute(text("ALTER TABLE competition_enrollment ADD COLUMN admin_notice_by INTEGER"))
+            if 'admin_notice_at' not in cols:
+                conn.execute(text("ALTER TABLE competition_enrollment ADD COLUMN admin_notice_at DATETIME"))
+            conn.commit()
+    except Exception:
+        pass
+
 def create_app():
     app = Flask(__name__)
     
@@ -168,6 +189,7 @@ def create_app():
         _migrate_user_active_account_column()
         _migrate_event_target_audience_column()
         _migrate_rsvp_attendee_fields()
+        _migrate_competition_enrollment_notice_fields()
     
     # Configure login manager
     login_manager.login_view = 'auth.login'
@@ -185,8 +207,21 @@ def create_app():
     def inject_guards():
         try:
             from app.models import CompetitionGuard
-            today = datetime.now().date()
-            guards = CompetitionGuard.query.filter(CompetitionGuard.week_end >= today).order_by(CompetitionGuard.week_start.desc()).all()
+            all_guards = CompetitionGuard.query.order_by(
+                CompetitionGuard.created_at.desc(),
+                CompetitionGuard.id.desc()
+            ).all()
+            # Keep the latest guard per level so widget always shows current champions by level.
+            seen_levels = set()
+            guards = []
+            for g in all_guards:
+                if g.level in seen_levels:
+                    continue
+                guards.append(g)
+                seen_levels.add(g.level)
+                if len(guards) >= 3:
+                    break
+            guards.sort(key=lambda item: item.level)
         except Exception:
             db.session.rollback()
             guards = []

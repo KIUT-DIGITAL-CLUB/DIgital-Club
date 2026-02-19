@@ -342,12 +342,15 @@ class NotificationService:
     
     def send_sms(self, phone_number, message):
         """Send SMS notification using Twilio"""
+        if not phone_number:
+            return False
         if phone_number[0] == '0':
             phone_number = '+255' + phone_number[1:]
         elif phone_number[0] == '+':
             phone_number = phone_number[1:]
         try:
-           current_app.logger.info(send_sms(phone_number, message))
+            current_app.logger.info(send_sms(phone_number, message))
+            return True
         except Exception as e:
             print(f"Failed to send SMS to {phone_number}: {str(e)}")
             try:
@@ -461,6 +464,42 @@ Digital Club Team
                 current_app.logger.error(f"Failed to send approval email: {exc}")
             except RuntimeError:
                 logging.error(f"Failed to send approval email: {exc}")
+            return False
+
+    def send_user_approval_sms(self, user):
+        """Send a short welcome SMS after account approval."""
+        try:
+            member = getattr(user, 'member', None)
+            phone = (member.phone or '').strip() if member else ''
+            if not phone:
+                return False
+            first_name = (member.full_name.split()[0] if member and member.full_name else 'Member')
+            message = (
+                f"Welcome {first_name}! Your KIUT Digital Club account is approved. "
+                "You can now log in and start participating in club activities."
+            )
+            return self.send_sms(phone, message)
+        except Exception as exc:
+            try:
+                current_app.logger.error(f"Failed to send approval SMS: {exc}")
+            except RuntimeError:
+                logging.error(f"Failed to send approval SMS: {exc}")
+            return False
+
+    def send_competition_member_notice_sms(self, member, message):
+        """Send competition notice/disqualification SMS to a member."""
+        try:
+            if not member:
+                return False
+            phone = (member.phone or '').strip()
+            if not phone:
+                return False
+            return self.send_sms(phone, message)
+        except Exception as exc:
+            try:
+                current_app.logger.error(f"Failed to send competition notice SMS: {exc}")
+            except RuntimeError:
+                logging.error(f"Failed to send competition notice SMS: {exc}")
             return False
 
     def send_admin_promotion_email(self, user, promoted_by):

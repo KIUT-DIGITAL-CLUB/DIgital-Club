@@ -860,10 +860,14 @@ class CompetitionEnrollment(db.Model):
     disqualified_reason = db.Column(db.Text)
     disqualified_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     disqualified_at = db.Column(db.DateTime)
+    admin_notice = db.Column(db.Text)
+    admin_notice_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    admin_notice_at = db.Column(db.DateTime)
     enrolled_at = db.Column(db.DateTime, default=datetime.now)
 
     member = db.relationship('Member', backref='competition_enrollments')
-    disqualifier = db.relationship('User', backref='competition_disqualifications')
+    disqualifier = db.relationship('User', foreign_keys=[disqualified_by], backref='competition_disqualifications')
+    notice_author = db.relationship('User', foreign_keys=[admin_notice_by], backref='competition_notices_sent')
 
     __table_args__ = (db.UniqueConstraint('competition_id', 'member_id', name='_competition_enrollment_uc'),)
 

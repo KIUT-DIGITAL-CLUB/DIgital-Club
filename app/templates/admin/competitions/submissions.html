@@ -51,7 +51,7 @@
     
     .submission-row {
         display: grid;
-        grid-template-columns: 2fr repeat(7, 1fr) auto;
+        grid-template-columns: 280px 110px 120px 90px 130px 90px 190px 90px 420px;
         gap: 1rem;
         align-items: center;
         padding: 1rem;
@@ -116,6 +116,10 @@
         justify-content: flex-end;
         flex-wrap: wrap;
     }
+
+    .submissions-table {
+        min-width: 1650px;
+    }
     
     .status-badge {
         font-size: 0.75rem;
@@ -165,40 +169,6 @@
         margin-bottom: 0.5rem;
     }
     
-    @media (max-width: 1200px) {
-        .submission-row {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-            padding: 1.25rem;
-            border: 1px solid var(--admin-border);
-            border-radius: var(--border-radius-sm);
-            margin-bottom: 1rem;
-        }
-        
-        .submission-meta-cell {
-            text-align: left;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .submission-meta-cell::before {
-            content: attr(data-label);
-            font-weight: 600;
-            color: var(--admin-text-primary);
-            margin-right: 1rem;
-        }
-        
-        .submission-actions-cell {
-            justify-content: flex-start;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--admin-border);
-        }
-        
-        .bonus-form {
-            max-width: none;
-        }
-    }
 </style>
 {% endblock %}
 
@@ -248,6 +218,7 @@
     <div class="admin-card-body">
         {% if submissions %}
         <div class="admin-table-responsive">
+            <div class="submissions-table">
             <!-- Desktop Table Header -->
             <div class="submission-row" style="background: var(--surface-2); font-weight: 600; border-bottom: 2px solid var(--admin-border);">
                 <div class="submission-member-cell">Participant</div>
@@ -263,6 +234,7 @@
             
             <!-- Submission Rows -->
             {% for s in submissions %}
+            {% set enrollment = enrollment_map.get(s.member_id) %}
             <div class="submission-row">
                 <!-- Member Info -->
                 <div class="submission-member-cell">
@@ -273,6 +245,11 @@
                         <div class="member-details">
                             <div class="member-name">{{ s.member.full_name }}</div>
                             <div class="member-email">{{ s.member.email }}</div>
+                            {% if enrollment and enrollment.admin_notice %}
+                            <div style="font-size: 0.75rem; color: var(--admin-warning); margin-top: 0.25rem;">
+                                <i class="fas fa-bell"></i> Notice: {{ enrollment.admin_notice|truncate(70) }}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -359,6 +336,20 @@
                         <i class="fas fa-pen"></i> Score
                     </a>
                     {% endif %}
+                    {% if competition.status != 'finalized' %}
+                    <form method="POST" action="{{ url_for('admin.competitions_submission_notice', competition_id=competition.id, submission_id=s.id) }}" class="bonus-form" style="max-width: 280px;">
+                        <input type="text" name="notice" value="{{ enrollment.admin_notice if enrollment else '' }}" placeholder="Admin notice to member" required>
+                        <button type="submit" class="admin-btn admin-btn-outline admin-btn-sm" title="Save notice + SMS">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.competitions_submission_delete', competition_id=competition.id, submission_id=s.id) }}" class="bonus-form" style="max-width: 320px;">
+                        <input type="text" name="delete_reason" placeholder="Reason to delete and reopen" required>
+                        <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm" title="Delete submission and notify member">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                    {% endif %}
                     
                     <a href="{{ url_for('admin.competitions_view', competition_id=competition.id) }}" class="admin-btn admin-btn-outline admin-btn-sm" title="View Details">
                         <i class="fas fa-eye"></i>
@@ -366,6 +357,7 @@
                 </div>
             </div>
             {% endfor %}
+            </div>
         </div>
         
         <div class="mt-3">

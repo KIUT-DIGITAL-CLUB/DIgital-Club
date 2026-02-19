@@ -54,7 +54,7 @@
     
     .competition-row {
         display: grid;
-        grid-template-columns: 2fr repeat(6, 1fr) auto;
+        grid-template-columns: 320px 120px 100px 120px 140px 120px 120px 170px;
         gap: 1rem;
         align-items: center;
         padding: 1rem;
@@ -95,6 +95,10 @@
         display: flex;
         gap: 0.5rem;
         justify-content: flex-end;
+    }
+
+    .competition-table {
+        min-width: 1330px;
     }
     
     .empty-state {
@@ -149,36 +153,6 @@
         letter-spacing: 0.5px;
     }
     
-    @media (max-width: 1200px) {
-        .competition-row {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-            padding: 1.25rem;
-            border: 1px solid var(--admin-border);
-            border-radius: var(--border-radius-sm);
-            margin-bottom: 1rem;
-        }
-        
-        .competition-meta-cell {
-            text-align: left;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .competition-meta-cell::before {
-            content: attr(data-label);
-            font-weight: 600;
-            color: var(--admin-text-primary);
-            margin-right: 1rem;
-        }
-        
-        .competition-actions-cell {
-            justify-content: flex-start;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--admin-border);
-        }
-    }
 </style>
 {% endblock %}
 
@@ -246,6 +220,7 @@
     <div class="admin-card-body">
         {% if competitions %}
         <div class="admin-table-responsive">
+            <div class="competition-table">
             <!-- Desktop Table Header -->
             <div class="competition-row" style="background: var(--surface-2); font-weight: 600; border-bottom: 2px solid var(--admin-border);">
                 <div class="competition-title-cell">Competition</div>
@@ -325,6 +300,7 @@
                 </div>
             </div>
             {% endfor %}
+            </div>
         </div>
         {% else %}
         <div class="empty-state">

@@ -102,6 +102,7 @@
     
     .leaderboard-table {
         width: 100%;
+        min-width: 980px;
         border-collapse: collapse;
         font-size: 0.85rem;
     }
@@ -276,52 +277,6 @@
     @media (max-width: 768px) {
         .leaderboard-stats {
             grid-template-columns: repeat(2, 1fr);
-        }
-
-        .leaderboard-table-wrapper {
-            overflow: hidden;
-        }
-
-        .leaderboard-table thead {
-            display: none;
-        }
-
-        .leaderboard-table,
-        .leaderboard-table tbody,
-        .leaderboard-table tr,
-        .leaderboard-table td {
-            display: block;
-            width: 100%;
-        }
-
-        .leaderboard-table tr {
-            border: 1px solid var(--admin-border);
-            border-radius: 12px;
-            margin-bottom: 0.75rem;
-            padding: 0.5rem;
-            background: var(--surface-1);
-        }
-
-        .leaderboard-table td {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0.25rem;
-        }
-
-        .leaderboard-table td::before {
-            content: attr(data-label);
-            font-size: 0.75rem;
-            color: var(--admin-text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            font-family: 'Fira Code', monospace;
-        }
-
-        .member-cell {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.4rem;
         }
     }
 </style>

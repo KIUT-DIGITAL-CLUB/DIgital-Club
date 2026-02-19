@@ -763,7 +763,7 @@
             {% endif %}
         </div>
         
-        {% if disqualified_enrollments %}
+        {% if competition_notices %}
         <div class="notice-section">
             <div class="notice-card">
                 <div class="notice-header">
@@ -772,20 +772,34 @@
                         Competition Notices
                     </h6>
                 </div>
-                {% for e in disqualified_enrollments %}
+                {% for e in competition_notices %}
                 <div class="notice-item">
                     <div class="competition-notice">
                         <div class="notice-icon">
+                            {% if e.status == 'disqualified' %}
                             <i class="fas fa-ban"></i>
+                            {% else %}
+                            <i class="fas fa-bell"></i>
+                            {% endif %}
                         </div>
                         <div class="notice-content">
                             <div class="notice-competition">{{ e.competition.title }}</div>
                             <div class="notice-reason">
+                                {% if e.status == 'disqualified' %}
                                 {{ e.disqualified_reason or 'Contact admin for details.' }}
+                                {% else %}
+                                {{ e.admin_notice }}
+                                {% endif %}
                             </div>
                             <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
                                 <i class="far fa-clock me-1"></i>
-                                {{ e.updated_at.strftime('%b %d, %Y') }}
+                                {% if e.status == 'disqualified' and e.disqualified_at %}
+                                {{ e.disqualified_at.strftime('%b %d, %Y') }}
+                                {% elif e.admin_notice_at %}
+                                {{ e.admin_notice_at.strftime('%b %d, %Y') }}
+                                {% else %}
+                                {{ e.enrolled_at.strftime('%b %d, %Y') }}
+                                {% endif %}
                             </div>
                         </div>
                     </div>

@@ -232,7 +232,7 @@
     </footer>
 
     {% if guards_week %}
-    <div class="guards-widget" id="guards-widget" aria-live="polite" style="position: fixed; left: 1.25rem; bottom: 1.25rem; top: auto; right: auto; z-index: 15000;">
+    <div class="guards-widget" id="guards-widget" aria-live="polite">
         <button class="guards-toggle" id="guards-toggle" type="button" aria-expanded="false" aria-controls="guards-panel">
             <span class="guards-toggle-icon"><i class="fas fa-shield-halved" aria-hidden="true"></i></span>
             <span class="guards-toggle-text">Guards of the Week</span>
@@ -259,7 +259,7 @@
                     {% endif %}
                     <div class="guards-info">
                         <div class="guards-name">{{ g.member.full_name }}</div>
-                        <div class="guards-meta">{{ g.member.title or 'Member' }} • Level {{ g.level }}</div>
+                        <div class="guards-meta">Level {{ g.level }}</div>
                         <div class="guards-meta">{{ g.week_start.strftime('%b %d') }} - {{ g.week_end.strftime('%b %d') }}</div>
                         {% if g.work_link %}
                             <a class="guards-link" href="{{ g.work_link }}" target="_blank" rel="noopener">View work</a>
