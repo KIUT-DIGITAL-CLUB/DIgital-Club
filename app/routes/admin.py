@@ -94,8 +94,9 @@ def approve_user(user_id):
     try:
         notification_service = get_notification_service()
         notification_service.send_user_approval_email(user)
+        notification_service.send_user_approval_sms(user)
     except Exception as exc:
-        current_app.logger.error(f"Failed to send approval email for user {user.email}: {exc}")
+        current_app.logger.error(f"Failed to send approval notifications for user {user.email}: {exc}")
     
     flash(f'User {user.email} has been approved.', 'success')
     return redirect(url_for('admin.users'))
@@ -3287,7 +3288,119 @@ def competitions_submissions(competition_id):
     judge = _competition_is_judge(competition.id, current_user.id)
     is_judge = judge is not None
     is_chair = judge.is_chair if judge else False
-    return render_template('admin/competitions/submissions.html', competition=competition, submissions=submissions, is_judge=is_judge, is_chair=is_chair)
+    enrollment_map = {
+        e.member_id: e
+        for e in CompetitionEnrollment.query.filter_by(competition_id=competition.id).all()
+    }
+    return render_template(
+        'admin/competitions/submissions.html',
+        competition=competition,
+        submissions=submissions,
+        is_judge=is_judge,
+        is_chair=is_chair,
+        enrollment_map=enrollment_map
+    )
+
+
+@admin_bp.route('/competitions/<int:competition_id>/submissions/<int:submission_id>/notice', methods=['POST'])
+@login_required
+@admin_required
+def competitions_submission_notice(competition_id, submission_id):
+    competition = Competition.query.get_or_404(competition_id)
+    if competition.status == 'finalized':
+        flash('Competition is finalized. Submission notices are locked.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+    submission = CompetitionSubmission.query.get_or_404(submission_id)
+    if submission.competition_id != competition.id:
+        flash('Invalid submission.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+    notice = (request.form.get('notice') or '').strip()
+    if not notice:
+        flash('Notice message is required.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+
+    enrollment = CompetitionEnrollment.query.filter_by(
+        competition_id=competition.id,
+        member_id=submission.member_id
+    ).first()
+    if not enrollment:
+        flash('Enrollment record was not found.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+
+    enrollment.admin_notice = notice
+    enrollment.admin_notice_by = current_user.id
+    enrollment.admin_notice_at = datetime.now()
+    db.session.commit()
+
+    try:
+        notification_service = get_notification_service()
+        notification_service.send_competition_member_notice_sms(
+            submission.member,
+            f"KIUT Digital Club: Competition notice for {competition.title}. {notice}"
+        )
+    except Exception as exc:
+        current_app.logger.error(f"Failed to send competition notice SMS: {exc}")
+
+    flash('Notice saved and sent to member phone (if available).', 'success')
+    return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+
+
+@admin_bp.route('/competitions/<int:competition_id>/submissions/<int:submission_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def competitions_submission_delete(competition_id, submission_id):
+    competition = Competition.query.get_or_404(competition_id)
+    if competition.status == 'finalized':
+        flash('Competition is finalized. Submissions are locked.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+    submission = CompetitionSubmission.query.get_or_404(submission_id)
+    if submission.competition_id != competition.id:
+        flash('Invalid submission.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+
+    reason = (request.form.get('delete_reason') or '').strip()
+    if not reason:
+        flash('A reason is required before deleting a submission.', 'error')
+        return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
+
+    enrollment = CompetitionEnrollment.query.filter_by(
+        competition_id=competition.id,
+        member_id=submission.member_id
+    ).first()
+    if enrollment:
+        enrollment.admin_notice = (
+            "Your previous submission was returned by admin: "
+            f"{reason}. Please submit again."
+        )
+        enrollment.admin_notice_by = current_user.id
+        enrollment.admin_notice_at = datetime.now()
+        if enrollment.status != 'disqualified':
+            enrollment.status = 'enrolled'
+
+    if submission.submission_type in ['video', 'report'] and submission.submission_value:
+        try:
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'competitions', submission.submission_value)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as exc:
+            current_app.logger.warning(f"Failed to remove submission file {submission.submission_value}: {exc}")
+
+    CompetitionScore.query.filter_by(submission_id=submission.id).delete(synchronize_session=False)
+    db.session.delete(submission)
+    db.session.commit()
+
+    try:
+        notification_service = get_notification_service()
+        notification_service.send_competition_member_notice_sms(
+            enrollment.member if enrollment else None,
+            f"KIUT Digital Club: Your submission in {competition.title} was removed by admin. "
+            f"Reason: {reason}. You can submit again."
+        )
+    except Exception as exc:
+        current_app.logger.error(f"Failed to send submission delete SMS: {exc}")
+
+    flash('Submission deleted. Member can submit again.', 'success')
+    return redirect(url_for('admin.competitions_submissions', competition_id=competition.id))
 
 
 @admin_bp.route('/competitions/<int:competition_id>/submissions/<int:submission_id>/score', methods=['GET', 'POST'])
@@ -3342,10 +3455,11 @@ def competitions_score(competition_id, submission_id):
 def competitions_finalize(competition_id):
     competition = Competition.query.get_or_404(competition_id)
     chair = CompetitionJudge.query.filter_by(competition_id=competition.id, user_id=current_user.id, is_chair=True, is_active=True).first()
-    if not chair:
+    is_super_admin = bool(getattr(current_user, 'is_super_admin', False))
+    if not chair and not is_super_admin:
         flash('Only the chair judge can finalize the competition.', 'error')
         return redirect(url_for('admin.competitions_view', competition_id=competition.id))
-    if chair.judge.role != 'admin':
+    if chair and chair.judge.role != 'admin' and not is_super_admin:
         flash('Chair judge must be an admin to finalize.', 'error')
         return redirect(url_for('admin.competitions_view', competition_id=competition.id))
 
@@ -3426,6 +3540,21 @@ def competitions_finalize(competition_id):
 
     competition.status = 'finalized'
     db.session.commit()
+
+    # Notify top 3 ranked members by SMS.
+    try:
+        notification_service = get_notification_service()
+        for winner in submissions[:3]:
+            if not winner.rank:
+                continue
+            notification_service.send_competition_member_notice_sms(
+                winner.member,
+                f"Congratulations! You placed #{winner.rank} in {competition.title}. "
+                "Your result has been finalized by KIUT Digital Club."
+            )
+    except Exception as exc:
+        current_app.logger.error(f"Failed to send winners SMS for competition {competition.id}: {exc}")
+
     flash('Competition finalized and winners published.', 'success')
     return redirect(url_for('admin.competitions_view', competition_id=competition.id))
 
@@ -3475,6 +3604,15 @@ def competitions_disqualify(competition_id, enrollment_id):
     if submission:
         submission.status = 'disqualified'
     db.session.commit()
+    try:
+        notification_service = get_notification_service()
+        notification_service.send_competition_member_notice_sms(
+            enrollment.member,
+            f"KIUT Digital Club: You were disqualified from {competition.title}. "
+            f"Reason: {reason or 'Contact admin for details.'}"
+        )
+    except Exception as exc:
+        current_app.logger.error(f"Failed to send disqualification SMS: {exc}")
     flash('Member disqualified.', 'success')
     return redirect(url_for('admin.competitions_enrollments', competition_id=competition.id))
 
@@ -3507,7 +3645,8 @@ def competitions_leaderboard(competition_id):
     rewards = competition.rewards.order_by(CompetitionReward.id.asc()).all()
     badges = _build_reward_badges(rewards, submissions_page.total)
     chair = CompetitionJudge.query.filter_by(competition_id=competition.id, user_id=current_user.id, is_chair=True, is_active=True).first()
-    can_finalize = chair is not None and chair.judge.role == 'admin' and competition.status != 'finalized'
+    is_super_admin = bool(getattr(current_user, 'is_super_admin', False))
+    can_finalize = (is_super_admin or (chair is not None and chair.judge.role == 'admin')) and competition.status != 'finalized'
     return render_template('admin/competitions/leaderboard.html', competition=competition, submissions=submissions_page, badges=badges, can_finalize=can_finalize)
 
 

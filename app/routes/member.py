@@ -136,7 +136,19 @@ def dashboard():
         flash('Please complete your profile first.', 'warning')
         return redirect(url_for('member.edit_profile'))
     
-    disqualified = CompetitionEnrollment.query.filter_by(member_id=current_user.member.id, status='disqualified').join(Competition).order_by(CompetitionEnrollment.disqualified_at.desc()).all()
+    notices = CompetitionEnrollment.query.filter(
+        CompetitionEnrollment.member_id == current_user.member.id,
+        db.or_(
+            CompetitionEnrollment.status == 'disqualified',
+            CompetitionEnrollment.admin_notice.isnot(None)
+        )
+    ).join(Competition).order_by(
+        db.func.coalesce(
+            CompetitionEnrollment.disqualified_at,
+            CompetitionEnrollment.admin_notice_at,
+            CompetitionEnrollment.enrolled_at
+        ).desc()
+    ).all()
     member = current_user.member
     total_points = member.get_total_points()
     competitions_count = CompetitionSubmission.query.filter_by(member_id=member.id).count()
@@ -155,7 +167,7 @@ def dashboard():
     return render_template(
         'member/dashboard.html',
         member=member,
-        disqualified_enrollments=disqualified,
+        competition_notices=notices,
         total_points=total_points,
         competitions_count=competitions_count,
         best_rank=best_rank,
@@ -946,6 +958,14 @@ def competition_submit(competition_id):
         submission_type=competition.submission_type,
         submission_value=submission_value,
     )
+    enrollment = CompetitionEnrollment.query.filter_by(
+        competition_id=competition.id,
+        member_id=member.id
+    ).first()
+    if enrollment and enrollment.admin_notice:
+        enrollment.admin_notice = None
+        enrollment.admin_notice_at = None
+        enrollment.admin_notice_by = None
     db.session.add(submission)
     db.session.commit()
 
