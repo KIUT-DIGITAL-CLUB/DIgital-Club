@@ -1,0 +1,158 @@
+{% extends "member/member_base.html" %}
+
+{% block title %}Notifications - Digital Club{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span><span>Notifications</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+  .notice-hero {
+    background: var(--gradient-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .notice-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--gradient-primary);
+  }
+  .notice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+  }
+  .notice-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 1.1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .notice-card.unread::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #00c2ff, #22c55e);
+  }
+  .notice-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.35rem;
+  }
+  .notice-card-body {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin: 0.7rem 0 0.9rem;
+  }
+  .notice-stats {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.9rem;
+  }
+  .notice-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .notice-summary-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 0.9rem 1rem;
+  }
+  .notice-empty {
+    border: 1px dashed var(--border-color);
+    background: var(--surface-1);
+    border-radius: var(--border-radius-md);
+    padding: 2rem 1.2rem;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  @media (max-width: 640px) {
+    .notice-summary {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block member_content %}
+<div class="notice-hero">
+  <h1 class="h4 mb-1">Notifications Center</h1>
+  <p class="mb-0 text-muted">Messages from club administrators appear here and are also sent by SMS when your phone number is available.</p>
+</div>
+
+<div class="notice-summary">
+  <div class="notice-summary-card">
+    <div class="text-muted small text-uppercase">Unread</div>
+    <div class="fs-4 fw-bold">{{ unread_count }}</div>
+  </div>
+  <div class="notice-summary-card">
+    <div class="text-muted small text-uppercase">Total</div>
+    <div class="fs-4 fw-bold">{{ pagination.total }}</div>
+  </div>
+</div>
+
+{% if notifications %}
+<div class="notice-grid">
+  {% for item in notifications %}
+  <div class="notice-card {% if not item.is_read %}unread{% endif %}">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div class="notice-card-title">{{ item.title }}</div>
+      {% if not item.is_read %}
+      <span class="admin-badge admin-badge-primary">New</span>
+      {% endif %}
+    </div>
+    <div class="notice-stats">
+      <span class="admin-badge admin-badge-secondary">{{ item.created_at.strftime('%b %d, %Y %H:%M') }}</span>
+      {% if item.sms_sent %}
+      <span class="admin-badge admin-badge-success">SMS Sent</span>
+      {% else %}
+      <span class="admin-badge admin-badge-warning">Panel Only</span>
+      {% endif %}
+    </div>
+    <div class="notice-card-body">{{ (item.message[:180] ~ ('...' if item.message|length > 180 else ''))|urlize(target='_blank')|safe }}</div>
+    <a href="{{ url_for('member.notification_detail', notification_id=item.id) }}" class="admin-btn admin-btn-outline">
+      <i class="fas fa-arrow-right"></i> Open
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+  <div class="text-muted small">Page {{ pagination.page }} of {{ pagination.pages or 1 }}</div>
+  <div class="d-flex gap-2">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('member.notifications', page=pagination.prev_num) }}" class="admin-btn admin-btn-outline admin-btn-sm">Prev</a>
+    {% endif %}
+    {% if pagination.has_next %}
+    <a href="{{ url_for('member.notifications', page=pagination.next_num) }}" class="admin-btn admin-btn-outline admin-btn-sm">Next</a>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<div class="notice-empty">
+  <i class="fas fa-bell-slash mb-2" style="font-size:2rem;color:var(--primary-color);opacity:0.7;"></i>
+  <div class="fw-semibold mb-1">No notifications yet</div>
+  <div>Messages from administrators will appear here when they are sent.</div>
+</div>
+{% endif %}
+{% endblock %}

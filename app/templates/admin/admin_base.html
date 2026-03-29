@@ -244,6 +244,10 @@
                     <i class="fas fa-chevron-down admin-dropdown-icon"></i>
                 </a>
                 <div class="admin-nav-dropdown-menu" id="dropdown-communication">
+                    <a href="{{ url_for('admin.notifications') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.notifications', 'admin.notification_batch_detail'] %}active{% endif %}">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Messages</span>
+                    </a>
                     <a href="{{ url_for('admin.newsletter') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.newsletter' %}active{% endif %}">
                         <i class="fas fa-envelope"></i>
                         <span>Newsletter</span>

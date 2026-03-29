@@ -1,0 +1,146 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Message Record{% endblock %}
+{% block page_title %}Message Record{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.notifications') }}">Messages</a><span class="breadcrumb-separator">/</span> <span>{{ batch.title }}</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+  .record-hero {
+    background: var(--gradient-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 1.3rem;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .record-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--gradient-primary);
+  }
+  .record-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .record-stat {
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 0.75rem 0.9rem;
+  }
+  .record-message {
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+  @media (max-width: 720px) {
+    .record-stats {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="record-hero">
+  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+    <div>
+      <h4 class="mb-1">{{ batch.title }}</h4>
+      <div class="text-muted small">Sent {{ batch.created_at.strftime('%b %d, %Y %H:%M') }} by {{ batch.sender.email }}</div>
+      <div class="text-muted small">Audience: {{ batch.audience_type|title }}</div>
+    </div>
+    <a href="{{ url_for('admin.notifications') }}" class="admin-btn admin-btn-outline">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+  </div>
+  <div class="record-stats">
+    <div class="record-stat">
+      <div class="text-muted small">Recipients</div>
+      <div class="fw-bold fs-5">{{ batch.recipient_count }}</div>
+    </div>
+    <div class="record-stat">
+      <div class="text-muted small">SMS Sent</div>
+      <div class="fw-bold fs-5">{{ batch.sms_sent_count }}</div>
+    </div>
+    <div class="record-stat">
+      <div class="text-muted small">SMS Failed</div>
+      <div class="fw-bold fs-5">{{ batch.sms_failed_count }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="admin-card mb-3">
+  <div class="admin-card-header"><h6 class="mb-0">Message</h6></div>
+  <div class="admin-card-body">
+    <div class="record-message">{{ batch.message|urlize(target='_blank')|safe }}</div>
+  </div>
+</div>
+
+<div class="admin-card">
+  <div class="admin-card-header"><h6 class="mb-0">Recipients</h6></div>
+  <div class="admin-card-body">
+    {% if recipients.items %}
+    <div class="table-responsive">
+      <table class="table admin-table">
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Course / Year</th>
+            <th>SMS</th>
+            <th>Panel Read</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in recipients.items %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ item.member.full_name }}</div>
+              <div class="small text-muted">{{ item.member.member_id_number or '-' }} • {{ item.member.user.email if item.member.user else '-' }}</div>
+            </td>
+            <td>{{ item.member.course or 'N/A' }}{% if item.member.year %}<div class="small text-muted">{{ item.member.year }}</div>{% endif %}</td>
+            <td>
+              {% if item.sms_sent %}
+              <span class="admin-badge admin-badge-success">Sent</span>
+              {% else %}
+              <span class="admin-badge admin-badge-warning">Not Sent</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if item.is_read %}
+              <span class="admin-badge admin-badge-primary">Read</span>
+              {% else %}
+              <span class="admin-badge admin-badge-secondary">Unread</span>
+              {% endif %}
+            </td>
+            <td>{{ item.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+      <div class="text-muted small">Page {{ recipients.page }} of {{ recipients.pages or 1 }}</div>
+      <div class="d-flex gap-2">
+        {% if recipients.has_prev %}
+        <a href="{{ url_for('admin.notification_batch_detail', batch_id=batch.id, page=recipients.prev_num) }}" class="admin-btn admin-btn-outline admin-btn-sm">Prev</a>
+        {% endif %}
+        {% if recipients.has_next %}
+        <a href="{{ url_for('admin.notification_batch_detail', batch_id=batch.id, page=recipients.next_num) }}" class="admin-btn admin-btn-outline admin-btn-sm">Next</a>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="text-muted">No recipients recorded for this batch.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

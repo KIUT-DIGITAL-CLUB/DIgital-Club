@@ -504,6 +504,23 @@ Digital Club Team
                 logging.error(f"Failed to send competition notice SMS: {exc}")
             return False
 
+    def send_member_notification_sms(self, member, title, message):
+        """Send generic admin message SMS to a member."""
+        try:
+            if not member:
+                return False
+            phone = (member.phone or '').strip()
+            if not phone:
+                return False
+            sms_message = f"{title}\n{message}".strip()
+            return self.send_sms(phone, sms_message[:1000])
+        except Exception as exc:
+            try:
+                current_app.logger.error(f"Failed to send member notification SMS: {exc}")
+            except RuntimeError:
+                logging.error(f"Failed to send member notification SMS: {exc}")
+            return False
+
     def send_team_notice_sms_to_leader(self, team, notice_message):
         """Send team admin notice to team leader."""
         try:

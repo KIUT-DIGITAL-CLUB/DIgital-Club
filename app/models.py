@@ -1274,3 +1274,49 @@ class QuizReminderNotification(db.Model):
     __table_args__ = (
         db.UniqueConstraint('quiz_id', 'member_id', name='uq_quiz_reminder_quiz_member'),
     )
+
+
+class NotificationBatch(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(180), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    audience_type = db.Column(db.String(20), nullable=False, default='group')  # group, individual
+    filters_json = db.Column(db.Text)
+    recipient_count = db.Column(db.Integer, default=0, nullable=False)
+    sms_sent_count = db.Column(db.Integer, default=0, nullable=False)
+    sms_failed_count = db.Column(db.Integer, default=0, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    sender = db.relationship('User', backref='notification_batches')
+    recipients = db.relationship('MemberNotification', backref='batch', lazy='dynamic', cascade='all, delete-orphan')
+
+    def get_filters(self):
+        if not self.filters_json:
+            return {}
+        try:
+            return json.loads(self.filters_json)
+        except Exception:
+            return {}
+
+    def set_filters(self, payload):
+        self.filters_json = json.dumps(payload or {})
+
+
+class MemberNotification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    batch_id = db.Column(db.Integer, db.ForeignKey('notification_batch.id'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    title = db.Column(db.String(180), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    sms_sent = db.Column(db.Boolean, default=False, nullable=False)
+    sms_sent_at = db.Column(db.DateTime)
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    read_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    member = db.relationship('Member', backref='notifications')
+
+    __table_args__ = (
+        db.UniqueConstraint('batch_id', 'member_id', name='uq_notification_batch_member'),
+    )

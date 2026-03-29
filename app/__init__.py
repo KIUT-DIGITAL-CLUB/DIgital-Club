@@ -254,6 +254,16 @@ def _migrate_quiz_reminder_tables():
     except Exception:
         pass
 
+
+def _migrate_member_notification_tables():
+    """Compatibility migration for admin/member messaging tables."""
+    try:
+        from app.models import NotificationBatch, MemberNotification
+        NotificationBatch.__table__.create(bind=db.engine, checkfirst=True)
+        MemberNotification.__table__.create(bind=db.engine, checkfirst=True)
+    except Exception:
+        pass
+
 def create_app():
     app = Flask(__name__)
     
@@ -301,6 +311,7 @@ def create_app():
         _migrate_competition_criteria_visibility()
         _migrate_team_member_workflow_and_competition_team_tables()
         _migrate_quiz_reminder_tables()
+        _migrate_member_notification_tables()
     
     # Configure login manager
     login_manager.login_view = 'auth.login'
@@ -318,6 +329,22 @@ def create_app():
     @app.template_filter('app_local')
     def app_local_filter(value):
         return utc_to_app_naive(value)
+
+    @app.context_processor
+    def inject_member_notification_counts():
+        unread_member_notifications = 0
+        try:
+            from app.models import MemberNotification
+            if current_user.is_authenticated and current_user.role != 'admin' and getattr(current_user, 'member', None):
+                unread_member_notifications = MemberNotification.query.filter_by(
+                    member_id=current_user.member.id,
+                    is_read=False
+                ).count()
+        except Exception:
+            unread_member_notifications = 0
+        return {
+            'unread_member_notifications': unread_member_notifications
+        }
 
     @app.context_processor
     def inject_guards():

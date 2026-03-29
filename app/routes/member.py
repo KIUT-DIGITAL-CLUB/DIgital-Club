@@ -39,6 +39,7 @@ from app.models import (
     QuizLeaderboard,
     QuizReminderPreference,
     QuizReminderNotification,
+    MemberNotification,
 )
 from app import db
 from app.utils import get_notification_service
@@ -856,6 +857,37 @@ def points_transactions():
     )
 
 
+@member_bp.route('/notifications')
+@login_required
+def notifications():
+    member = current_user.member
+    page = request.args.get('page', 1, type=int)
+    query = MemberNotification.query.filter_by(member_id=member.id).order_by(
+        MemberNotification.created_at.desc(),
+        MemberNotification.id.desc()
+    )
+    pagination = query.paginate(page=page, per_page=12, error_out=False)
+    unread_count = MemberNotification.query.filter_by(member_id=member.id, is_read=False).count()
+    return render_template(
+        'member/notifications.html',
+        notifications=pagination.items,
+        pagination=pagination,
+        unread_count=unread_count,
+    )
+
+
+@member_bp.route('/notifications/<int:notification_id>')
+@login_required
+def notification_detail(notification_id):
+    member = current_user.member
+    notification = MemberNotification.query.filter_by(id=notification_id, member_id=member.id).first_or_404()
+    if not notification.is_read:
+        notification.is_read = True
+        notification.read_at = datetime.utcnow()
+        db.session.commit()
+    return render_template('member/notification_detail.html', notification=notification)
+  
+  
 @member_bp.route('/events')
 @login_required
 def events():

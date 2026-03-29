@@ -78,6 +78,14 @@
                 <span>Events</span>
             </a>
 
+            <a href="{{ url_for('member.notifications') }}" class="admin-nav-item {% if request.endpoint in ['member.notifications', 'member.notification_detail'] %}active{% endif %}">
+                <i class="fas fa-bell"></i>
+                <span>Notifications</span>
+                {% if unread_member_notifications > 0 %}
+                <span class="warmup-badge">{{ unread_member_notifications }}</span>
+                {% endif %}
+            </a>
+
             {% set profile_endpoints = [
                 'member.profile',
                 'member.edit_profile',
@@ -118,7 +126,16 @@
                 </div>
 
                 <div class="admin-header-right">
+                    <a href="{{ url_for('member.notifications') }}" class="btn btn-outline-secondary position-relative me-2" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        {% if unread_member_notifications > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ unread_member_notifications }}
+                        </span>
+                        {% endif %}
+                    </a>
                     <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         {% set display_name = current_user.email %}
                         {% if current_user.member and current_user.member.full_name %}
                             {% set first_name = current_user.member.full_name.split(' ')[0] %}
@@ -126,7 +143,6 @@
                                 {% set display_name = first_name|lower|capitalize %}
                             {% endif %}
                         {% endif %}
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user"></i> {{ display_name }}
                         </button>
                         <ul class="dropdown-menu">

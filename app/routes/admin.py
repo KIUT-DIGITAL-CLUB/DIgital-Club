@@ -13,7 +13,7 @@ from app.models import (
     CompetitionTeamSubmission, CompetitionTeamScore, TeamCompetitionPoint,
     SessionWeek, SessionSchedule, SessionReport, Team, TeamMember,
     DailyActiveUser, Quiz, QuizQuestion, QuizOption, QuizAttempt,
-    QuizViolation, QuizLeaderboard
+    QuizViolation, QuizLeaderboard, NotificationBatch, MemberNotification
 )
 from app import db
 from app.utils import get_notification_service
@@ -28,6 +28,7 @@ import json
 import csv
 import io
 import math
+from sqlalchemy import and_, exists, func
 from app.quiz_constants import QUIZ_FIELDS_OF_STUDY
 from app.quiz_cleanup import delete_quiz_and_related
 from app.time_utils import utc_to_app_naive
@@ -42,6 +43,59 @@ def admin_required(f):
             return redirect(url_for('main.index'))
         return f(*args, **kwargs)
     return decorated_function
+
+
+def _member_message_query():
+    return Member.query.join(User).filter(User.is_approved == True)
+
+
+def _apply_member_message_filters(query, filters):
+    course = (filters.get('course') or '').strip()
+    year = (filters.get('year') or '').strip()
+    status = (filters.get('status') or '').strip()
+    membership_status = (filters.get('membership_status') or '').strip()
+    has_phone = (filters.get('has_phone') or '').strip()
+
+    if course:
+        query = query.filter(Member.course == course)
+    if year:
+        query = query.filter(Member.year == year)
+    if status:
+        query = query.filter(Member.status == status)
+    if has_phone == 'yes':
+        query = query.filter(Member.phone.isnot(None), Member.phone != '')
+    elif has_phone == 'no':
+        query = query.filter(db.or_(Member.phone.is_(None), Member.phone == ''))
+
+    if membership_status in ['valid', 'expired', 'none']:
+        today = datetime.utcnow().date()
+        active_payment_exists = exists().where(
+            and_(
+                MembershipPayment.member_id == Member.id,
+                MembershipPayment.start_date <= today,
+                MembershipPayment.end_date >= today
+            )
+        )
+        any_payment_exists = exists().where(MembershipPayment.member_id == Member.id)
+        if membership_status == 'valid':
+            query = query.filter(active_payment_exists)
+        elif membership_status == 'expired':
+            query = query.filter(any_payment_exists).filter(~active_payment_exists)
+        elif membership_status == 'none':
+            query = query.filter(~any_payment_exists)
+
+    return query
+
+
+def _resolve_notification_recipients(audience_type, payload):
+    if audience_type == 'individual':
+        member_id = payload.get('member_id')
+        if not member_id:
+            return []
+        member = _member_message_query().filter(Member.id == member_id).first()
+        return [member] if member else []
+    query = _apply_member_message_filters(_member_message_query(), payload)
+    return query.order_by(Member.full_name.asc()).all()
 
 @admin_bp.route('/')
 @login_required
@@ -444,6 +498,140 @@ def toggle_newsletter_status(subscriber_id):
     status = 'activated' if subscriber.is_active else 'deactivated'
     flash(f'Subscriber {status} successfully.', 'success')
     return redirect(url_for('admin.newsletter'))
+
+
+@admin_bp.route('/messages')
+@login_required
+@admin_required
+def notifications():
+    courses = db.session.query(
+        Member.course, func.count(Member.id)
+    ).join(User).filter(
+        User.is_approved == True,
+        Member.course.isnot(None),
+        Member.course != ''
+    ).group_by(Member.course).order_by(Member.course.asc()).all()
+    years = db.session.query(
+        Member.year, func.count(Member.id)
+    ).join(User).filter(
+        User.is_approved == True,
+        Member.year.isnot(None),
+        Member.year != ''
+    ).group_by(Member.year).order_by(Member.year.asc()).all()
+    statuses = db.session.query(
+        Member.status, func.count(Member.id)
+    ).join(User).filter(User.is_approved == True).group_by(Member.status).order_by(Member.status.asc()).all()
+    batches = NotificationBatch.query.order_by(NotificationBatch.created_at.desc()).limit(12).all()
+    return render_template(
+        'admin/notifications/index.html',
+        courses=courses,
+        years=years,
+        statuses=statuses,
+        batches=batches
+    )
+
+
+@admin_bp.route('/messages/recipients-preview')
+@login_required
+@admin_required
+def notifications_recipients_preview():
+    audience_type = (request.args.get('audience_type') or 'group').strip()
+    payload = {
+        'member_id': request.args.get('member_id', type=int),
+        'course': request.args.get('course'),
+        'year': request.args.get('year'),
+        'status': request.args.get('status'),
+        'membership_status': request.args.get('membership_status'),
+        'has_phone': request.args.get('has_phone'),
+    }
+    recipients = _resolve_notification_recipients(audience_type, payload)
+    preview = recipients[:12]
+    return jsonify({
+        'count': len(recipients),
+        'phone_count': sum(1 for m in recipients if (m.phone or '').strip()),
+        'results': [
+            {
+                'id': m.id,
+                'full_name': m.full_name,
+                'email': m.user.email if m.user else '',
+                'member_id_number': m.member_id_number or '',
+                'course': m.course or '',
+                'year': m.year or '',
+                'phone': m.phone or '',
+            }
+            for m in preview
+        ]
+    })
+
+
+@admin_bp.route('/messages/send', methods=['POST'])
+@login_required
+@admin_required
+def notifications_send():
+    audience_type = (request.form.get('audience_type') or 'group').strip()
+    title = (request.form.get('title') or '').strip()
+    message = (request.form.get('message') or '').strip()
+    payload = {
+        'member_id': request.form.get('member_id', type=int),
+        'course': request.form.get('course'),
+        'year': request.form.get('year'),
+        'status': request.form.get('status'),
+        'membership_status': request.form.get('membership_status'),
+        'has_phone': request.form.get('has_phone'),
+    }
+    if not title or not message:
+        flash('Title and message are required.', 'error')
+        return redirect(url_for('admin.notifications'))
+
+    recipients = _resolve_notification_recipients(audience_type, payload)
+    if not recipients:
+        flash('No matching members found for this message.', 'warning')
+        return redirect(url_for('admin.notifications'))
+
+    notification_service = get_notification_service()
+    batch = NotificationBatch(
+        sender_user_id=current_user.id,
+        title=title,
+        message=message,
+        audience_type=audience_type,
+        recipient_count=len(recipients),
+    )
+    batch.set_filters(payload)
+    db.session.add(batch)
+    db.session.flush()
+
+    sms_sent_count = 0
+    sms_failed_count = 0
+    for member in recipients:
+        sms_sent = notification_service.send_member_notification_sms(member, title, message)
+        db.session.add(MemberNotification(
+            batch_id=batch.id,
+            member_id=member.id,
+            title=title,
+            message=message,
+            sms_sent=bool(sms_sent),
+            sms_sent_at=datetime.utcnow() if sms_sent else None,
+        ))
+        if sms_sent:
+            sms_sent_count += 1
+        else:
+            sms_failed_count += 1
+
+    batch.sms_sent_count = sms_sent_count
+    batch.sms_failed_count = sms_failed_count
+    db.session.commit()
+    flash(f'Message saved for {len(recipients)} member(s). SMS sent: {sms_sent_count}.', 'success')
+    return redirect(url_for('admin.notification_batch_detail', batch_id=batch.id))
+
+
+@admin_bp.route('/messages/<int:batch_id>')
+@login_required
+@admin_required
+def notification_batch_detail(batch_id):
+    batch = NotificationBatch.query.get_or_404(batch_id)
+    page = request.args.get('page', 1, type=int)
+    recipients = batch.recipients.order_by(MemberNotification.created_at.desc()).paginate(page=page, per_page=25, error_out=False)
+    return render_template('admin/notifications/detail.html', batch=batch, recipients=recipients)
 
 # Missing routes for edit/delete operations
 @admin_bp.route('/events/edit/<int:event_id>', methods=['GET', 'POST'])
