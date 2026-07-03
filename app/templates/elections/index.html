@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Leadership Elections - Digital Club{% endblock %}
+
+{% block extra_head %}
+<style>
+    .elections-hero {
+        min-height: 35vh;
+        padding: 8rem 0 4rem;
+        background: radial-gradient(ellipse at top, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .elections-hero h1 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .elections-section { padding: 4rem 0; }
+    .election-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+        transition: all 0.3s;
+    }
+    .election-card:hover { border-color: var(--primary-color); transform: translateY(-3px); }
+    .status-badge { font-size: 0.75rem; padding: 0.3rem 0.75rem; border-radius: 50px; text-transform: capitalize; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="elections-hero">
+    <div class="container">
+        <h1 data-aos="fade-up">Leadership Elections</h1>
+        <p data-aos="fade-up" data-aos-delay="100" style="color: var(--text-secondary); max-width: 640px; margin: 1rem auto 0;">
+            Democratic selection of Digital Club executive leaders. Members can apply and vote through the member portal.
+        </p>
+    </div>
+</section>
+
+<section class="elections-section">
+    <div class="container" style="max-width: 800px;">
+        {% if elections %}
+        {% for e in elections %}
+        <div class="election-card" data-aos="fade-up">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                <h4 class="mb-0">{{ e.title }}</h4>
+                <span class="status-badge" style="background: rgba(var(--particle-color), 0.1); color: var(--primary-color); border: 1px solid rgba(var(--particle-color), 0.3);">{{ e.status }}</span>
+            </div>
+            {% if e.term_label %}<p class="text-muted small mb-2">{{ e.term_label }}</p>{% endif %}
+            {% if e.description %}<p style="color: var(--text-secondary);">{{ e.description[:200] }}{% if e.description|length > 200 %}…{% endif %}</p>{% endif %}
+            <a href="{{ url_for('main.public_election_detail', election_id=e.id) }}" class="btn btn-primary btn-sm">View Details</a>
+            {% if current_user.is_authenticated and current_user.role != 'admin' %}
+            <a href="{{ url_for('member.election_detail', election_id=e.id) }}" class="btn btn-outline-primary btn-sm ms-2">Participate</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-5" style="color: var(--text-muted);">
+            <i class="fas fa-vote-yea fa-3x mb-3 opacity-50"></i>
+            <h4>No active elections</h4>
+            <p>Check back when the next leadership election is announced.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends "member/member_base.html" %}
+
+{% block title %}Results - {{ election.title }}{% endblock %}
+{% block page_title %}Election Results{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('member.elections_browse') }}">Elections</a><span class="breadcrumb-separator">/</span> <a href="{{ url_for('member.election_detail', election_id=election.id) }}">{{ election.title }}</a><span class="breadcrumb-separator">/</span> <span>Results</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .results-page { width: 100%; max-width: 100%; }
+
+    .results-header {
+        background: var(--gradient-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem 1.75rem; margin-bottom: 1.5rem;
+        position: relative; overflow: hidden;
+    }
+    .results-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--gradient-primary); }
+    .results-header h4 { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem; }
+
+    .live-tag {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.78rem; font-weight: 600; margin-top: 0.5rem;
+        background: rgba(255,170,0,0.12); color: var(--warning-color); border: 1px solid rgba(255,170,0,0.35);
+    }
+    .final-tag {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.78rem; font-weight: 600; margin-top: 0.5rem;
+        background: rgba(27,129,27,0.15); color: var(--success-color); border: 1px solid rgba(27,129,27,0.4);
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+        gap: 1.25rem;
+    }
+    @media (max-width: 640px) { .results-grid { grid-template-columns: 1fr; } }
+    .results-block {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+    }
+    .results-block-head { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.25rem; }
+    .results-block-icon {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: var(--surface-1); border: 1px solid var(--border-color);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--primary-color); font-size: 1rem; flex-shrink: 0;
+    }
+    .results-block-title { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0; }
+
+    .result-row {
+        display: flex; align-items: center; gap: 1rem;
+        padding: 0.85rem; border-radius: var(--border-radius-sm);
+        margin-bottom: 0.5rem; border: 1px solid transparent; transition: all 0.2s ease;
+    }
+    .result-row:hover { background: var(--surface-1); }
+    .result-row.is-winner {
+        background: rgba(27,129,27,0.08);
+        border-color: rgba(27,129,27,0.35);
+    }
+
+    .rank-num {
+        width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+        background: var(--surface-2); color: var(--text-secondary);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 0.85rem;
+    }
+    .rank-num.winner { background: var(--gradient-primary); color: #fff; }
+
+    .result-photo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(var(--particle-color), 0.4); flex-shrink: 0; }
+    .result-photo-ph {
+        width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--surface-2); border: 2px solid var(--border-color); color: var(--text-muted);
+    }
+    .result-main { flex: 1; min-width: 0; }
+    .result-name { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.4rem; }
+    .elected-badge {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        padding: 0.15rem 0.55rem; border-radius: 50px; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem;
+        background: rgba(27,129,27,0.15); color: var(--success-color); border: 1px solid rgba(27,129,27,0.4);
+    }
+    .vote-bar-track { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+    .vote-bar-fill { height: 100%; background: var(--gradient-primary); border-radius: 3px; transition: width 0.6s ease; }
+    .result-count { text-align: right; flex-shrink: 0; min-width: 60px; }
+    .result-count .num { font-size: 1.35rem; font-weight: 700; color: var(--primary-color); font-family: 'Fira Code', monospace; line-height: 1; }
+    .result-count .lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .empty-note {
+        display: flex; align-items: center; gap: 0.6rem;
+        color: var(--text-muted); font-size: 0.88rem; padding: 0.85rem 1rem;
+        background: var(--surface-5); border: 1px dashed var(--border-color); border-radius: var(--border-radius-sm);
+    }
+</style>
+{% endblock %}
+
+{% block member_content %}
+<div class="results-page">
+    <div class="results-header">
+        <h4>{{ election.title }}</h4>
+        {% if election.term_label %}<p class="mb-0" style="color: var(--text-secondary);">{{ election.term_label }}</p>{% endif %}
+        {% if election.status == 'finalized' %}
+        <span class="final-tag"><i class="fas fa-circle-check"></i> Final results</span>
+        {% elif election.show_live_results %}
+        <span class="live-tag"><i class="fas fa-tower-broadcast"></i> Live results — not yet final</span>
+        {% endif %}
+    </div>
+
+    <div class="results-grid">
+    {% for block in results %}
+    {% set vote_counts = block.candidates|map(attribute='vote_count')|map('default', 0, true)|list %}
+    {% set max_votes = vote_counts|max if vote_counts else 0 %}
+    <div class="results-block">
+        <div class="results-block-head">
+            <div class="results-block-icon"><i class="fas fa-user-tie"></i></div>
+            <h5 class="results-block-title">{{ block.position.title }}</h5>
+        </div>
+        {% if block.candidates %}
+        {% for c in block.candidates %}
+        <div class="result-row {% if c.is_winner %}is-winner{% endif %}">
+            <div class="rank-num {% if c.is_winner %}winner{% endif %}">{{ c.rank or loop.index }}</div>
+            {% if c.passport_image %}
+            <img src="{{ url_for('static', filename='uploads/elections/passports/' + c.passport_image) }}" class="result-photo" alt="">
+            {% else %}
+            <div class="result-photo-ph"><i class="fas fa-user"></i></div>
+            {% endif %}
+            <div class="result-main">
+                <h6 class="result-name">
+                    {{ c.member.full_name if c.member else 'Candidate' }}
+                    {% if c.is_winner %}<span class="elected-badge"><i class="fas fa-crown"></i> Elected</span>{% endif %}
+                </h6>
+                <div class="vote-bar-track">
+                    <div class="vote-bar-fill" style="width: {{ ((c.vote_count or 0) / max_votes * 100) if max_votes and max_votes > 0 else 0 }}%;"></div>
+                </div>
+            </div>
+            <div class="result-count">
+                <div class="num">{{ c.vote_count or 0 }}</div>
+                <div class="lbl">votes</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-note"><i class="fas fa-user-slash"></i> No results for this position.</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    </div>
+
+    <a href="{{ url_for('member.election_detail', election_id=election.id) }}" class="admin-btn admin-btn-secondary mt-3"><i class="fas fa-arrow-left"></i> Back to Election</a>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}{{ 'Edit' if election else 'New' }} Election - Admin{% endblock %}
+{% block page_title %}{{ 'Edit' if election else 'New' }} Election{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.elections') }}">Elections</a><span class="breadcrumb-separator">/</span> <span>{{ 'Edit' if election else 'New' }}</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .form-section { background: var(--surface-1); border-radius: var(--border-radius-md); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--admin-border); }
+    .form-section-header { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--admin-border); }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .form-field-full { grid-column: 1 / -1; }
+    .position-check { background: var(--surface-2); border-radius: var(--border-radius-sm); padding: 0.75rem 1rem; margin-bottom: 0.5rem; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<form method="POST">
+    <div class="form-section">
+        <div class="form-section-header">
+            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
+        </div>
+        <div class="form-grid">
+            <div class="form-field-full">
+                <label class="form-label">Election Title *</label>
+                <input type="text" name="title" class="form-control" required value="{{ election.title if election else '' }}">
+            </div>
+            <div class="form-field-full">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="3">{{ election.description if election else '' }}</textarea>
+            </div>
+            <div>
+                <label class="form-label">Term Label</label>
+                <input type="text" name="term_label" class="form-control" placeholder="e.g. 2026/2027 Executive" value="{{ election.term_label if election and election.term_label else '' }}">
+            </div>
+            <div>
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    {% for s in ['draft', 'nominations', 'screening', 'voting', 'counting', 'finalized', 'cancelled'] %}
+                    <option value="{{ s }}" {% if election and election.status == s %}selected{% elif not election and s == 'draft' %}selected{% endif %}>{{ s|replace('_', ' ')|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="form-section-header">
+            <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Timeline Windows</h6>
+            <small class="text-muted">Set start/end for each phase (local time)</small>
+        </div>
+        <div class="form-grid">
+            <div><label class="form-label">Applications Start</label><input type="datetime-local" name="application_starts_at" class="form-control" value="{{ election.application_starts_at.strftime('%Y-%m-%dT%H:%M') if election and election.application_starts_at else '' }}"></div>
+            <div><label class="form-label">Applications End</label><input type="datetime-local" name="application_ends_at" class="form-control" value="{{ election.application_ends_at.strftime('%Y-%m-%dT%H:%M') if election and election.application_ends_at else '' }}"></div>
+            <div><label class="form-label">Screening Ends</label><input type="datetime-local" name="screening_ends_at" class="form-control" value="{{ election.screening_ends_at.strftime('%Y-%m-%dT%H:%M') if election and election.screening_ends_at else '' }}"></div>
+            <div><label class="form-label">Voting Start</label><input type="datetime-local" name="voting_starts_at" class="form-control" value="{{ election.voting_starts_at.strftime('%Y-%m-%dT%H:%M') if election and election.voting_starts_at else '' }}"></div>
+            <div><label class="form-label">Voting End</label><input type="datetime-local" name="voting_ends_at" class="form-control" value="{{ election.voting_ends_at.strftime('%Y-%m-%dT%H:%M') if election and election.voting_ends_at else '' }}"></div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="form-section-header"><h6 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Rules</h6></div>
+        <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="requires_paid_membership" id="requires_paid_membership" {% if election and election.requires_paid_membership %}checked{% endif %}>
+            <label class="form-check-label" for="requires_paid_membership">Require valid paid membership</label>
+        </div>
+        <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="allow_multiple_positions" id="allow_multiple_positions" {% if election and election.allow_multiple_positions %}checked{% endif %}>
+            <label class="form-check-label" for="allow_multiple_positions">Allow one member to apply for multiple positions</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="show_live_results" id="show_live_results" {% if election and election.show_live_results %}checked{% endif %}>
+            <label class="form-check-label" for="show_live_results">Show live vote counts during voting</label>
+        </div>
+    </div>
+
+    {% if not election %}
+    <div class="form-section">
+        <div class="form-section-header"><h6 class="mb-0"><i class="fas fa-sitemap me-2"></i>Positions to Include</h6></div>
+        {% if templates %}
+        {% for t in templates %}
+        <div class="position-check">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="position_templates" value="{{ t.id }}" id="tpl_{{ t.id }}" checked>
+                <label class="form-check-label" for="tpl_{{ t.id }}">
+                    <strong>{{ t.title }}</strong>
+                    <span class="admin-badge admin-badge-secondary ms-1" style="font-size:0.65rem;">{{ t.default_seats or 1 }} seat{{ 's' if (t.default_seats or 1) != 1 else '' }}</span>
+                    {% if t.subtitle %}<br><small class="text-muted">{{ t.subtitle }}</small>{% endif %}
+                </label>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted mb-0">No templates yet. <a href="{{ url_for('admin.election_positions') }}">Add position templates</a> first.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between flex-wrap gap-2">
+        <a href="{{ url_for('admin.elections') }}" class="admin-btn admin-btn-secondary">Cancel</a>
+        <button type="submit" class="admin-btn admin-btn-primary">{{ 'Save Changes' if election else 'Create Election' }}</button>
+    </div>
+</form>
+{% endblock %}

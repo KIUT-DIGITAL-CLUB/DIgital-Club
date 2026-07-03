@@ -1,0 +1,190 @@
+{% extends "member/member_base.html" %}
+
+{% block title %}Vote - {{ election.title }}{% endblock %}
+{% block page_title %}Cast Your Vote{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('member.elections_browse') }}">Elections</a><span class="breadcrumb-separator">/</span> <a href="{{ url_for('member.election_detail', election_id=election.id) }}">{{ election.title }}</a><span class="breadcrumb-separator">/</span> <span>Vote</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .vote-page { width: 100%; max-width: 100%; }
+
+    .vote-notice {
+        display: flex; align-items: center; gap: 0.85rem;
+        padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+        background: rgba(var(--particle-color), 0.08);
+        border: 1px solid rgba(var(--particle-color), 0.3);
+        border-radius: var(--border-radius-md);
+        color: var(--text-secondary);
+    }
+    .vote-notice i { color: var(--primary-color); font-size: 1.25rem; }
+
+    .ballot-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .ballot-position {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .ballot-position::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0;
+        height: 3px; background: var(--gradient-primary);
+    }
+    .ballot-head { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .ballot-icon {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: var(--surface-1); border: 1px solid var(--border-color);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--primary-color); font-size: 1rem; flex-shrink: 0;
+    }
+    .ballot-title { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0; }
+    .ballot-meta { font-size: 0.82rem; color: var(--text-muted); margin: 0.15rem 0 0; }
+
+    .voted-badge {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.72rem; font-weight: 600;
+        background: rgba(27,129,27,0.15); color: var(--success-color); border: 1px solid rgba(27,129,27,0.4);
+    }
+
+    .ballot-option {
+        display: block;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        overflow: hidden;
+    }
+    .ballot-option:hover { border-color: rgba(var(--particle-color), 0.5); }
+    .ballot-option:has(input:checked) {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 1px var(--primary-color) inset;
+    }
+    .ballot-option-head {
+        display: flex; align-items: flex-start; gap: 1rem;
+        padding: 1rem 1.1rem;
+        background: var(--surface-1);
+        border-bottom: 1px solid var(--border-color);
+    }
+    .ballot-option:has(input:checked) .ballot-option-head {
+        background: rgba(var(--particle-color), 0.08);
+    }
+    .ballot-option input { accent-color: var(--primary-color); width: 20px; height: 20px; flex-shrink: 0; margin-top: 0.35rem; }
+    .ballot-photo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(var(--particle-color), 0.4); flex-shrink: 0; }
+    .ballot-photo-ph {
+        width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--surface-2); border: 2px solid var(--border-color); color: var(--text-muted);
+    }
+    .ballot-name { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.35rem; }
+    .ballot-details {
+        display: flex; flex-wrap: wrap; gap: 0.5rem 1rem;
+        font-size: 0.82rem; color: var(--text-secondary);
+    }
+    .ballot-details span { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .ballot-details i { color: var(--primary-color); font-size: 0.75rem; }
+
+    .ballot-manifesto-wrap { padding: 1rem 1.1rem 1.1rem; }
+    .ballot-manifesto-label {
+        font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;
+        letter-spacing: 0.5px; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem;
+    }
+    .ballot-manifesto-label i { color: var(--primary-color); }
+    .ballot-manifesto {
+        font-size: 0.9rem; color: var(--text-secondary); margin: 0;
+        line-height: 1.65; white-space: pre-wrap;
+    }
+    .ballot-manifesto.empty { font-style: italic; color: var(--text-muted); }
+
+    .voted-lock { opacity: 0.65; }
+    .voted-lock .ballot-option { cursor: default; }
+
+    .empty-note {
+        display: flex; align-items: center; gap: 0.6rem;
+        color: var(--text-muted); font-size: 0.88rem; padding: 0.85rem 1rem;
+        background: var(--surface-5); border: 1px dashed var(--border-color); border-radius: var(--border-radius-sm);
+    }
+
+    .vote-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+</style>
+{% endblock %}
+
+{% block member_content %}
+<div class="vote-page">
+    <div class="vote-notice">
+        <i class="fas fa-shield-halved"></i>
+        <div>
+            <strong style="color: var(--text-primary);">Your vote is secret.</strong>
+            Review each candidate's profile and manifesto below, then select one per position. You cannot vote for yourself.
+        </div>
+    </div>
+
+    <form method="POST">
+        <div class="ballot-grid">
+        {% for item in ballot %}
+        <div class="ballot-position {% if item.already_voted %}voted-lock{% endif %}">
+            <div class="ballot-head">
+                <div class="ballot-icon"><i class="fas fa-user-tie"></i></div>
+                <div class="flex-grow-1">
+                    <h5 class="ballot-title">{{ item.position.title }}</h5>
+                    {% if item.position.subtitle %}<p class="ballot-meta">{{ item.position.subtitle }}</p>{% endif %}
+                </div>
+                {% if item.already_voted %}<span class="voted-badge"><i class="fas fa-check"></i> Voted</span>{% endif %}
+            </div>
+            {% if item.candidates %}
+            {% for c in item.candidates %}
+            {% set mem = c.member %}
+            <label class="ballot-option">
+                <div class="ballot-option-head">
+                    <input type="radio" name="vote_{{ item.position.id }}" value="{{ c.id }}" {% if item.already_voted %}disabled{% endif %} required>
+                    {% if c.passport_image %}
+                    <img src="{{ url_for('static', filename='uploads/elections/passports/' + c.passport_image) }}" class="ballot-photo" alt="{{ mem.full_name if mem else 'Candidate' }}">
+                    {% else %}
+                    <div class="ballot-photo-ph"><i class="fas fa-user fa-lg"></i></div>
+                    {% endif %}
+                    <div class="flex-grow-1">
+                        <h6 class="ballot-name">{{ mem.full_name if mem else 'Candidate' }}</h6>
+                        <div class="ballot-details">
+                            {% if mem and mem.member_id_number %}
+                            <span><i class="fas fa-id-card"></i> {{ mem.member_id_number }}</span>
+                            {% endif %}
+                            {% if mem and mem.course %}
+                            <span><i class="fas fa-book"></i> {{ mem.course }}</span>
+                            {% endif %}
+                            {% if mem and mem.year %}
+                            <span><i class="fas fa-calendar"></i> Year {{ mem.year }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="ballot-manifesto-wrap">
+                    <div class="ballot-manifesto-label"><i class="fas fa-file-lines"></i> Manifesto</div>
+                    {% if c.manifesto %}
+                    <p class="ballot-manifesto">{{ c.manifesto }}</p>
+                    {% else %}
+                    <p class="ballot-manifesto empty">No manifesto provided.</p>
+                    {% endif %}
+                </div>
+            </label>
+            {% endfor %}
+            {% else %}
+            <div class="empty-note"><i class="fas fa-user-slash"></i> No approved candidates for this position.</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        </div>
+
+        <div class="vote-actions">
+            <button type="submit" class="admin-btn admin-btn-primary"><i class="fas fa-vote-yea"></i> Submit Vote</button>
+            <a href="{{ url_for('member.election_detail', election_id=election.id) }}" class="admin-btn admin-btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

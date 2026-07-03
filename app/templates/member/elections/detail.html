@@ -1,0 +1,278 @@
+{% extends "member/member_base.html" %}
+
+{% block title %}{{ election.title }} - Elections{% endblock %}
+{% block page_title %}{{ election.title }}{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('member.elections_browse') }}">Elections</a><span class="breadcrumb-separator">/</span> <span>{{ election.title }}</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .election-page { width: 100%; max-width: 100%; overflow-x: hidden; }
+
+    /* Hero */
+    .election-hero {
+        background: var(--gradient-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .election-hero::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    .election-hero h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.35rem;
+    }
+    .election-term { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem; }
+
+    .election-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .election-tag {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.4rem 0.85rem; border-radius: 50px;
+        font-size: 0.8rem; font-weight: 500; border: 1px solid;
+        text-transform: capitalize;
+    }
+    .tag-phase { background: rgba(var(--particle-color), 0.1); color: var(--primary-color); border-color: rgba(var(--particle-color), 0.3); }
+    .tag-warn { background: rgba(255, 170, 0, 0.1); color: var(--warning-color); border-color: rgba(255, 170, 0, 0.3); }
+    .tag-live { background: rgba(255, 0, 255, 0.1); color: var(--secondary-color); border-color: rgba(255, 0, 255, 0.3); }
+
+    .action-bar { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+
+    .timeline-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-color);
+    }
+    .timeline-cell { display: flex; align-items: flex-start; gap: 0.6rem; }
+    .timeline-cell i { color: var(--primary-color); margin-top: 0.15rem; }
+    .timeline-cell .tl-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .timeline-cell .tl-value { font-size: 0.85rem; color: var(--text-primary); }
+
+    /* Position section cards */
+    .position-block {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+        transition: border-color 0.25s ease;
+    }
+    .position-block:hover { border-color: rgba(var(--particle-color), 0.4); }
+
+    .position-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+    .position-head-left { display: flex; align-items: center; gap: 0.85rem; }
+    .position-icon {
+        width: 44px; height: 44px; border-radius: 50%;
+        background: var(--surface-1); border: 1px solid var(--border-color);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--primary-color); font-size: 1.1rem; flex-shrink: 0;
+    }
+    .position-title { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0; }
+    .position-subtitle { font-size: 0.85rem; color: var(--primary-color); margin: 0.1rem 0 0; }
+    .position-desc { font-size: 0.85rem; color: var(--text-muted); margin: 0.1rem 0 0; }
+
+    .roles-toggle {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        margin-top: 0.6rem; padding: 0.35rem 0.75rem;
+        background: var(--surface-1); border: 1px solid var(--border-color);
+        border-radius: 999px; color: var(--text-secondary); font-size: 0.78rem;
+        cursor: pointer; transition: all 0.2s ease;
+    }
+    .roles-toggle:hover { border-color: var(--primary-color); color: var(--primary-color); }
+    .roles-toggle .chevron { transition: transform 0.2s ease; font-size: 0.7rem; }
+    .roles-toggle.open .chevron { transform: rotate(180deg); }
+    .roles-panel {
+        display: none; margin-top: 0.85rem; padding: 1rem 1.1rem;
+        background: var(--surface-1); border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+    }
+    .roles-panel.open { display: block; }
+    .roles-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+    .roles-list li { display: flex; align-items: flex-start; gap: 0.55rem; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+    .roles-list li i { color: var(--primary-color); font-size: 0.6rem; margin-top: 0.42rem; flex-shrink: 0; }
+    .position-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        padding: 0.3rem 0.7rem; border-radius: 50px;
+        font-size: 0.72rem; font-weight: 600; text-transform: capitalize; border: 1px solid;
+    }
+    .pill-approved { background: rgba(27,129,27,0.15); color: var(--success-color); border-color: rgba(27,129,27,0.4); }
+    .pill-pending { background: rgba(255,170,0,0.12); color: var(--warning-color); border-color: rgba(255,170,0,0.35); }
+    .pill-rejected { background: rgba(255,60,60,0.12); color: #ff5555; border-color: rgba(255,60,60,0.35); }
+    .pill-neutral { background: var(--surface-2); color: var(--text-secondary); border-color: var(--border-color); }
+    .pill-voted { background: rgba(var(--particle-color),0.12); color: var(--primary-color); border-color: rgba(var(--particle-color),0.4); }
+
+    .candidate-count-note {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        margin-top: 0.75rem; padding: 0.4rem 0.75rem;
+        background: var(--surface-1); border: 1px solid var(--border-color);
+        border-radius: 999px; font-size: 0.82rem; color: var(--text-secondary);
+    }
+    .candidate-count-note i { color: var(--primary-color); font-size: 0.75rem; }
+
+    .empty-note {
+        display: flex; align-items: center; gap: 0.6rem;
+        color: var(--text-muted); font-size: 0.88rem;
+        padding: 0.85rem 1rem; margin-top: 1rem;
+        background: var(--surface-5); border: 1px dashed var(--border-color);
+        border-radius: var(--border-radius-sm);
+    }
+
+    .not-eligible-banner {
+        display: flex; align-items: center; gap: 0.75rem;
+        margin-top: 1.25rem; padding: 0.85rem 1.1rem;
+        background: rgba(255,170,0,0.1); border: 1px solid rgba(255,170,0,0.35);
+        border-radius: var(--border-radius-sm); color: var(--warning-color);
+        font-size: 0.9rem;
+    }
+
+    .election-desc { margin-top: 1rem; color: var(--text-secondary); line-height: 1.6; }
+</style>
+{% endblock %}
+
+{% block member_content %}
+<div class="election-page">
+    <div class="election-hero">
+        <div class="d-flex justify-content-between flex-wrap gap-3">
+            <div>
+                <h4>{{ election.title }}</h4>
+                {% if election.term_label %}<div class="election-term">{{ election.term_label }}</div>{% endif %}
+                <div class="election-tags">
+                    <span class="election-tag tag-phase"><i class="fas fa-flag"></i> {{ phase }}</span>
+                    {% if election.requires_paid_membership %}
+                    <span class="election-tag tag-warn"><i class="fas fa-id-card"></i> Paid membership</span>
+                    {% endif %}
+                    {% if election.show_live_results %}
+                    <span class="election-tag tag-live"><i class="fas fa-chart-line"></i> Live results</span>
+                    {% endif %}
+                    {% if not eligible %}
+                    <span class="election-tag tag-warn"><i class="fas fa-triangle-exclamation"></i> Not eligible</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="action-bar">
+                {% if can_vote %}
+                <a href="{{ url_for('member.election_vote', election_id=election.id) }}" class="admin-btn admin-btn-primary"><i class="fas fa-vote-yea"></i> Cast Vote</a>
+                {% endif %}
+                {% if election.status == 'finalized' or election.show_live_results %}
+                <a href="{{ url_for('member.election_results', election_id=election.id) }}" class="admin-btn admin-btn-secondary"><i class="fas fa-chart-bar"></i> Results</a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if election.description %}
+        <p class="election-desc">{{ election.description }}</p>
+        {% endif %}
+
+        {% if not eligible and reason %}
+        <div class="not-eligible-banner"><i class="fas fa-circle-info"></i> {{ reason }}</div>
+        {% endif %}
+
+        <div class="timeline-strip">
+            <div class="timeline-cell">
+                <i class="fas fa-file-signature"></i>
+                <div>
+                    <div class="tl-label">Applications</div>
+                    <div class="tl-value">{% if election.application_starts_at %}{{ election.application_starts_at|app_local }} – {{ election.application_ends_at|app_local if election.application_ends_at else 'TBD' }}{% else %}Not scheduled{% endif %}</div>
+                </div>
+            </div>
+            <div class="timeline-cell">
+                <i class="fas fa-user-check"></i>
+                <div>
+                    <div class="tl-label">Screening ends</div>
+                    <div class="tl-value">{% if election.screening_ends_at %}{{ election.screening_ends_at|app_local }}{% else %}Not scheduled{% endif %}</div>
+                </div>
+            </div>
+            <div class="timeline-cell">
+                <i class="fas fa-vote-yea"></i>
+                <div>
+                    <div class="tl-label">Voting</div>
+                    <div class="tl-value">{% if election.voting_starts_at %}{{ election.voting_starts_at|app_local }} – {{ election.voting_ends_at|app_local if election.voting_ends_at else 'TBD' }}{% else %}Not scheduled{% endif %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% for p in positions %}
+    {% set my_c = my_candidates.get(p.id) %}
+    {% set approved = approved_by_position.get(p.id, []) %}
+    <div class="position-block">
+        <div class="position-head">
+            <div class="position-head-left">
+                <div class="position-icon"><i class="fas fa-user-tie"></i></div>
+                <div>
+                    <h5 class="position-title">{{ p.title }}</h5>
+                    {% if p.subtitle %}<p class="position-subtitle">{{ p.subtitle }}</p>{% endif %}
+                    <p class="position-desc">{{ p.seats_available }} seat{{ 's' if p.seats_available != 1 else '' }} · {{ approved|length }} candidate{{ 's' if approved|length != 1 else '' }}</p>
+                    {% if p.role_list() %}
+                    <button type="button" class="roles-toggle" onclick="toggleRoles({{ p.id }})" id="rolesBtn{{ p.id }}">
+                        <i class="fas fa-list-check"></i> View responsibilities <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="position-actions">
+                {% if p.id in voted_positions %}
+                <span class="status-pill pill-voted"><i class="fas fa-check"></i> Voted</span>
+                {% endif %}
+                {% if my_c %}
+                <span class="status-pill {% if my_c.status == 'approved' %}pill-approved{% elif my_c.status in ['rejected', 'disqualified'] %}pill-rejected{% elif my_c.status in ['submitted', 'under_review'] %}pill-pending{% else %}pill-neutral{% endif %}">
+                    <i class="fas fa-user-check"></i> {{ my_c.status }}
+                </span>
+                {% if my_c.status not in ['withdrawn', 'rejected', 'disqualified'] and can_apply %}
+                <form method="POST" action="{{ url_for('member.election_withdraw', election_id=election.id, candidate_id=my_c.id) }}" onsubmit="return confirm('Withdraw your application?');">
+                    <button type="submit" class="admin-btn admin-btn-sm admin-btn-danger"><i class="fas fa-xmark"></i> Withdraw</button>
+                </form>
+                {% endif %}
+                {% elif can_apply %}
+                <a href="{{ url_for('member.election_apply', election_id=election.id, position_id=p.id) }}" class="admin-btn admin-btn-sm admin-btn-primary"><i class="fas fa-plus"></i> Apply</a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if p.role_list() %}
+        <div class="roles-panel" id="rolesPanel{{ p.id }}">
+            <ul class="roles-list">
+                {% for r in p.role_list() %}
+                <li><i class="fas fa-circle"></i> <span>{{ r }}</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if can_vote and approved|length > 0 %}
+        <p class="candidate-count-note mb-0"><i class="fas fa-circle-info"></i> Candidate profiles and manifestos are available on the voting screen.</p>
+        {% elif not approved %}
+        <div class="empty-note"><i class="fas fa-user-slash"></i> No approved candidates yet for this position.</div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="position-block text-center py-5">
+        <i class="fas fa-list-ul fa-2x mb-3" style="color: var(--text-muted); opacity: 0.5;"></i>
+        <p class="mb-0" style="color: var(--text-muted);">No positions have been added to this election yet.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function toggleRoles(id) {
+    var panel = document.getElementById('rolesPanel' + id);
+    var btn = document.getElementById('rolesBtn' + id);
+    if (panel) panel.classList.toggle('open');
+    if (btn) btn.classList.toggle('open');
+}
+</script>
+{% endblock %}

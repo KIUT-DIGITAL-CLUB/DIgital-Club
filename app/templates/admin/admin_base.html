@@ -165,6 +165,25 @@
                 </div>
             </div>
 
+            <!-- Elections -->
+            <div class="admin-nav-dropdown">
+                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="elections">
+                    <i class="fas fa-vote-yea"></i>
+                    <span>Elections</span>
+                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
+                </a>
+                <div class="admin-nav-dropdown-menu" id="dropdown-elections">
+                    <a href="{{ url_for('admin.elections') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.elections', 'admin.elections_add', 'admin.elections_edit', 'admin.elections_view', 'admin.elections_applications', 'admin.elections_results'] %}active{% endif %}">
+                        <i class="fas fa-list"></i>
+                        <span>All Elections</span>
+                    </a>
+                    <a href="{{ url_for('admin.election_positions') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.election_positions', 'admin.election_positions_add', 'admin.election_positions_delete'] %}active{% endif %}">
+                        <i class="fas fa-sitemap"></i>
+                        <span>Position Templates</span>
+                    </a>
+                </div>
+            </div>
+
             <!-- Competitions -->
             <div class="admin-nav-dropdown">
                 <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="competitions">

@@ -43,7 +43,6 @@
             <a href="{{ url_for('member.quizzes') }}" class="admin-nav-item warmup-link {% if request.endpoint in ['member.quizzes', 'member.quiz_detail', 'member.quiz_start', 'member.quiz_take', 'member.quiz_submit', 'member.quiz_result', 'member.quiz_leaderboard'] %}active{% endif %}">
                 <i class="fas fa-file-signature"></i>
                 <span>Warmup</span>
-                <span class="warmup-badge">NEW</span>
             </a>
 
             {% if current_user.role == 'quizmaster' %}
@@ -61,6 +60,12 @@
             <a href="{{ url_for('member.competitions_weekly') }}" class="admin-nav-item {% if request.endpoint in ['member.competitions_weekly', 'member.competitions_monthly', 'member.competition_detail', 'member.competition_submit', 'member.competition_leaderboard', 'member.competition_score_member', 'member.competition_enroll', 'member.competition_team_enroll', 'member.competition_team_submit'] %}active{% endif %}">
                 <i class="fas fa-trophy"></i>
                 <span>Competitions</span>
+            </a>
+
+            <a href="{{ url_for('member.elections_browse') }}" class="admin-nav-item warmup-link {% if request.endpoint in ['member.elections_browse', 'member.election_detail', 'member.election_apply', 'member.election_vote', 'member.election_results', 'member.election_withdraw'] %}active{% endif %}">
+                <i class="fas fa-vote-yea"></i>
+                <span>Elections</span>
+                <span class="warmup-badge">NEW</span>
             </a>
 
             <a href="{{ url_for('member.competitions_rankings') }}" class="admin-nav-item {% if request.endpoint == 'member.competitions_rankings' %}active{% endif %}">

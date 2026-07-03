@@ -1,0 +1,259 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Position Templates - Admin{% endblock %}
+{% block page_title %}Leadership Position Templates{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.elections') }}">Elections</a><span class="breadcrumb-separator">/</span> <span>Templates</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .pt-layout { display: grid; grid-template-columns: 360px 1fr; gap: 1.5rem; align-items: start; }
+    @media (max-width: 992px) { .pt-layout { grid-template-columns: 1fr; } }
+
+    .pt-hint {
+        display: flex; align-items: center; gap: 0.6rem;
+        font-size: 0.82rem; color: var(--admin-text-muted);
+        background: var(--surface-1); border: 1px dashed var(--admin-border);
+        border-radius: var(--border-radius-sm); padding: 0.7rem 0.9rem; margin-bottom: 1rem;
+    }
+    .pt-hint i { color: var(--admin-primary); }
+
+    .position-list { display: flex; flex-direction: column; gap: 1rem; }
+
+    .position-item {
+        background: var(--admin-bg-secondary);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .position-item.dragging { opacity: 0.5; }
+    .position-item.drag-over { border-color: var(--admin-primary); box-shadow: 0 0 0 2px rgba(var(--particle-color), 0.3); }
+
+    .position-item-head {
+        display: flex; align-items: flex-start; gap: 0.85rem;
+        padding: 1.1rem 1.25rem;
+    }
+    .drag-handle {
+        cursor: grab; color: var(--admin-text-muted); font-size: 1rem;
+        padding-top: 0.2rem; flex-shrink: 0;
+    }
+    .drag-handle:active { cursor: grabbing; }
+    .pos-order-badge {
+        width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+        background: var(--surface-2); color: var(--admin-primary);
+        font-family: 'Fira Code', monospace; font-weight: 700; font-size: 0.8rem;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .pos-main { flex: 1; min-width: 0; }
+    .pos-title-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .pos-title { font-size: 1.02rem; font-weight: 600; color: var(--admin-text-primary); margin: 0; }
+    .pos-subtitle { font-size: 0.82rem; color: var(--admin-primary); margin: 0.15rem 0 0; }
+    .seats-badge {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px;
+        background: rgba(var(--particle-color), 0.1); color: var(--admin-primary); border: 1px solid rgba(var(--particle-color), 0.3);
+    }
+    .pos-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    .roles-list { list-style: none; margin: 0.85rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
+    .roles-list li {
+        display: flex; align-items: flex-start; gap: 0.55rem;
+        font-size: 0.85rem; color: var(--admin-text-secondary); line-height: 1.45;
+    }
+    .roles-list li i { color: var(--admin-primary); font-size: 0.7rem; margin-top: 0.35rem; flex-shrink: 0; }
+    .no-roles { font-size: 0.82rem; color: var(--admin-text-muted); font-style: italic; margin-top: 0.5rem; }
+
+    .pos-edit-form {
+        border-top: 1px solid var(--admin-border);
+        padding: 1.25rem; background: var(--surface-1);
+        display: none;
+    }
+    .pos-edit-form.open { display: block; }
+
+    .inactive-tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--admin-text-muted); }
+    .roles-textarea { font-family: inherit; }
+    .field-help { font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.25rem; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <p class="mb-0 text-muted">Reusable executive positions, their responsibilities, and default seats.</p>
+    <a href="{{ url_for('admin.elections') }}" class="admin-btn admin-btn-secondary"><i class="fas fa-arrow-left"></i> Back to Elections</a>
+</div>
+
+<div class="pt-layout">
+    <!-- Add form -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h5>Add Position</h5>
+            <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">Create a reusable position template</p>
+        </div>
+        <div class="admin-card-body">
+            <form method="POST" action="{{ url_for('admin.election_positions_add') }}">
+                <div class="mb-3">
+                    <label class="form-label">Title *</label>
+                    <input type="text" name="title" class="form-control" required placeholder="e.g. Chairperson">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Subtitle</label>
+                    <input type="text" name="subtitle" class="form-control" placeholder="e.g. Overall Leadership & Strategic Direction">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Seats</label>
+                    <input type="number" name="default_seats" class="form-control" value="1" min="1">
+                    <div class="field-help">How many people can hold this position.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Roles / Responsibilities</label>
+                    <textarea name="roles" class="form-control roles-textarea" rows="5" placeholder="One responsibility per line"></textarea>
+                    <div class="field-help">Enter one responsibility per line.</div>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="is_active" checked>
+                    <label class="form-check-label" for="is_active">Active (available for new elections)</label>
+                </div>
+                <button type="submit" class="admin-btn admin-btn-primary w-100">Add Template</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Catalog -->
+    <div>
+        <div class="pt-hint"><i class="fas fa-up-down-left-right"></i> Drag positions by the handle to set the leadership hierarchy. Order saves automatically.</div>
+        {% if templates %}
+        <div class="position-list" id="positionList" data-reorder-url="{{ url_for('admin.election_positions_reorder') }}">
+            {% for t in templates %}
+            <div class="position-item" draggable="true" data-id="{{ t.id }}">
+                <div class="position-item-head">
+                    <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                    <span class="pos-order-badge">{{ loop.index }}</span>
+                    <div class="pos-main">
+                        <div class="pos-title-row">
+                            <h6 class="pos-title">{{ t.title }}</h6>
+                            <span class="seats-badge"><i class="fas fa-user-group"></i> {{ t.default_seats or 1 }} seat{{ 's' if (t.default_seats or 1) != 1 else '' }}</span>
+                            {% if not t.is_active %}<span class="inactive-tag">Inactive</span>{% endif %}
+                        </div>
+                        {% if t.subtitle %}<p class="pos-subtitle">{{ t.subtitle }}</p>{% endif %}
+                        {% if t.role_list() %}
+                        <ul class="roles-list">
+                            {% for r in t.role_list() %}
+                            <li><i class="fas fa-circle"></i> <span>{{ r }}</span></li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="no-roles">No responsibilities listed yet.</p>
+                        {% endif %}
+                    </div>
+                    <div class="pos-actions">
+                        <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" onclick="togglePosEdit({{ t.id }})"><i class="fas fa-pen"></i></button>
+                        <form method="POST" action="{{ url_for('admin.election_positions_delete', template_id=t.id) }}" onsubmit="return confirm('Remove this position template?');">
+                            <button type="submit" class="admin-btn admin-btn-sm admin-btn-danger"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
+                <div class="pos-edit-form" id="posEdit{{ t.id }}">
+                    <form method="POST" action="{{ url_for('admin.election_positions_edit', template_id=t.id) }}">
+                        <div class="row g-2">
+                            <div class="col-md-8">
+                                <label class="form-label">Title *</label>
+                                <input type="text" name="title" class="form-control" value="{{ t.title }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Seats</label>
+                                <input type="number" name="default_seats" class="form-control" value="{{ t.default_seats or 1 }}" min="1">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Subtitle</label>
+                                <input type="text" name="subtitle" class="form-control" value="{{ t.subtitle or '' }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Roles / Responsibilities</label>
+                                <textarea name="roles" class="form-control roles-textarea" rows="5">{{ t.roles or '' }}</textarea>
+                                <div class="field-help">One responsibility per line.</div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_active" id="active{{ t.id }}" {% if t.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="active{{ t.id }}">Active</label>
+                                </div>
+                            </div>
+                            <div class="col-12 d-flex gap-2">
+                                <button type="submit" class="admin-btn admin-btn-primary admin-btn-sm">Save Changes</button>
+                                <button type="button" class="admin-btn admin-btn-secondary admin-btn-sm" onclick="togglePosEdit({{ t.id }})">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="admin-card"><div class="admin-card-body text-center py-5 text-muted">
+            <i class="fas fa-sitemap fa-2x mb-2 d-block opacity-50"></i>No templates yet.
+        </div></div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function togglePosEdit(id) {
+    var el = document.getElementById('posEdit' + id);
+    if (el) el.classList.toggle('open');
+}
+
+(function () {
+    var list = document.getElementById('positionList');
+    if (!list) return;
+    var dragged = null;
+
+    list.querySelectorAll('.position-item').forEach(function (item) {
+        item.addEventListener('dragstart', function (e) {
+            dragged = item;
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        item.addEventListener('dragend', function () {
+            item.classList.remove('dragging');
+            list.querySelectorAll('.position-item').forEach(function (i) { i.classList.remove('drag-over'); });
+            saveOrder();
+        });
+        item.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            var after = getAfterElement(list, e.clientY);
+            list.querySelectorAll('.position-item').forEach(function (i) { i.classList.remove('drag-over'); });
+            if (after == null) {
+                list.appendChild(dragged);
+            } else {
+                list.insertBefore(dragged, after);
+                after.classList.add('drag-over');
+            }
+        });
+    });
+
+    function getAfterElement(container, y) {
+        var els = [].slice.call(container.querySelectorAll('.position-item:not(.dragging)'));
+        return els.reduce(function (closest, child) {
+            var box = child.getBoundingClientRect();
+            var offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            }
+            return closest;
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function saveOrder() {
+        var ids = [].slice.call(list.querySelectorAll('.position-item')).map(function (i) { return i.getAttribute('data-id'); });
+        // Renumber the visible order badges.
+        list.querySelectorAll('.pos-order-badge').forEach(function (b, idx) { b.textContent = idx + 1; });
+        fetch(list.getAttribute('data-reorder-url'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: ids })
+        });
+    }
+})();
+</script>
+{% endblock %}

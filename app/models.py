@@ -205,6 +205,149 @@ class Leader(db.Model):
     def __repr__(self):
         return f'<Leader {self.position}>'
 
+
+# Leadership elections
+class LeadershipPositionTemplate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False, unique=True)
+    subtitle = db.Column(db.String(200))  # short tagline, e.g. "Overall Leadership & Strategic Direction"
+    description = db.Column(db.Text)
+    roles = db.Column(db.Text)  # newline-separated responsibilities
+    default_seats = db.Column(db.Integer, default=1)
+    display_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def role_list(self):
+        if not self.roles:
+            return []
+        return [r.strip() for r in self.roles.splitlines() if r.strip()]
+
+    def __repr__(self):
+        return f'<LeadershipPositionTemplate {self.title}>'
+
+
+class Election(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    term_label = db.Column(db.String(100))
+    status = db.Column(db.String(20), default='draft')  # draft, nominations, screening, voting, counting, finalized, archived, cancelled
+
+    application_starts_at = db.Column(db.DateTime)
+    application_ends_at = db.Column(db.DateTime)
+    screening_ends_at = db.Column(db.DateTime)
+    voting_starts_at = db.Column(db.DateTime)
+    voting_ends_at = db.Column(db.DateTime)
+
+    requires_paid_membership = db.Column(db.Boolean, default=False)
+    allow_multiple_positions = db.Column(db.Boolean, default=False)
+    show_live_results = db.Column(db.Boolean, default=False)
+
+    financial_period_id = db.Column(db.Integer, db.ForeignKey('financial_period.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    finalized_at = db.Column(db.DateTime)
+    finalized_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    creator = db.relationship('User', foreign_keys=[created_by], backref='elections_created')
+    finalizer = db.relationship('User', foreign_keys=[finalized_by], backref='elections_finalized')
+    financial_period = db.relationship('FinancialPeriod', backref='elections')
+    positions = db.relationship('ElectionPosition', backref='election', lazy='dynamic', cascade='all, delete-orphan')
+    candidates = db.relationship('ElectionCandidate', backref='election', lazy='dynamic', cascade='all, delete-orphan')
+    votes = db.relationship('ElectionVote', backref='election', lazy='dynamic', cascade='all, delete-orphan')
+
+    def _now(self):
+        return datetime.now()
+
+    def is_application_open(self):
+        now = self._now()
+        return (
+            self.status in ('nominations', 'screening')
+            and self.application_starts_at
+            and self.application_ends_at
+            and self.application_starts_at <= now <= self.application_ends_at
+        )
+
+    def is_voting_open(self):
+        now = self._now()
+        return (
+            self.status == 'voting'
+            and self.voting_starts_at
+            and self.voting_ends_at
+            and self.voting_starts_at <= now <= self.voting_ends_at
+        )
+
+    def candidates_visible(self):
+        """Approved candidates are visible once screening starts and through voting/finalized."""
+        if self.status in ('screening', 'voting', 'counting', 'finalized'):
+            return True
+        return self.status == 'nominations' and self.candidates.filter_by(status='approved').count() > 0
+
+    def __repr__(self):
+        return f'<Election {self.title}>'
+
+
+class ElectionPosition(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
+    template_id = db.Column(db.Integer, db.ForeignKey('leadership_position_template.id'))
+    title = db.Column(db.String(100), nullable=False)
+    subtitle = db.Column(db.String(200))
+    description = db.Column(db.Text)
+    roles = db.Column(db.Text)  # newline-separated responsibilities
+    display_order = db.Column(db.Integer, default=0)
+    seats_available = db.Column(db.Integer, default=1)
+
+    template = db.relationship('LeadershipPositionTemplate', backref='election_positions')
+
+    def role_list(self):
+        if not self.roles:
+            return []
+        return [r.strip() for r in self.roles.splitlines() if r.strip()]
+    candidates = db.relationship('ElectionCandidate', backref='position', lazy='dynamic', cascade='all, delete-orphan')
+    votes = db.relationship('ElectionVote', backref='position', lazy='dynamic', cascade='all, delete-orphan')
+
+    __table_args__ = (db.UniqueConstraint('election_id', 'title', name='_election_position_title_uc'),)
+
+
+class ElectionCandidate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
+    election_position_id = db.Column(db.Integer, db.ForeignKey('election_position.id'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    status = db.Column(db.String(20), default='draft')  # draft, submitted, under_review, approved, rejected, withdrawn, disqualified
+    manifesto = db.Column(db.Text)
+    passport_image = db.Column(db.String(255))
+    submitted_at = db.Column(db.DateTime)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    reviewed_at = db.Column(db.DateTime)
+    review_note = db.Column(db.Text)
+    rejection_reason = db.Column(db.Text)
+    vote_count = db.Column(db.Integer, default=0)
+    rank = db.Column(db.Integer)
+    is_winner = db.Column(db.Boolean, default=False)
+
+    member = db.relationship('Member', backref='election_candidacies')
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by], backref='election_candidate_reviews')
+    votes = db.relationship('ElectionVote', backref='candidate', lazy='dynamic', cascade='all, delete-orphan')
+
+    __table_args__ = (db.UniqueConstraint('election_position_id', 'member_id', name='_election_candidate_position_member_uc'),)
+
+
+class ElectionVote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
+    election_position_id = db.Column(db.Integer, db.ForeignKey('election_position.id'), nullable=False)
+    voter_member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
+    candidate_id = db.Column(db.Integer, db.ForeignKey('election_candidate.id'), nullable=False)
+    cast_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    voter = db.relationship('Member', backref='election_votes_cast')
+    __table_args__ = (db.UniqueConstraint('election_position_id', 'voter_member_id', name='_election_vote_position_voter_uc'),)
+
+
 class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)

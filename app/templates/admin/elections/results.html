@@ -1,0 +1,67 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Results - {{ election.title }}{% endblock %}
+{% block page_title %}Election Results{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.elections') }}">Elections</a><span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.elections_view', election_id=election.id) }}">{{ election.title }}</a><span class="breadcrumb-separator">/</span> <span>Results</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .results-position { background: var(--surface-1); border: 1px solid var(--admin-border); border-radius: var(--border-radius-md); padding: 1.25rem; margin-bottom: 1.25rem; }
+    .candidate-result { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--admin-border); }
+    .candidate-result:last-child { border-bottom: none; }
+    .rank-badge { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
+    .rank-badge.winner { background: var(--gradient-primary); color: var(--admin-bg-primary); }
+    .passport-sm { width: 48px; height: 48px; object-fit: cover; border-radius: 50%; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h5 class="mb-0">{{ election.title }}</h5>
+        <small class="text-muted">{{ voter_count }} unique voter{{ 's' if voter_count != 1 else '' }} · Status: {{ election.status }}</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.elections_view', election_id=election.id) }}" class="admin-btn admin-btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+        {% if election.status != 'finalized' %}
+        <form method="POST" action="{{ url_for('admin.elections_finalize', election_id=election.id) }}" onsubmit="return confirm('Finalize election and install winners to the leadership team?');">
+            <button type="submit" class="admin-btn admin-btn-primary"><i class="fas fa-check-circle"></i> Finalize & Install Leaders</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if election.status == 'finalized' %}
+<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Election finalized{% if election.finalized_at %} on {{ election.finalized_at|app_local }}{% endif %}. Winners have been installed to the leadership team.</div>
+{% else %}
+<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Review results below. Finalizing will tally votes, mark winners, and update the public leadership page.</div>
+{% endif %}
+
+{% for block in results %}
+<div class="results-position">
+    <h6 class="mb-3"><i class="fas fa-user-tie me-2"></i>{{ block.position.title }} <span class="badge bg-secondary">{{ block.position.seats_available }} seat{{ 's' if block.position.seats_available != 1 else '' }}</span></h6>
+    {% if block.candidates %}
+    {% for c in block.candidates %}
+    <div class="candidate-result">
+        <div class="rank-badge {% if c.is_winner %}winner{% endif %}">{{ c.rank or loop.index }}</div>
+        {% if c.passport_image %}
+        <img src="{{ url_for('static', filename='uploads/elections/passports/' + c.passport_image) }}" class="passport-sm" alt="">
+        {% endif %}
+        <div class="flex-grow-1">
+            <strong>{{ c.member.full_name if c.member else 'Unknown' }}</strong>
+            {% if c.is_winner %}<span class="badge bg-success ms-2">Winner</span>{% endif %}
+            {% if c.status == 'disqualified' %}<span class="badge bg-danger ms-2">Disqualified</span>{% endif %}
+        </div>
+        <div class="text-end">
+            <div class="fw-bold" style="color: var(--admin-primary);">{{ c.vote_count or 0 }}</div>
+            <small class="text-muted">votes</small>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="text-muted mb-0">No approved candidates for this position.</p>
+    {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

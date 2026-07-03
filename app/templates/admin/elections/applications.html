@@ -1,0 +1,83 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Applications - {{ election.title }}{% endblock %}
+{% block page_title %}Candidate Applications{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.elections') }}">Elections</a><span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.elections_view', election_id=election.id) }}">{{ election.title }}</a><span class="breadcrumb-separator">/</span> <span>Applications</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .candidate-card { background: var(--surface-1); border: 1px solid var(--admin-border); border-radius: var(--border-radius-md); padding: 1.25rem; margin-bottom: 1rem; }
+    .candidate-header { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
+    .passport-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: var(--border-radius-sm); border: 2px solid var(--admin-border); }
+    .status-pill { padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize; }
+    .manifesto-box { background: var(--surface-2); border-radius: var(--border-radius-sm); padding: 1rem; margin-top: 1rem; font-size: 0.9rem; white-space: pre-wrap; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h5 class="mb-0">{{ election.title }}</h5>
+        <small class="text-muted">Review and approve candidate applications</small>
+    </div>
+    <a href="{{ url_for('admin.elections_view', election_id=election.id) }}" class="admin-btn admin-btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="d-flex gap-2 flex-wrap mb-3">
+    <a href="{{ url_for('admin.elections_applications', election_id=election.id) }}" class="admin-btn admin-btn-sm {% if not status_filter %}admin-btn-primary{% else %}admin-btn-secondary{% endif %}">All</a>
+    {% for s in ['submitted', 'under_review', 'approved', 'rejected', 'withdrawn', 'disqualified'] %}
+    <a href="{{ url_for('admin.elections_applications', election_id=election.id, status=s) }}" class="admin-btn admin-btn-sm {% if status_filter == s %}admin-btn-primary{% else %}admin-btn-secondary{% endif %}">{{ s|replace('_', ' ') }}</a>
+    {% endfor %}
+</div>
+
+{% if candidates %}
+{% for c in candidates %}
+<div class="candidate-card">
+    <div class="candidate-header">
+        {% if c.passport_image %}
+        <img src="{{ url_for('static', filename='uploads/elections/passports/' + c.passport_image) }}" alt="Passport" class="passport-thumb">
+        {% else %}
+        <div class="passport-thumb d-flex align-items-center justify-content-center bg-secondary"><i class="fas fa-user"></i></div>
+        {% endif %}
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between flex-wrap gap-2">
+                <div>
+                    <h6 class="mb-1">{{ c.member.full_name if c.member else 'Unknown' }}</h6>
+                    <div class="text-muted small">{{ c.position.title }} · {{ c.member.member_id_number if c.member and c.member.member_id_number else '' }}</div>
+                </div>
+                <span class="status-pill">{{ c.status }}</span>
+            </div>
+            {% if c.submitted_at %}<small class="text-muted">Submitted {{ c.submitted_at|app_local }}</small>{% endif %}
+        </div>
+    </div>
+    {% if c.manifesto %}
+    <div class="manifesto-box">{{ c.manifesto }}</div>
+    {% endif %}
+    {% if c.status in ['submitted', 'under_review', 'approved'] %}
+    <form method="POST" action="{{ url_for('admin.elections_candidate_review', election_id=election.id, candidate_id=c.id) }}" class="mt-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label small">Review note (internal)</label>
+                <input type="text" name="review_note" class="form-control form-control-sm" value="{{ c.review_note or '' }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small">Rejection reason (sent to member)</label>
+                <input type="text" name="rejection_reason" class="form-control form-control-sm">
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+                <button type="submit" name="action" value="approve" class="admin-btn admin-btn-sm admin-btn-primary">Approve</button>
+                <button type="submit" name="action" value="reject" class="admin-btn admin-btn-sm admin-btn-warning">Reject</button>
+                <button type="submit" name="action" value="disqualify" class="admin-btn admin-btn-sm admin-btn-danger">Disqualify</button>
+            </div>
+        </div>
+    </form>
+    {% elif c.rejection_reason %}
+    <div class="alert alert-warning mt-3 mb-0 py-2 small">Reason: {{ c.rejection_reason }}</div>
+    {% endif %}
+</div>
+{% endfor %}
+{% else %}
+<div class="admin-card"><div class="admin-card-body text-center py-5 text-muted">No applications match this filter.</div></div>
+{% endif %}
+{% endblock %}

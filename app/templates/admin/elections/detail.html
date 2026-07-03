@@ -1,0 +1,375 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}{{ election.title }} - Admin{% endblock %}
+{% block page_title %}{{ election.title }}{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('admin.elections') }}">Elections</a><span class="breadcrumb-separator">/</span> <span>Manage</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .phase-banner {
+        background: var(--gradient-secondary);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .stat-card {
+        background: var(--surface-1);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm);
+        padding: 0.9rem;
+        text-align: center;
+    }
+    .stat-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--admin-primary);
+        font-family: 'Fira Code', monospace;
+        line-height: 1;
+    }
+    .stat-label {
+        display: block;
+        font-size: 0.72rem;
+        color: var(--admin-text-muted);
+        margin-top: 0.35rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Themed table matching leaderboard */
+    .el-table-wrapper {
+        overflow-x: auto;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--admin-border);
+        background: var(--surface-1);
+    }
+    .el-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+    .el-table thead { background: var(--surface-2); }
+    .el-table th {
+        padding: 0.85rem 0.9rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--admin-text-primary);
+        border-bottom: 2px solid var(--admin-border);
+        font-family: 'Fira Code', monospace;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    .el-table tbody tr { border-bottom: 1px solid var(--admin-border); transition: background 0.2s ease; }
+    .el-table tbody tr:last-child { border-bottom: none; }
+    .el-table tbody tr:hover { background: var(--surface-2); }
+    .el-table td { padding: 0.85rem 0.9rem; color: var(--admin-text-secondary); vertical-align: middle; }
+    .el-table .pos-order {
+        font-family: 'Fira Code', monospace;
+        font-weight: 700;
+        color: var(--admin-primary);
+    }
+    .el-table .pos-title { font-weight: 600; color: var(--admin-text-primary); }
+    .el-table .pos-desc { font-size: 0.78rem; color: var(--admin-text-muted); }
+
+    .timeline-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid var(--admin-border);
+        font-size: 0.85rem;
+    }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-item .tl-key { color: var(--admin-text-primary); font-weight: 500; }
+    .timeline-item .tl-val { color: var(--admin-text-muted); text-align: right; }
+
+    .rules-list { list-style: none; padding: 0; margin: 0; }
+    .rules-list li {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0.6rem 0; border-bottom: 1px solid var(--admin-border); font-size: 0.88rem;
+        color: var(--admin-text-secondary);
+    }
+    .rules-list li:last-child { border-bottom: none; }
+    .empty-inline { padding: 2rem 1rem; text-align: center; color: var(--admin-text-muted); }
+    .empty-inline i { font-size: 2rem; opacity: 0.5; margin-bottom: 0.5rem; display: block; }
+
+    /* Position cards (drag + roles) */
+    .position-list { display: flex; flex-direction: column; gap: 0.85rem; }
+    .position-item {
+        background: var(--surface-1); border: 1px solid var(--admin-border);
+        border-radius: var(--border-radius-sm); overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .position-item.dragging { opacity: 0.5; }
+    .position-item.drag-over { border-color: var(--admin-primary); box-shadow: 0 0 0 2px rgba(var(--particle-color), 0.3); }
+    .position-item-head { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem 1.1rem; }
+    .drag-handle { cursor: grab; color: var(--admin-text-muted); padding-top: 0.15rem; flex-shrink: 0; }
+    .drag-handle:active { cursor: grabbing; }
+    .pos-order-badge {
+        width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+        background: var(--surface-2); color: var(--admin-primary);
+        font-family: 'Fira Code', monospace; font-weight: 700; font-size: 0.78rem;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .pos-main { flex: 1; min-width: 0; }
+    .pos-title-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .pos-title { font-size: 1rem; font-weight: 600; color: var(--admin-text-primary); margin: 0; }
+    .pos-subtitle { font-size: 0.8rem; color: var(--admin-primary); margin: 0.15rem 0 0; }
+    .seats-badge, .cand-badge {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px;
+    }
+    .seats-badge { background: rgba(var(--particle-color), 0.1); color: var(--admin-primary); border: 1px solid rgba(var(--particle-color), 0.3); }
+    .cand-badge { background: var(--surface-2); color: var(--admin-text-muted); border: 1px solid var(--admin-border); }
+    .roles-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.35rem; }
+    .roles-list li { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.83rem; color: var(--admin-text-secondary); line-height: 1.4; }
+    .roles-list li i { color: var(--admin-primary); font-size: 0.6rem; margin-top: 0.4rem; flex-shrink: 0; }
+    .pos-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+    .pos-edit-form { display: none; border-top: 1px solid var(--admin-border); padding: 1.1rem; background: var(--admin-bg-tertiary); }
+    .pos-edit-form.open { display: block; }
+    .field-help { font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.25rem; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="phase-banner">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h5 class="mb-1">{{ election.title }}</h5>
+            {% if election.term_label %}<p class="mb-2 text-muted">{{ election.term_label }}</p>{% endif %}
+            <span class="admin-badge admin-badge-info text-capitalize">{{ election.status }}</span>
+            <span class="admin-badge admin-badge-secondary text-capitalize ms-1">Phase: {{ phase }}</span>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            {% if election.status != 'finalized' %}
+            <a href="{{ url_for('admin.elections_edit', election_id=election.id) }}" class="admin-btn admin-btn-secondary"><i class="fas fa-edit"></i> Edit</a>
+            {% endif %}
+            <a href="{{ url_for('admin.elections_applications', election_id=election.id) }}" class="admin-btn admin-btn-secondary"><i class="fas fa-inbox"></i> Applications{% if stats.pending %} ({{ stats.pending }}){% endif %}</a>
+            <a href="{{ url_for('admin.elections_results', election_id=election.id) }}" class="admin-btn admin-btn-primary"><i class="fas fa-chart-bar"></i> Results</a>
+        </div>
+    </div>
+    <div class="stat-grid">
+        <div class="stat-card"><span class="stat-value">{{ positions|length }}</span><span class="stat-label">Positions</span></div>
+        <div class="stat-card"><span class="stat-value">{{ stats.candidates }}</span><span class="stat-label">Applications</span></div>
+        <div class="stat-card"><span class="stat-value">{{ stats.approved }}</span><span class="stat-label">Approved</span></div>
+        <div class="stat-card"><span class="stat-value">{{ stats.votes }}</span><span class="stat-label">Votes Cast</span></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5>Positions</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">
+                    {{ positions|length }} position{{ 's' if positions|length != 1 else '' }} · drag to set hierarchy
+                </p>
+            </div>
+            <div class="admin-card-body">
+                {% if positions %}
+                <div class="position-list" id="electionPositionList"
+                     data-reorder-url="{{ url_for('admin.elections_positions_reorder', election_id=election.id) }}"
+                     data-locked="{{ '1' if election.status == 'finalized' else '0' }}">
+                    {% for p in positions %}
+                    <div class="position-item" draggable="{{ 'false' if election.status == 'finalized' else 'true' }}" data-id="{{ p.id }}">
+                        <div class="position-item-head">
+                            {% if election.status != 'finalized' %}<span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>{% endif %}
+                            <span class="pos-order-badge">{{ loop.index }}</span>
+                            <div class="pos-main">
+                                <div class="pos-title-row">
+                                    <h6 class="pos-title">{{ p.title }}</h6>
+                                    <span class="seats-badge"><i class="fas fa-user-group"></i> {{ p.seats_available }} seat{{ 's' if p.seats_available != 1 else '' }}</span>
+                                    <span class="cand-badge"><i class="fas fa-users"></i> {{ p.candidates.count() }} applied</span>
+                                </div>
+                                {% if p.subtitle %}<p class="pos-subtitle">{{ p.subtitle }}</p>{% endif %}
+                                {% if p.role_list() %}
+                                <ul class="roles-list">
+                                    {% for r in p.role_list() %}
+                                    <li><i class="fas fa-circle"></i> <span>{{ r }}</span></li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </div>
+                            {% if election.status != 'finalized' %}
+                            <div class="pos-actions">
+                                <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" onclick="togglePosEdit({{ p.id }})"><i class="fas fa-pen"></i></button>
+                                <form method="POST" action="{{ url_for('admin.elections_position_delete', election_id=election.id, position_id=p.id) }}" onsubmit="return confirm('Remove this position?');">
+                                    <button type="submit" class="admin-btn admin-btn-sm admin-btn-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if election.status != 'finalized' %}
+                        <div class="pos-edit-form" id="posEdit{{ p.id }}">
+                            <form method="POST" action="{{ url_for('admin.elections_position_edit', election_id=election.id, position_id=p.id) }}">
+                                <div class="row g-2">
+                                    <div class="col-md-8">
+                                        <label class="form-label">Title *</label>
+                                        <input type="text" name="title" class="form-control" value="{{ p.title }}" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Seats</label>
+                                        <input type="number" name="seats_available" class="form-control" value="{{ p.seats_available }}" min="1">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Subtitle</label>
+                                        <input type="text" name="subtitle" class="form-control" value="{{ p.subtitle or '' }}">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Roles / Responsibilities</label>
+                                        <textarea name="roles" class="form-control" rows="5">{{ p.roles or '' }}</textarea>
+                                        <div class="field-help">One responsibility per line.</div>
+                                    </div>
+                                    <div class="col-12 d-flex gap-2">
+                                        <button type="submit" class="admin-btn admin-btn-primary admin-btn-sm">Save Changes</button>
+                                        <button type="button" class="admin-btn admin-btn-secondary admin-btn-sm" onclick="togglePosEdit({{ p.id }})">Cancel</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-inline">
+                    <i class="fas fa-sitemap"></i>
+                    <p class="mb-0">No positions added yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if election.status != 'finalized' %}
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5>Add Position</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">
+                    Pick from a template (copies roles &amp; seats) or enter a custom one
+                </p>
+            </div>
+            <div class="admin-card-body">
+                <form method="POST" action="{{ url_for('admin.elections_position_add', election_id=election.id) }}">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">From Template</label>
+                            <select name="template_id" class="form-select">
+                                <option value="">— Custom —</option>
+                                {% for t in templates %}
+                                {% if t.title not in existing_titles %}
+                                <option value="{{ t.id }}">{{ t.title }}{% if t.subtitle %} — {{ t.subtitle }}{% endif %}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Custom Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="If not using template">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Seats</label>
+                            <input type="number" name="seats_available" class="form-control" placeholder="1" min="1">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Custom Roles <span class="text-muted" style="font-weight:400;">(only for custom positions — one per line)</span></label>
+                            <textarea name="roles" class="form-control" rows="3" placeholder="Leave blank when using a template"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="admin-btn admin-btn-primary"><i class="fas fa-plus"></i> Add Position</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-5">
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5>Timeline</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">Configured phase windows</p>
+            </div>
+            <div class="admin-card-body">
+                <div class="timeline-item"><span class="tl-key">Applications</span><span class="tl-val">{% if election.application_starts_at %}{{ election.application_starts_at|app_local }}{% else %}—{% endif %} → {% if election.application_ends_at %}{{ election.application_ends_at|app_local }}{% else %}—{% endif %}</span></div>
+                <div class="timeline-item"><span class="tl-key">Screening ends</span><span class="tl-val">{% if election.screening_ends_at %}{{ election.screening_ends_at|app_local }}{% else %}—{% endif %}</span></div>
+                <div class="timeline-item"><span class="tl-key">Voting</span><span class="tl-val">{% if election.voting_starts_at %}{{ election.voting_starts_at|app_local }}{% else %}—{% endif %} → {% if election.voting_ends_at %}{{ election.voting_ends_at|app_local }}{% else %}—{% endif %}</span></div>
+            </div>
+        </div>
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5>Rules</h5>
+                <p class="mb-0" style="font-size: 0.8rem; color: var(--admin-text-muted);">Eligibility and visibility settings</p>
+            </div>
+            <div class="admin-card-body">
+                <ul class="rules-list">
+                    <li>Paid membership required <span class="admin-badge {{ 'admin-badge-success' if election.requires_paid_membership else 'admin-badge-secondary' }}">{{ 'Yes' if election.requires_paid_membership else 'No' }}</span></li>
+                    <li>Multiple positions per member <span class="admin-badge {{ 'admin-badge-success' if election.allow_multiple_positions else 'admin-badge-secondary' }}">{{ 'Yes' if election.allow_multiple_positions else 'No' }}</span></li>
+                    <li>Live results <span class="admin-badge {{ 'admin-badge-success' if election.show_live_results else 'admin-badge-secondary' }}">{{ 'Yes' if election.show_live_results else 'No' }}</span></li>
+                </ul>
+                {% if election.description %}
+                <hr style="border-color: var(--admin-border);">
+                <p class="mb-0" style="font-size: 0.88rem; color: var(--admin-text-muted);">{{ election.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePosEdit(id) {
+    var el = document.getElementById('posEdit' + id);
+    if (el) el.classList.toggle('open');
+}
+
+(function () {
+    var list = document.getElementById('electionPositionList');
+    if (!list || list.getAttribute('data-locked') === '1') return;
+    var dragged = null;
+
+    list.querySelectorAll('.position-item').forEach(function (item) {
+        item.addEventListener('dragstart', function () {
+            dragged = item;
+            item.classList.add('dragging');
+        });
+        item.addEventListener('dragend', function () {
+            item.classList.remove('dragging');
+            list.querySelectorAll('.position-item').forEach(function (i) { i.classList.remove('drag-over'); });
+            saveOrder();
+        });
+        item.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            var after = getAfterElement(list, e.clientY);
+            if (after == null) { list.appendChild(dragged); }
+            else { list.insertBefore(dragged, after); }
+        });
+    });
+
+    function getAfterElement(container, y) {
+        var els = [].slice.call(container.querySelectorAll('.position-item:not(.dragging)'));
+        return els.reduce(function (closest, child) {
+            var box = child.getBoundingClientRect();
+            var offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; }
+            return closest;
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function saveOrder() {
+        var ids = [].slice.call(list.querySelectorAll('.position-item')).map(function (i) { return i.getAttribute('data-id'); });
+        list.querySelectorAll('.pos-order-badge').forEach(function (b, idx) { b.textContent = idx + 1; });
+        fetch(list.getAttribute('data-reorder-url'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: ids })
+        });
+    }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends "member/member_base.html" %}
+
+{% block title %}Leadership Elections - Digital Club{% endblock %}
+{% block page_title %}Leadership Elections{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Elections</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .elections-page { width: 100%; max-width: 100%; overflow-x: hidden; }
+
+    /* Intro / hero strip */
+    .elections-hero {
+        background: var(--gradient-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .elections-hero::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--gradient-primary);
+    }
+    .elections-hero h4 {
+        font-size: 1.5rem; font-weight: 700; color: var(--text-primary);
+        margin-bottom: 0.4rem; font-family: 'Fira Code', monospace;
+    }
+    .elections-hero p { color: var(--text-secondary); margin: 0; max-width: 640px; }
+    .hero-icon-badge {
+        position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%);
+        width: 72px; height: 72px; border-radius: 50%;
+        background: rgba(var(--particle-color), 0.1); border: 1px solid rgba(var(--particle-color), 0.3);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--primary-color); font-size: 1.75rem;
+    }
+    @media (max-width: 640px) { .hero-icon-badge { display: none; } }
+
+    /* Tabs */
+    .election-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .election-tab {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.55rem 1.15rem; border-radius: 999px;
+        border: 1px solid var(--border-color); color: var(--text-secondary);
+        text-decoration: none; font-size: 0.85rem; background: var(--surface-1);
+        transition: all 0.2s ease;
+    }
+    .election-tab:hover { border-color: var(--primary-color); color: var(--primary-color); background: var(--surface-2); }
+    .election-tab.active { background: var(--gradient-primary); color: var(--bg-primary); border-color: transparent; font-weight: 600; }
+    .election-tab .count-chip {
+        font-size: 0.72rem; padding: 0.05rem 0.5rem; border-radius: 999px;
+        background: rgba(255,255,255,0.18);
+    }
+    .election-tab:not(.active) .count-chip { background: var(--surface-2); }
+
+    /* Cards grid */
+    .election-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 1.25rem;
+    }
+    @media (max-width: 768px) { .election-grid { grid-template-columns: 1fr; } }
+
+    .election-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative; overflow: hidden;
+        display: flex; flex-direction: column; height: 100%;
+    }
+    .election-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: var(--gradient-primary); transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease;
+    }
+    .election-card:hover { transform: translateY(-5px); border-color: var(--primary-color); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .election-card:hover::before { transform: scaleX(1); }
+
+    .ec-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .ec-title { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0; line-height: 1.35; font-family: 'Fira Code', monospace; }
+    .ec-term { font-size: 0.82rem; color: var(--text-muted); margin: 0.15rem 0 0; }
+
+    .phase-badge {
+        font-size: 0.72rem; padding: 0.3rem 0.7rem; border-radius: 999px;
+        font-weight: 600; text-transform: capitalize; white-space: nowrap; border: 1px solid;
+    }
+    .phase-nominations, .phase-screening { background: rgba(0,200,255,0.12); color: #00c8ff; border-color: rgba(0,200,255,0.3); }
+    .phase-voting, .phase-counting { background: rgba(255,170,0,0.12); color: var(--warning-color); border-color: rgba(255,170,0,0.3); }
+    .phase-finalized, .phase-completed { background: rgba(27,129,27,0.15); color: var(--success-color); border-color: rgba(27,129,27,0.4); }
+    .phase-upcoming, .phase-draft { background: var(--surface-2); color: var(--text-muted); border-color: var(--border-color); }
+
+    .ec-desc { font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0 1rem; line-height: 1.55; }
+
+    .ec-meta { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; flex-grow: 1; }
+    .meta-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.83rem; color: var(--text-secondary); }
+    .meta-item i { width: 16px; color: var(--primary-color); opacity: 0.85; }
+    .meta-window {
+        background: var(--surface-1); padding: 0.5rem 0.75rem; border-radius: var(--border-radius-sm);
+        border-left: 3px solid var(--primary-color); font-size: 0.8rem; color: var(--text-secondary);
+    }
+
+    .ec-stats { display: flex; gap: 1.25rem; margin-bottom: 1rem; }
+    .ec-stat { text-align: center; }
+    .ec-stat .num { font-size: 1.25rem; font-weight: 700; color: var(--primary-color); font-family: 'Fira Code', monospace; line-height: 1; }
+    .ec-stat .lbl { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.2rem; }
+
+    .ec-actions {
+        display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+        margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);
+    }
+    .applied-chip {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        font-size: 0.72rem; padding: 0.3rem 0.65rem; border-radius: 999px; text-transform: capitalize;
+        background: rgba(var(--particle-color), 0.1); color: var(--primary-color); border: 1px solid rgba(var(--particle-color), 0.3);
+    }
+    .voted-chip {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        font-size: 0.72rem; padding: 0.3rem 0.65rem; border-radius: 999px;
+        background: rgba(27,129,27,0.15); color: var(--success-color); border: 1px solid rgba(27,129,27,0.4);
+    }
+
+    .empty-state {
+        grid-column: 1 / -1; text-align: center; padding: 3rem 2rem; color: var(--text-muted);
+        background: var(--surface-1); border-radius: var(--border-radius-md); border: 1px dashed var(--border-color);
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; color: var(--primary-color); }
+    .empty-state h5 { color: var(--text-primary); margin-bottom: 0.5rem; font-family: 'Fira Code', monospace; }
+</style>
+{% endblock %}
+
+{% block member_content %}
+<div class="elections-page">
+    <div class="elections-hero">
+        <h4>Leadership Elections</h4>
+        <p>Apply for leadership positions, share your manifesto, vote for candidates, and follow live results — all in one place.</p>
+        <div class="hero-icon-badge"><i class="fas fa-vote-yea"></i></div>
+    </div>
+
+    <div class="election-tabs">
+        <a href="{{ url_for('member.elections_browse', tab='active') }}" class="election-tab {% if tab == 'active' %}active{% endif %}">
+            <i class="fas fa-bolt"></i> Active <span class="count-chip">{{ active|length }}</span>
+        </a>
+        <a href="{{ url_for('member.elections_browse', tab='upcoming') }}" class="election-tab {% if tab == 'upcoming' %}active{% endif %}">
+            <i class="fas fa-clock"></i> Upcoming <span class="count-chip">{{ upcoming|length }}</span>
+        </a>
+        <a href="{{ url_for('member.elections_browse', tab='past') }}" class="election-tab {% if tab == 'past' %}active{% endif %}">
+            <i class="fas fa-flag-checkered"></i> Past <span class="count-chip">{{ past|length }}</span>
+        </a>
+    </div>
+
+    {% set items = active if tab == 'active' else (upcoming if tab == 'upcoming' else past) %}
+
+    <div class="election-grid">
+        {% if items %}
+        {% for e in items %}
+        {% set my_app = my_apps.get(e.id) %}
+        {% set phase_key = 'completed' if e.status == 'finalized' else ('upcoming' if tab == 'upcoming' else e.status) %}
+        <div class="election-card">
+            <div class="ec-head">
+                <div>
+                    <h5 class="ec-title">{{ e.title }}</h5>
+                    {% if e.term_label %}<p class="ec-term">{{ e.term_label }}</p>{% endif %}
+                </div>
+                <span class="phase-badge phase-{{ phase_key }}">{{ 'Completed' if e.status == 'finalized' else phase_key }}</span>
+            </div>
+
+            {% if e.description %}
+            <p class="ec-desc">{{ e.description[:130] }}{% if e.description|length > 130 %}…{% endif %}</p>
+            {% endif %}
+
+            <div class="ec-meta">
+                {% if e.voting_starts_at %}
+                <div class="meta-window">
+                    <i class="fas fa-vote-yea me-1" style="color: var(--primary-color);"></i>
+                    Voting: {{ e.voting_starts_at|app_local }} – {{ e.voting_ends_at|app_local if e.voting_ends_at else 'TBD' }}
+                </div>
+                {% elif e.application_starts_at %}
+                <div class="meta-window">
+                    <i class="fas fa-file-signature me-1" style="color: var(--primary-color);"></i>
+                    Applications: {{ e.application_starts_at|app_local }} – {{ e.application_ends_at|app_local if e.application_ends_at else 'TBD' }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="ec-stats">
+                <div class="ec-stat">
+                    <div class="num">{{ e.positions.count() }}</div>
+                    <div class="lbl">Positions</div>
+                </div>
+                <div class="ec-stat">
+                    <div class="num">{{ e.candidates.filter_by(status='approved').count() }}</div>
+                    <div class="lbl">Candidates</div>
+                </div>
+                <div class="ec-stat">
+                    <div class="num">{{ e.votes.count() }}</div>
+                    <div class="lbl">Votes</div>
+                </div>
+            </div>
+
+            <div class="ec-actions">
+                <a href="{{ url_for('member.election_detail', election_id=e.id) }}" class="admin-btn admin-btn-primary admin-btn-sm">
+                    <i class="fas fa-arrow-right"></i> View Details
+                </a>
+                {% if e.is_voting_open() %}
+                <a href="{{ url_for('member.election_vote', election_id=e.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">
+                    <i class="fas fa-vote-yea"></i> Vote
+                </a>
+                {% elif e.status == 'finalized' or e.show_live_results %}
+                <a href="{{ url_for('member.election_results', election_id=e.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">
+                    <i class="fas fa-chart-bar"></i> Results
+                </a>
+                {% endif %}
+                {% if my_app %}
+                <span class="applied-chip"><i class="fas fa-user-check"></i> Applied: {{ my_app.status }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-vote-yea"></i>
+            <h5>No {{ tab }} elections</h5>
+            <p class="mb-0">Check back when the club announces the next leadership election.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

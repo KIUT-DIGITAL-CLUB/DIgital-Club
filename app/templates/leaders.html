@@ -422,6 +422,25 @@
 <!-- Leadership Team -->
 <section class="leaders-section" style="background: var(--surface-5);">
     <div class="container">
+        {% if active_elections %}
+        <div class="mb-5" data-aos="fade-up">
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 2rem; text-align: center;">
+                <h3 style="color: var(--text-primary); margin-bottom: 0.75rem;"><i class="fas fa-vote-yea me-2"></i>Leadership Elections</h3>
+                <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 1.25rem;">
+                    {% for e in active_elections %}
+                    <strong>{{ e.title }}</strong>{% if e.term_label %} ({{ e.term_label }}){% endif %}{% if not loop.last %} · {% endif %}
+                    {% endfor %}
+                </p>
+                <a href="{{ url_for('main.public_elections') }}" class="btn btn-primary me-2">View Elections</a>
+                {% if current_user.is_authenticated and current_user.role != 'admin' %}
+                <a href="{{ url_for('member.elections_browse') }}" class="btn btn-outline-primary">Member Portal</a>
+                {% elif not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">Login to Participate</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
         <h2 class="section-title" data-aos="fade-up">Meet Our Leaders</h2>
         <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
             Passionate students committed to advancing technology education

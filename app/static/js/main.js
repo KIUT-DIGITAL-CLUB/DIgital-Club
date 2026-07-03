@@ -235,8 +235,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Loading States for Forms
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
-        form.addEventListener('submit', function() {
-            const submitBtn = this.querySelector('button[type="submit"]');
+        form.addEventListener('submit', function(e) {
+            const submitter = e.submitter;
+            if (submitter && submitter.name && submitter.value &&
+                (submitter.type === 'submit' || submitter.type === 'image')) {
+                let hidden = form.querySelector('input[type="hidden"][data-submit-clone]');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.setAttribute('data-submit-clone', '1');
+                    form.appendChild(hidden);
+                }
+                hidden.name = submitter.name;
+                hidden.value = submitter.value;
+            }
+
+            const submitBtn = (submitter && submitter.type === 'submit') ? submitter
+                : this.querySelector('button[type="submit"]');
             if (submitBtn) {
                 const originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<div class="loading"></div>';

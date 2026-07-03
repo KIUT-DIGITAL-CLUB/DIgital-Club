@@ -264,6 +264,100 @@ def _migrate_member_notification_tables():
     except Exception:
         pass
 
+
+def _migrate_election_tables():
+    """Compatibility migration for leadership election tables."""
+    from sqlalchemy import inspect, text
+    try:
+        from app.models import (
+            LeadershipPositionTemplate,
+            Election,
+            ElectionPosition,
+            ElectionCandidate,
+            ElectionVote,
+        )
+        from app.election_utils import DEFAULT_POSITIONS
+
+        LeadershipPositionTemplate.__table__.create(bind=db.engine, checkfirst=True)
+        Election.__table__.create(bind=db.engine, checkfirst=True)
+        ElectionPosition.__table__.create(bind=db.engine, checkfirst=True)
+        ElectionCandidate.__table__.create(bind=db.engine, checkfirst=True)
+        ElectionVote.__table__.create(bind=db.engine, checkfirst=True)
+
+        # Add newer columns to existing tables where missing.
+        inspector = inspect(db.engine)
+
+        def _cols(table):
+            try:
+                return {c['name'] for c in inspector.get_columns(table)}
+            except Exception:
+                return set()
+
+        tpl_cols = _cols('leadership_position_template')
+        add_tpl = []
+        if 'subtitle' not in tpl_cols:
+            add_tpl.append("ALTER TABLE leadership_position_template ADD COLUMN subtitle VARCHAR(200)")
+        if 'roles' not in tpl_cols:
+            add_tpl.append("ALTER TABLE leadership_position_template ADD COLUMN roles TEXT")
+        if 'default_seats' not in tpl_cols:
+            add_tpl.append("ALTER TABLE leadership_position_template ADD COLUMN default_seats INTEGER DEFAULT 1")
+
+        pos_cols = _cols('election_position')
+        add_pos = []
+        if 'subtitle' not in pos_cols:
+            add_pos.append("ALTER TABLE election_position ADD COLUMN subtitle VARCHAR(200)")
+        if 'roles' not in pos_cols:
+            add_pos.append("ALTER TABLE election_position ADD COLUMN roles TEXT")
+
+        with db.engine.begin() as conn:
+            for stmt in add_tpl + add_pos:
+                conn.execute(text(stmt))
+
+        # Seed / refresh canonical positions from the roles document.
+        _seed_default_election_positions(LeadershipPositionTemplate, DEFAULT_POSITIONS)
+    except Exception:
+        db.session.rollback()
+
+
+def _seed_default_election_positions(LeadershipPositionTemplate, DEFAULT_POSITIONS):
+    """Replace the legacy default templates with the canonical KIUT positions."""
+    legacy_titles = {
+        'President', 'Vice President', 'Secretary General',
+        'Technical Lead', 'Events Coordinator',
+    }
+    canonical_titles = {p[0] for p in DEFAULT_POSITIONS}
+
+    # Remove legacy defaults that are not referenced by any election.
+    for tpl in LeadershipPositionTemplate.query.filter(
+        LeadershipPositionTemplate.title.in_(legacy_titles)
+    ).all():
+        if tpl.title not in canonical_titles and len(tpl.election_positions) == 0:
+            db.session.delete(tpl)
+    db.session.commit()
+
+    # Insert / update the canonical positions.
+    for order, (title, subtitle, seats, roles) in enumerate(DEFAULT_POSITIONS, start=1):
+        tpl = LeadershipPositionTemplate.query.filter_by(title=title).first()
+        roles_text = '\n'.join(roles)
+        if tpl is None:
+            db.session.add(LeadershipPositionTemplate(
+                title=title,
+                subtitle=subtitle,
+                roles=roles_text,
+                default_seats=seats,
+                display_order=order,
+                is_active=True,
+            ))
+        else:
+            # Backfill new fields if empty, keep admin edits otherwise.
+            if not tpl.subtitle:
+                tpl.subtitle = subtitle
+            if not tpl.roles:
+                tpl.roles = roles_text
+            if not tpl.default_seats:
+                tpl.default_seats = seats
+    db.session.commit()
+
 def create_app():
     app = Flask(__name__)
     
@@ -312,6 +406,7 @@ def create_app():
         _migrate_team_member_workflow_and_competition_team_tables()
         _migrate_quiz_reminder_tables()
         _migrate_member_notification_tables()
+        _migrate_election_tables()
     
     # Configure login manager
     login_manager.login_view = 'auth.login'
@@ -324,6 +419,7 @@ def create_app():
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'gallery'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'digital_ids'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'competitions'), exist_ok=True)
+    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'elections', 'passports'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'quiz_resources'), exist_ok=True)
 
     @app.template_filter('app_local')
@@ -433,14 +529,16 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
     
-    # Register blueprints
+    # Register blueprints (election route modules must import before register_blueprint)
     from app.routes.main import main_bp
     from app.routes.auth import auth_bp
     from app.routes.admin import admin_bp
     from app.routes.member import member_bp
     from app.routes.quizmaster import quizmaster_bp
     from app.routes.verification import verification_bp
-    
+    from app.routes import election_admin  # noqa: F401
+    from app.routes import election_member  # noqa: F401
+
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')

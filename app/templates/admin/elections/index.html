@@ -1,0 +1,128 @@
+{% extends "admin/admin_base.html" %}
+
+{% block admin_title %}Leadership Elections - Admin{% endblock %}
+{% block page_title %}Leadership Elections{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <span>Elections</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .elections-header {
+        background: var(--gradient-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--admin-border);
+    }
+    .filters-bar {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--admin-border);
+    }
+    .filter-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 1rem;
+        background: var(--surface-1);
+        border: 1px solid var(--admin-border);
+        border-radius: 50px;
+        color: var(--admin-text-secondary);
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+    .filter-pill.active, .filter-pill:hover {
+        background: var(--gradient-primary);
+        color: var(--admin-bg-primary);
+        border-color: transparent;
+    }
+    .election-row {
+        display: grid;
+        grid-template-columns: 1fr 120px 90px 90px 90px 90px 160px;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid var(--admin-border);
+    }
+    .election-row:hover { background: var(--surface-1); }
+    .status-badge {
+        display: inline-flex;
+        padding: 0.25rem 0.65rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+    .status-draft { background: rgba(150,150,150,0.15); color: var(--admin-text-muted); }
+    .status-nominations, .status-screening { background: rgba(0,200,255,0.12); color: #00c8ff; }
+    .status-voting, .status-counting { background: rgba(255,170,0,0.12); color: var(--admin-warning); }
+    .status-finalized { background: rgba(0,255,100,0.12); color: var(--admin-success); }
+    .status-cancelled { background: rgba(255,80,80,0.12); color: var(--admin-danger); }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="elections-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h5 class="mb-1">Leadership Elections</h5>
+            <p class="mb-0" style="font-size: 0.85rem; color: var(--admin-text-muted);">
+                Create elections, review applications, manage voting, and install winners
+            </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('admin.election_positions') }}" class="admin-btn admin-btn-secondary">
+                <i class="fas fa-sitemap"></i> Position Templates
+            </a>
+            <a href="{{ url_for('admin.elections_add') }}" class="admin-btn admin-btn-primary">
+                <i class="fas fa-plus"></i> New Election
+            </a>
+        </div>
+    </div>
+    <div class="filters-bar">
+        <a href="{{ url_for('admin.elections') }}" class="filter-pill {% if not status_filter %}active{% endif %}">All</a>
+        {% for s in ['draft', 'nominations', 'screening', 'voting', 'finalized'] %}
+        <a href="{{ url_for('admin.elections', status=s) }}" class="filter-pill {% if status_filter == s %}active{% endif %}">{{ s|replace('_', ' ') }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h6 class="mb-0"><i class="fas fa-vote-yea me-2"></i>All Elections</h6>
+    </div>
+    <div class="admin-card-body p-0">
+        {% if elections %}
+        <div class="election-row fw-semibold" style="font-size: 0.8rem; color: var(--admin-text-muted); background: var(--surface-1);">
+            <span>Title</span><span>Status</span><span>Positions</span><span>Candidates</span><span>Approved</span><span>Votes</span><span></span>
+        </div>
+        {% for e in elections %}
+        {% set s = stats.get(e.id, {}) %}
+        <div class="election-row">
+            <div>
+                <div class="fw-semibold">{{ e.title }}</div>
+                {% if e.term_label %}<small class="text-muted">{{ e.term_label }}</small>{% endif %}
+            </div>
+            <div><span class="status-badge status-{{ e.status }}">{{ e.status }}</span></div>
+            <div class="text-center">{{ s.positions or 0 }}</div>
+            <div class="text-center">{{ s.candidates or 0 }}</div>
+            <div class="text-center">{{ s.approved or 0 }}</div>
+            <div class="text-center">{{ s.votes or 0 }}</div>
+            <div class="text-end">
+                <a href="{{ url_for('admin.elections_view', election_id=e.id) }}" class="admin-btn admin-btn-sm admin-btn-primary">Manage</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-vote-yea fa-3x mb-3 opacity-50"></i>
+            <h5>No elections yet</h5>
+            <p>Create your first leadership election to get started.</p>
+            <a href="{{ url_for('admin.elections_add') }}" class="admin-btn admin-btn-primary">Create Election</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

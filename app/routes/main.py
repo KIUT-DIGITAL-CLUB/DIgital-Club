@@ -4,7 +4,7 @@ import os
 
 from flask import render_template, request, flash, redirect, url_for, jsonify, current_app, send_from_directory, abort, Response
 from app.routes import main_bp
-from app.models import News, Event, Project, Gallery, Topic, Member, Leader, Newsletter, Blog, RSVP, User, Technology, Quiz, QuizResource
+from app.models import News, Event, Project, Gallery, Topic, Member, Leader, Newsletter, Blog, RSVP, User, Technology, Quiz, QuizResource, Election, ElectionPosition, ElectionCandidate
 from app import db
 from datetime import datetime, timedelta
 import urllib.parse
@@ -52,10 +52,49 @@ def leaders():
     try:
         from sqlalchemy.orm import joinedload
         leaders = Leader.query.options(joinedload(Leader.user).joinedload(User.member)).order_by(Leader.display_order.asc()).all()
+        active_elections = Election.query.filter(
+            ~Election.status.in_(['draft', 'cancelled', 'archived'])
+        ).order_by(Election.created_at.desc()).limit(3).all()
     except Exception as e:
         print(f"Error loading leaders: {e}")
         leaders = []
-    return render_template('leaders.html', leaders=leaders)
+        active_elections = []
+    return render_template('leaders.html', leaders=leaders, active_elections=active_elections)
+
+
+@main_bp.route('/elections')
+def public_elections():
+    try:
+        elections = Election.query.filter(
+            ~Election.status.in_(['draft', 'cancelled'])
+        ).order_by(Election.created_at.desc()).all()
+    except Exception:
+        elections = []
+    return render_template('elections/index.html', elections=elections)
+
+
+@main_bp.route('/elections/<int:election_id>')
+def public_election_detail(election_id):
+    from app.election_utils import election_phase
+    election = Election.query.get_or_404(election_id)
+    if election.status in ('draft', 'cancelled'):
+        abort(404)
+    positions = election.positions.order_by(ElectionPosition.display_order.asc()).all()
+    approved_by_position = {}
+    show_candidates = election.candidates_visible()
+    if show_candidates:
+        for p in positions:
+            approved_by_position[p.id] = p.candidates.filter_by(status='approved').order_by(
+                ElectionCandidate.submitted_at.asc()
+            ).all()
+    return render_template(
+        'elections/detail.html',
+        election=election,
+        positions=positions,
+        phase=election_phase(election),
+        approved_by_position=approved_by_position,
+        show_candidates=show_candidates,
+    )
 
 @main_bp.route('/alumni')
 def alumni():

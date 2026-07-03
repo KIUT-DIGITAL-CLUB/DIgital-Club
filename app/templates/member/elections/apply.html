@@ -1,0 +1,196 @@
+{% extends "member/member_base.html" %}
+
+{% block title %}Apply - {{ position.title }}{% endblock %}
+{% block page_title %}Apply for {{ position.title }}{% endblock %}
+{% block breadcrumb %}<span class="breadcrumb-separator">/</span> <a href="{{ url_for('member.elections_browse') }}">Elections</a><span class="breadcrumb-separator">/</span> <a href="{{ url_for('member.election_detail', election_id=election.id) }}">{{ election.title }}</a><span class="breadcrumb-separator">/</span> <span>Apply</span>{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+    .apply-wrap { width: 100%; max-width: 100%; }
+    .apply-form { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 1.5rem; }
+    .passport-frame { position: relative; flex-shrink: 0; }
+    .passport-preview { width: 120px; height: 120px; object-fit: cover; border-radius: var(--border-radius-sm); border: 2px solid rgba(var(--particle-color), 0.4); display: block; }
+    .passport-preview.hidden { display: none; }
+    .passport-placeholder { width: 120px; height: 120px; border-radius: var(--border-radius-sm); border: 2px dashed var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+    .passport-placeholder.hidden { display: none; }
+    .preview-hint { display: none; margin-top: 0.35rem; font-size: 0.8rem; }
+    .preview-hint.visible { display: block; }
+
+    .position-pill {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 0.55rem 1.1rem; margin-bottom: 1.25rem;
+        background: var(--gradient-primary); color: #fff;
+        border-radius: 50px; font-weight: 600; font-size: 0.9rem;
+        box-shadow: 0 4px 14px rgba(var(--particle-color), 0.25);
+    }
+    .position-pill i { font-size: 0.95rem; }
+    .position-pill .pill-label { font-weight: 400; opacity: 0.85; }
+
+    /* Role card (toggle to view responsibilities) */
+    .role-card {
+        background: var(--card-bg); border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md); margin-bottom: 1.25rem; overflow: hidden;
+    }
+    .role-card-head {
+        width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        padding: 1.1rem 1.25rem; background: none; border: none; cursor: pointer; text-align: left;
+        transition: background 0.2s ease;
+    }
+    .role-card-head:hover { background: var(--surface-1); }
+    .role-card-head-left { display: flex; align-items: center; gap: 0.85rem; }
+    .role-card-icon {
+        width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+        background: rgba(var(--particle-color), 0.1); border: 1px solid rgba(var(--particle-color), 0.3);
+        display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.1rem;
+    }
+    .role-card-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0; }
+    .role-card-sub { font-size: 0.82rem; color: var(--primary-color); margin: 0.1rem 0 0; }
+    .role-card-toggle { display: flex; align-items: center; gap: 0.6rem; color: var(--text-muted); font-size: 0.8rem; flex-shrink: 0; }
+    .role-count { white-space: nowrap; }
+    .role-card-toggle .chevron { transition: transform 0.25s ease; }
+    .role-card-head.open .chevron { transform: rotate(180deg); }
+    .role-card-body { display: none; padding: 0 1.25rem 1.25rem; }
+    .role-card-body.open { display: block; }
+    .role-card-body .roles-list { list-style: none; margin: 0; padding: 0.5rem 0 0; display: grid; gap: 0.55rem; }
+    .role-card-body .roles-list li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; }
+    .role-card-body .roles-list li i { color: var(--success-color); font-size: 0.85rem; margin-top: 0.15rem; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block member_content %}
+<div class="apply-wrap">
+    <span class="position-pill">
+        <i class="fas fa-user-tie"></i>
+        <span class="pill-label">Applying for</span> {{ position.title }}
+    </span>
+
+    <div class="role-card">
+        <button type="button" class="role-card-head" onclick="toggleApplyRoles()" id="applyRolesBtn" aria-expanded="false">
+            <div class="role-card-head-left">
+                <div class="role-card-icon"><i class="fas fa-list-check"></i></div>
+                <div>
+                    <h6 class="role-card-title">{{ position.title }}</h6>
+                    {% if position.subtitle %}<p class="role-card-sub">{{ position.subtitle }}</p>{% endif %}
+                </div>
+            </div>
+            <span class="role-card-toggle">
+                {% if position.role_list() %}<span class="role-count">{{ position.role_list()|length }} responsibilities</span>{% endif %}
+                <i class="fas fa-chevron-down chevron"></i>
+            </span>
+        </button>
+        <div class="role-card-body" id="applyRolesBody">
+            {% if position.role_list() %}
+            <ul class="roles-list">
+                {% for r in position.role_list() %}
+                <li><i class="fas fa-circle-check"></i> <span>{{ r }}</span></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">No responsibilities have been listed for this position.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="apply-form">
+        <h5 class="mb-1">{{ position.title }}</h5>
+        <p class="text-muted small mb-4">{{ election.title }}{% if election.term_label %} · {{ election.term_label }}{% endif %}</p>
+
+        {% if candidate and candidate.status not in ['draft', 'submitted', 'under_review'] %}
+        <div class="alert alert-info">Your application status: <strong>{{ candidate.status }}</strong></div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data">
+            <div class="mb-4">
+                <label class="form-label">Passport Photo *</label>
+                <div class="d-flex gap-3 align-items-center flex-wrap">
+                    <div class="passport-frame">
+                        <img id="passportPreviewImg"
+                             class="passport-preview{% if not (candidate and candidate.passport_image) %} hidden{% endif %}"
+                             alt="Passport preview"
+                             {% if candidate and candidate.passport_image %}
+                             src="{{ url_for('static', filename='uploads/elections/passports/' + candidate.passport_image) }}"
+                             {% endif %}>
+                        <div id="passportPlaceholder" class="passport-placeholder{% if candidate and candidate.passport_image %} hidden{% endif %}">
+                            <i class="fas fa-camera fa-2x"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <input type="file" id="passportImageInput" name="passport_image" class="form-control" accept="image/png,image/jpeg,image/webp">
+                        <small class="text-muted">PNG, JPG or WEBP. Max 5MB.</small>
+                        <small id="passportPreviewHint" class="preview-hint text-muted">Preview updated — save or submit to upload.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Manifesto * <small class="text-muted">(min. 50 characters)</small></label>
+                <textarea name="manifesto" class="form-control" rows="8" required placeholder="Share your vision, experience, and plans for this role…">{{ candidate.manifesto if candidate else '' }}</textarea>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" name="action" value="save" class="admin-btn admin-btn-secondary">Save Draft</button>
+                <button type="submit" name="action" value="submit" class="admin-btn admin-btn-primary">Submit Application</button>
+                <a href="{{ url_for('member.election_detail', election_id=election.id) }}" class="admin-btn admin-btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleApplyRoles() {
+    var body = document.getElementById('applyRolesBody');
+    var btn = document.getElementById('applyRolesBtn');
+    if (body) body.classList.toggle('open');
+    if (btn) {
+        btn.classList.toggle('open');
+        btn.setAttribute('aria-expanded', btn.classList.contains('open') ? 'true' : 'false');
+    }
+}
+
+(function () {
+    var input = document.getElementById('passportImageInput');
+    var img = document.getElementById('passportPreviewImg');
+    var placeholder = document.getElementById('passportPlaceholder');
+    var hint = document.getElementById('passportPreviewHint');
+    var objectUrl = null;
+
+    if (!input || !img || !placeholder) return;
+
+    function revokePreviewUrl() {
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+    }
+
+    input.addEventListener('change', function () {
+        revokePreviewUrl();
+        var file = input.files && input.files[0];
+
+        if (!file) {
+            if (!img.getAttribute('src') || img.classList.contains('hidden')) {
+                img.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+            if (hint) hint.classList.remove('visible');
+            return;
+        }
+
+        if (!file.type.startsWith('image/')) {
+            input.value = '';
+            if (hint) hint.classList.remove('visible');
+            return;
+        }
+
+        objectUrl = URL.createObjectURL(file);
+        img.src = objectUrl;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        if (hint) hint.classList.add('visible');
+    });
+
+    window.addEventListener('beforeunload', revokePreviewUrl);
+})();
+</script>
+{% endblock %}
