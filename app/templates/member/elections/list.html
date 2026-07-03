@@ -85,7 +85,7 @@
         font-size: 0.72rem; padding: 0.3rem 0.7rem; border-radius: 999px;
         font-weight: 600; text-transform: capitalize; white-space: nowrap; border: 1px solid;
     }
-    .phase-nominations, .phase-screening { background: rgba(0,200,255,0.12); color: #00c8ff; border-color: rgba(0,200,255,0.3); }
+    .phase-nominations, .phase-application, .phase-screening { background: rgba(0,200,255,0.12); color: #00c8ff; border-color: rgba(0,200,255,0.3); }
     .phase-voting, .phase-counting { background: rgba(255,170,0,0.12); color: var(--warning-color); border-color: rgba(255,170,0,0.3); }
     .phase-finalized, .phase-completed { background: rgba(27,129,27,0.15); color: var(--success-color); border-color: rgba(27,129,27,0.4); }
     .phase-upcoming, .phase-draft { background: var(--surface-2); color: var(--text-muted); border-color: var(--border-color); }
@@ -155,14 +155,34 @@
         {% if items %}
         {% for e in items %}
         {% set my_app = my_apps.get(e.id) %}
-        {% set phase_key = 'completed' if e.status == 'finalized' else ('upcoming' if tab == 'upcoming' else e.status) %}
+        {% set is_voting = e.is_voting_open() or e.status == 'voting' %}
+        {% set is_application = e.is_application_open() or e.status == 'nominations' %}
+        {% if e.status == 'finalized' %}
+            {% set phase_key = 'completed' %}
+            {% set phase_label = 'Completed' %}
+        {% elif tab == 'upcoming' %}
+            {% set phase_key = 'upcoming' %}
+            {% set phase_label = 'Upcoming' %}
+        {% elif is_voting %}
+            {% set phase_key = 'voting' %}
+            {% set phase_label = 'Voting' %}
+        {% elif e.status == 'screening' %}
+            {% set phase_key = 'screening' %}
+            {% set phase_label = 'Screening' %}
+        {% elif is_application %}
+            {% set phase_key = 'application' %}
+            {% set phase_label = 'Application' %}
+        {% else %}
+            {% set phase_key = e.status %}
+            {% set phase_label = e.status|replace('_', ' ')|title %}
+        {% endif %}
         <div class="election-card">
             <div class="ec-head">
                 <div>
                     <h5 class="ec-title">{{ e.title }}</h5>
                     {% if e.term_label %}<p class="ec-term">{{ e.term_label }}</p>{% endif %}
                 </div>
-                <span class="phase-badge phase-{{ phase_key }}">{{ 'Completed' if e.status == 'finalized' else phase_key }}</span>
+                <span class="phase-badge phase-{{ phase_key }}">{{ phase_label }}</span>
             </div>
 
             {% if e.description %}
@@ -170,7 +190,7 @@
             {% endif %}
 
             <div class="ec-meta">
-                {% if e.voting_starts_at %}
+                {% if is_voting and e.voting_starts_at %}
                 <div class="meta-window">
                     <i class="fas fa-vote-yea me-1" style="color: var(--primary-color);"></i>
                     Voting: {{ e.voting_starts_at|app_local }} – {{ e.voting_ends_at|app_local if e.voting_ends_at else 'TBD' }}
@@ -199,17 +219,23 @@
             </div>
 
             <div class="ec-actions">
+                {% if e.is_voting_open() %}
+                <a href="{{ url_for('member.election_vote', election_id=e.id) }}" class="admin-btn admin-btn-primary admin-btn-sm">
+                    <i class="fas fa-vote-yea"></i> Vote
+                </a>
+                {% elif e.is_application_open() %}
+                <a href="{{ url_for('member.election_detail', election_id=e.id) }}" class="admin-btn admin-btn-primary admin-btn-sm">
+                    <i class="fas fa-file-signature"></i> Apply
+                </a>
+                {% else %}
                 <a href="{{ url_for('member.election_detail', election_id=e.id) }}" class="admin-btn admin-btn-primary admin-btn-sm">
                     <i class="fas fa-arrow-right"></i> View Details
                 </a>
-                {% if e.is_voting_open() %}
-                <a href="{{ url_for('member.election_vote', election_id=e.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">
-                    <i class="fas fa-vote-yea"></i> Vote
-                </a>
-                {% elif e.status == 'finalized' or e.show_live_results %}
+                {% if e.status == 'finalized' or e.show_live_results %}
                 <a href="{{ url_for('member.election_results', election_id=e.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">
                     <i class="fas fa-chart-bar"></i> Results
                 </a>
+                {% endif %}
                 {% endif %}
                 {% if my_app %}
                 <span class="applied-chip"><i class="fas fa-user-check"></i> Applied: {{ my_app.status }}</span>
