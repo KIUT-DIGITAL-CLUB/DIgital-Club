@@ -45,3 +45,6 @@ Thumbs.db
 # Logs
 *.log
 
+
+# Local dev database (never ship it in the image)
+instance/

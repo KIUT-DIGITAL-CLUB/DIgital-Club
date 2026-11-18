@@ -38,7 +38,16 @@ RUN mkdir -p instance \
     && mkdir -p app/static/uploads/profiles \
     && mkdir -p app/static/uploads/gallery \
     && mkdir -p app/static/uploads/digital_ids \
-    && mkdir -p app/static/uploads/blogs
+    && mkdir -p app/static/uploads/blogs \
+    && mkdir -p app/static/uploads/competitions \
+    && mkdir -p app/static/uploads/elections/passports \
+    && mkdir -p app/static/uploads/quiz_resources
+
+# Stash a copy of the bundled uploads. When a persistent volume is mounted at
+# /app/app/static/uploads it shadows the image's copy, so the start script seeds
+# the volume from here on first boot (see scripts/railway_start.sh).
+RUN cp -r app/static/uploads /app/seed_uploads \
+    && chmod +x scripts/railway_start.sh
 
 # Expose port 5051
 EXPOSE 5051
@@ -47,8 +56,9 @@ EXPOSE 5051
 ENV FLASK_APP=main.py
 ENV PYTHONUNBUFFERED=1
 
-# Use gunicorn for production, fallback to python for development
-# To use gunicorn, uncomment the line below and comment out the python line
-CMD ["gunicorn", "-c", "gunicorn_conf.py", "main:app"]
-# For development/debugging, use: CMD ["python", "main.py"]
+# Seed the uploads volume (if any), then run gunicorn.
+# Workers override this with their own start command, e.g.:
+#   python scripts/rq_worker.py
+CMD ["sh", "scripts/railway_start.sh"]
+# For development/debugging, override the command with: python main.py
 
