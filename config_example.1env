@@ -6,3 +6,20 @@ APP_TIMEZONE=Africa/Nairobi
 APP_UTC_OFFSET_HOURS=3
 QUIZ_REMINDER_RUN_ON_REQUEST=1
 QUIZ_REMINDER_INTERVAL_SECONDS=30
+
+# Email (SMTP) - required for password reset and notification emails.
+# Never hardcode these in source; set them here locally and in the host's
+# variable settings in production.
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+FROM_EMAIL=
+
+# Leave SERVER_NAME unset on Railway/other hosts: when set, Flask 404s any
+# request whose Host header does not match, breaking healthchecks.
+# SERVER_NAME=digitalclub.kiut.ac.tz
+PREFERRED_URL_SCHEME=https
+
+# Gunicorn: do NOT rely on the cpu-count default on a shared host.
+GUNICORN_WORKERS=3

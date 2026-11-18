@@ -1,3 +1,4 @@
+import os
 import smtplib
 import socket
 import requests
@@ -10,6 +11,27 @@ from flask import current_app
 import logging
 from app.sms import send_sms
 
+
+def _setting(name, default=None):
+    """Read a setting from Flask config, falling back to the environment.
+
+    Credentials must never be hardcoded here: set them as environment variables
+    (SMTP_USERNAME, SMTP_PASSWORD, ...) in .env locally and in the host's
+    variable settings in production.
+    """
+    value = None
+    try:
+        value = current_app.config.get(name)
+    except RuntimeError:
+        # Outside of an application context.
+        value = None
+    if value in (None, ''):
+        value = os.environ.get(name)
+    if value in (None, ''):
+        return default
+    return value
+
+
 class NotificationService:
     """Service for sending email and SMS notifications"""
     
@@ -21,16 +43,19 @@ class NotificationService:
     def _load_config(self):
         """Load configuration from Flask app context"""
         try:
-            self.smtp_server = "smtp.gmail.com" #current_app.config.get('SMTP_SERVER', 'smtp.gmail.com')
-            self.smtp_port = 587#current_app.config.get('SMTP_PORT', 587)
-            self.smtp_username = "kiutdigitalclubs@gmail.com" #current_app.config.get('SMTP_USERNAME')
-            self.smtp_password = "rkxw rvsh waap tuqo" #current_app.config.get('SMTP_PASSWORD')
-            self.from_email = "kiutdigitalclubs@gmail.com"#current_app.config.get('FROM_EMAIL', 'noreply@digitalclub.kiut.ac.tz')
+            self.smtp_server = _setting('SMTP_SERVER', 'smtp.gmail.com')
+            try:
+                self.smtp_port = int(_setting('SMTP_PORT', '587'))
+            except (TypeError, ValueError):
+                self.smtp_port = 587
+            self.smtp_username = _setting('SMTP_USERNAME')
+            self.smtp_password = _setting('SMTP_PASSWORD')
+            self.from_email = _setting('FROM_EMAIL') or self.smtp_username or 'noreply@digitalclub.kiut.ac.tz'
             
             # SMS configuration (using Twilio as example)
-            self.twilio_account_sid = current_app.config.get('TWILIO_ACCOUNT_SID')
-            self.twilio_auth_token = current_app.config.get('TWILIO_AUTH_TOKEN')
-            self.twilio_phone_number = current_app.config.get('TWILIO_PHONE_NUMBER')
+            self.twilio_account_sid = _setting('TWILIO_ACCOUNT_SID')
+            self.twilio_auth_token = _setting('TWILIO_AUTH_TOKEN')
+            self.twilio_phone_number = _setting('TWILIO_PHONE_NUMBER')
             
             self._config_loaded = True
         except RuntimeError:

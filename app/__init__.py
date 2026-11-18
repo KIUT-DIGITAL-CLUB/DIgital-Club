@@ -383,11 +383,13 @@ def create_app():
     app.config['SESSION_COOKIE_SAMESITE'] = os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')
     
     # URL generation (for emails, etc.)
-    # In production, set SERVER_NAME and PREFERRED_URL_SCHEME via environment variables:
-    #   SERVER_NAME=digitalclub.kiut.ac.tz
-    #   PREFERRED_URL_SCHEME=https
-    app.config['SERVER_NAME'] = "digitalclub.kiut.ac.tz" # os.environ.get('SERVER_NAME')
-    app.config['PREFERRED_URL_SCHEME'] = "https" #os.environ.get('PREFERRED_URL_SCHEME', 'https')
+    # Leave SERVER_NAME unset in hosted environments (Railway, etc.): when it is set,
+    # Flask returns 404 for any request whose Host header does not match it, which breaks
+    # platform healthchecks and *.up.railway.app domains. Unset, url_for(_external=True)
+    # derives the host from the incoming request, which is what we want.
+    # Only set SERVER_NAME when URLs must be built outside a request context.
+    app.config['SERVER_NAME'] = os.environ.get('SERVER_NAME') or None
+    app.config['PREFERRED_URL_SCHEME'] = os.environ.get('PREFERRED_URL_SCHEME', 'https')
     
     # Initialize extensions
     db.init_app(app)
@@ -421,6 +423,15 @@ def create_app():
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'competitions'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'elections', 'passports'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'quiz_resources'), exist_ok=True)
+
+    @app.route('/healthz')
+    def healthz():
+        """Lightweight liveness probe for hosted platforms (no DB, no templates).
+
+        Use this as the platform healthcheck path: '/' returns a 302 to /home,
+        and /home renders the full homepage with database queries.
+        """
+        return jsonify(status='ok'), 200
 
     @app.template_filter('app_local')
     def app_local_filter(value):
