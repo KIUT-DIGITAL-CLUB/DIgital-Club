@@ -379,6 +379,10 @@ def create_app():
             flush=True,
         )
         database_url = 'sqlite:///digital_club_01.db'
+    elif database_url.startswith('postgres://'):
+        # Some providers hand out the legacy "postgres://" scheme, which
+        # SQLAlchemy rejects. Normalise it to the scheme it accepts.
+        database_url = 'postgresql://' + database_url[len('postgres://'):]
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')

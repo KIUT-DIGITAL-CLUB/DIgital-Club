@@ -16,6 +16,12 @@ dependencies = [
     "requests>=2.32.5",
     "qrcode[pil]>=7.4.2",
     "cairosvg>=2.8.2",
+    # Both Postgres drivers are installed on purpose. SQLAlchemy 2.1 changed the
+    # default driver for a bare "postgresql://" URL from psycopg2 to psycopg v3,
+    # and managed Postgres providers hand out bare postgresql:// URLs. Keeping
+    # psycopg2-binary as well means explicit "postgresql+psycopg2://" URLs
+    # (as used by the docker-compose setup) keep working.
+    "psycopg[binary]>=3.1",
     "psycopg2-binary>=2.9.9",
     "reportlab>=4.0.0",
     "rq>=1.16.2",
