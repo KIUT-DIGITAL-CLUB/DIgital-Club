@@ -365,7 +365,21 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     # whoops i checked that line above amd the secret key is secret not the default
     
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///digital_club_01.db'
+    database_url = (os.environ.get('DATABASE_URL') or '').strip()
+    if not database_url:
+        # Do not let this fail silently: on a hosted platform the SQLite file
+        # lives on an ephemeral disk, so the app would come up looking healthy
+        # with an empty database and lose every write on the next deploy.
+        print(
+            "\n" + "!" * 72 +
+            "\n!! DATABASE_URL is not set - falling back to local SQLite."
+            "\n!! In production this means: EMPTY DATABASE, DATA LOST ON EVERY DEPLOY."
+            "\n!! Set DATABASE_URL to your Postgres connection string."
+            "\n" + "!" * 72 + "\n",
+            flush=True,
+        )
+        database_url = 'sqlite:///digital_club_01.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
