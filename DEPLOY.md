@@ -111,15 +111,31 @@ repository and logs a warning. Set `ADMIN_PASSWORD` before the first deploy.
 ## Migrating from an existing database
 
 A database created before the migration history was squashed is already at the
-right schema but is stamped at a revision that no longer exists, so Alembic
-cannot place it. Stamp it once:
+right schema but is stamped at a revision that no longer exists, such as
+`c20260703100000`. Alembic cannot place it and every command fails with:
 
-```bash
-flask db stamp bacaa08da2ca
-flask db upgrade
+```
+Can't locate revision identified by 'c20260703100000'
 ```
 
-To move data from a previous host, dump and restore before stamping. Use the
+Nothing needs to be done about this. `migrations/env.py` detects a stamped
+revision that is not in `migrations/versions`, clears that one record, and lets
+the migration run; the baseline then finds the existing schema, creates
+nothing, and stamps the database at the current head. Tables and data are not
+touched. The deploy log shows the warning:
+
+```
+Database is stamped at 'c20260703100000', which is not in migrations/versions
+(the history was squashed). Clearing the stale record so the migration can
+run; the schema itself is left alone.
+```
+
+A revision that *is* in `migrations/versions` is never cleared, so this cannot
+skip a real migration. There is no need to edit `alembic_version` by hand, and
+`flask db stamp` would itself fail on such a database — it has to resolve the
+current revision before it can set a new one.
+
+To move data from a previous host, dump and restore. Use the
 database's **public** connection URL from outside the platform — internal
 hostnames such as `*.railway.internal` only resolve from inside it.
 
@@ -149,6 +165,10 @@ list of pids, the container is being OOM-killed: set `GUNICORN_WORKERS=3`.
 
 **`no such table: user` / `relation "user" does not exist`** — the pre-deploy
 `flask db upgrade` did not run, or ran against a different database.
+
+**`Can't locate revision identified by '<id>'`** — see *Migrating from an
+existing database* above; this now recovers on its own, so if it still appears
+the deploy is running an older copy of `migrations/env.py`.
 
 **Startup banner `!! DATABASE_URL is not set`** — the variable is missing or
 empty (a variable reference that fails to resolve is passed through as an empty

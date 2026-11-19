@@ -275,12 +275,15 @@ The history was squashed into a single baseline
 (`migrations/versions/bacaa08da2ca_initial_schema.py`). The previous 18
 revisions could not build a database from scratch: the first one altered the
 `user` table, assuming it already existed because the tables had originally
-been created with `db.create_all()`. If you have a database created before the
-squash, point it at the new history once:
+been created with `db.create_all()`.
 
-```bash
-flask db stamp bacaa08da2ca
-```
+A database created before the squash is stamped at a revision that no longer
+exists. `migrations/env.py` notices this, clears that one stale record and
+lets the migration run; the baseline sees the existing schema and creates
+nothing, so the database ends up stamped at the current head with its tables
+and data untouched. Nothing to do by hand. A revision that is still in
+`migrations/versions` is never cleared, so a real migration cannot be
+skipped.
 
 ---
 
