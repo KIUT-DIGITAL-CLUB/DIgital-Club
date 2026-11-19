@@ -1,9 +1,11 @@
 import logging
 from logging.config import fileConfig
 
+import sqlalchemy as sa
 from flask import current_app
 
 from alembic import context
+from alembic.script import ScriptDirectory
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -51,6 +53,60 @@ def get_metadata():
     return target_db.metadata
 
 
+def discard_unknown_revision(connectable):
+    """Forget a stamped revision that no longer exists in migrations/versions.
+
+    The migration history was squashed into a single baseline, so a database
+    stamped at one of the old revision ids cannot be placed by Alembic any
+    more: every command fails with "Can't locate revision identified by
+    '<id>'", including `stamp`, which is what would otherwise fix it.
+
+    The schema in such a database is already correct, so the safe move is to
+    drop the stale pointer and let the upgrade run: the baseline migration
+    detects an existing schema, creates nothing, and leaves the database
+    stamped at the current head. Doing it here means a deploy recovers on its
+    own instead of needing someone to edit alembic_version by hand.
+
+    Only a revision this project does not know about is removed. A normal,
+    resolvable revision is never touched, so this cannot skip real migrations.
+    """
+    try:
+        script = ScriptDirectory.from_config(config)
+        known = {rev.revision for rev in script.walk_revisions()}
+    except Exception as exc:  # unreadable history: let Alembic report it
+        logger.debug('Could not read the migration history: %s', exc)
+        return
+
+    if not known:
+        return
+
+    with connectable.connect() as connection:
+        if not sa.inspect(connection).has_table('alembic_version'):
+            return
+
+        stamped = [
+            row[0] for row in connection.execute(
+                sa.text('SELECT version_num FROM alembic_version')
+            )
+        ]
+        stale = [rev for rev in stamped if rev and rev not in known]
+        if not stale:
+            return
+
+        logger.warning(
+            'Database is stamped at %s, which is not in migrations/versions '
+            '(the history was squashed). Clearing the stale record so the '
+            'migration can run; the schema itself is left alone.',
+            ', '.join(repr(rev) for rev in stale),
+        )
+        connection.execute(
+            sa.text(
+                'DELETE FROM alembic_version WHERE version_num IN :stale'
+            ).bindparams(sa.bindparam('stale', value=stale, expanding=True))
+        )
+        connection.commit()
+
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 
@@ -95,6 +151,8 @@ def run_migrations_online():
         conf_args["process_revision_directives"] = process_revision_directives
 
     connectable = get_engine()
+
+    discard_unknown_revision(connectable)
 
     with connectable.connect() as connection:
         context.configure(
