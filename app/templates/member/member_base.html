@@ -40,18 +40,6 @@
                 <span>Dashboard</span>
             </a>
 
-            <a href="{{ url_for('member.quizzes') }}" class="admin-nav-item warmup-link {% if request.endpoint in ['member.quizzes', 'member.quiz_detail', 'member.quiz_start', 'member.quiz_take', 'member.quiz_submit', 'member.quiz_result', 'member.quiz_leaderboard'] %}active{% endif %}">
-                <i class="fas fa-file-signature"></i>
-                <span>Warmup</span>
-            </a>
-
-            {% if current_user.role == 'quizmaster' %}
-            <a href="{{ url_for('quizmaster.dashboard') }}" class="admin-nav-item {% if request.endpoint and request.endpoint.startswith('quizmaster.') %}active{% endif %}">
-                <i class="fas fa-robot"></i>
-                <span>Quizmaster</span>
-            </a>
-            {% endif %}
-
             <a href="{{ url_for('member.sessions_timetable') }}" class="admin-nav-item {% if request.endpoint in ['member.sessions_timetable', 'member.sessions_instructors', 'member.session_report_submit'] %}active{% endif %}">
                 <i class="fas fa-chalkboard-teacher"></i>
                 <span>Sessions</span>
@@ -157,11 +145,6 @@
                             <li><a class="dropdown-item" href="{{ url_for('member.dashboard') }}">
                                 <i class="fas fa-home"></i> Dashboard
                             </a></li>
-                            {% if current_user.role == 'quizmaster' %}
-                            <li><a class="dropdown-item" href="{{ url_for('quizmaster.dashboard') }}">
-                                <i class="fas fa-robot"></i> Quizmaster Panel
-                            </a></li>
-                            {% endif %}
                             <li><a class="dropdown-item" href="{{ url_for('main.index') }}">
                                 <i class="fas fa-globe"></i> View Site
                             </a></li>

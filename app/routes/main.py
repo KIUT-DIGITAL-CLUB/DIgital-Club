@@ -4,7 +4,7 @@ import os
 
 from flask import render_template, request, flash, redirect, url_for, jsonify, current_app, send_from_directory, abort, Response
 from app.routes import main_bp
-from app.models import News, Event, Project, Gallery, Topic, Member, Leader, Newsletter, Blog, RSVP, User, Technology, Quiz, QuizResource, Election, ElectionPosition, ElectionCandidate
+from app.models import News, Event, Project, Gallery, Topic, Member, Leader, Newsletter, Blog, RSVP, User, Technology, Election, ElectionPosition, ElectionCandidate
 from app import db
 from datetime import datetime, timedelta
 import urllib.parse
@@ -186,122 +186,6 @@ def members():
                                             alumni_count=0,
                                             course_counts=[]), 200)
 
-
-def _quiz_note_file_safe_parts(resource):
-    filename = os.path.basename(resource.file_path or '')
-    notes_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'quiz_resources')
-    full_path = os.path.join(notes_dir, filename)
-    return notes_dir, filename, full_path
-
-
-def _quiz_end_at(quiz):
-    if not quiz.scheduled_start_at:
-        return None
-    return quiz.scheduled_start_at + timedelta(minutes=quiz.duration_minutes or 0)
-
-
-@main_bp.route('/learn')
-def learn():
-    now_local = app_now_naive()
-    field_filter = (request.args.get('field') or '').strip()
-    topic_filter = (request.args.get('topic') or '').strip()
-    q = (request.args.get('q') or '').strip()
-
-    query = QuizResource.query.join(Quiz, Quiz.id == QuizResource.quiz_id).filter(Quiz.status == 'published')
-    if field_filter:
-        query = query.filter(Quiz.field_of_study == field_filter)
-    if topic_filter:
-        query = query.filter(Quiz.topic == topic_filter)
-    if q:
-        like = f'%{q}%'
-        query = query.filter(
-            db.or_(
-                Quiz.title.ilike(like),
-                Quiz.topic.ilike(like),
-                Quiz.description.ilike(like),
-                QuizResource.title.ilike(like),
-            )
-        )
-
-    resources = query.order_by(QuizResource.uploaded_at.desc()).all()
-
-    notes = []
-    for r in resources:
-        uploader_member = r.uploader.member if r.uploader else None
-        quiz_end_at = _quiz_end_at(r.quiz)
-        notes.append({
-            'resource': r,
-            'quiz': r.quiz,
-            'uploader_member': uploader_member,
-            'quiz_not_ended': (quiz_end_at is None) or (now_local < quiz_end_at),
-            'quiz_end_at': quiz_end_at,
-        })
-
-    fields = db.session.query(Quiz.field_of_study).join(QuizResource, QuizResource.quiz_id == Quiz.id).filter(
-        Quiz.status == 'published'
-    ).distinct().order_by(Quiz.field_of_study.asc()).all()
-    topics = db.session.query(Quiz.topic).join(QuizResource, QuizResource.quiz_id == Quiz.id).filter(
-        Quiz.status == 'published'
-    ).distinct().order_by(Quiz.topic.asc()).all()
-
-    return render_template(
-        'learn.html',
-        notes=notes,
-        fields=[f[0] for f in fields if f and f[0]],
-        topics=[t[0] for t in topics if t and t[0]],
-        field_filter=field_filter,
-        topic_filter=topic_filter,
-        q=q,
-    )
-
-
-@main_bp.route('/learn/notes/<int:resource_id>/preview')
-def learn_note_preview(resource_id):
-    resource = QuizResource.query.get_or_404(resource_id)
-    is_admin = bool(current_user.is_authenticated and current_user.role == 'admin')
-    if not resource.quiz or (resource.quiz.status != 'published' and not is_admin):
-        abort(404)
-    notes_dir, filename, full_path = _quiz_note_file_safe_parts(resource)
-    if not filename or not os.path.isfile(full_path):
-        abort(404)
-    return send_from_directory(notes_dir, filename, as_attachment=False, download_name=filename)
-
-
-@main_bp.route('/learn/notes/<int:resource_id>/download')
-def learn_note_download(resource_id):
-    resource = QuizResource.query.get_or_404(resource_id)
-    is_admin = bool(current_user.is_authenticated and current_user.role == 'admin')
-    if not resource.quiz or (resource.quiz.status != 'published' and not is_admin):
-        abort(404)
-    notes_dir, filename, full_path = _quiz_note_file_safe_parts(resource)
-    if not filename or not os.path.isfile(full_path):
-        abort(404)
-    return send_from_directory(notes_dir, filename, as_attachment=True, download_name=filename)
-
-
-@main_bp.route('/learn/cover/<field_name>.svg')
-def learn_cover(field_name):
-    raw = (field_name or 'General').strip()[:60] or 'General'
-    h = hashlib.md5(raw.lower().encode('utf-8')).hexdigest()
-    c1 = f'#{h[0:6]}'
-    c2 = f'#{h[6:12]}'
-    label = html.escape(raw)
-    svg = f"""<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'>
-<defs>
-  <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-    <stop offset='0%' stop-color='{c1}'/>
-    <stop offset='100%' stop-color='{c2}'/>
-  </linearGradient>
-</defs>
-<rect width='1200' height='630' fill='url(#g)'/>
-<rect x='42' y='42' width='1116' height='546' rx='28' fill='rgba(0,0,0,.24)' stroke='rgba(255,255,255,.22)'/>
-<text x='88' y='128' fill='white' font-size='40' font-family='Inter,Segoe UI,Arial,sans-serif' opacity='0.86'>KIUT DIGITAL CLUB</text>
-<text x='88' y='282' fill='white' font-size='78' font-weight='700' font-family='Fira Code,Consolas,monospace'>{label}</text>
-<text x='88' y='346' fill='white' font-size='32' font-family='Inter,Segoe UI,Arial,sans-serif' opacity='0.9'>Learning Notes</text>
-<circle cx='1070' cy='106' r='28' fill='rgba(255,255,255,.16)'/>
-<text x='1056' y='116' fill='white' font-size='22' font-family='Inter,Segoe UI,Arial,sans-serif'>L</text>
-</svg>"""
-    return Response(svg, mimetype='image/svg+xml')
 
 @main_bp.route('/students')
 def students():

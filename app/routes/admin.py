@@ -12,8 +12,7 @@ from app.models import (
     CompetitionEnrollment, CompetitionTeamEnrollment, CompetitionTeamEnrollmentMember,
     CompetitionTeamSubmission, CompetitionTeamScore, TeamCompetitionPoint,
     SessionWeek, SessionSchedule, SessionReport, Team, TeamMember,
-    DailyActiveUser, Quiz, QuizQuestion, QuizOption, QuizAttempt,
-    QuizViolation, QuizLeaderboard, NotificationBatch, MemberNotification
+    DailyActiveUser, NotificationBatch, MemberNotification
 )
 from app import db
 from app.utils import get_notification_service
@@ -29,8 +28,6 @@ import csv
 import io
 import math
 from sqlalchemy import and_, exists, func
-from app.quiz_constants import QUIZ_FIELDS_OF_STUDY
-from app.quiz_cleanup import delete_quiz_and_related
 from app.time_utils import utc_to_app_naive
 
 def admin_required(f):
@@ -1428,7 +1425,7 @@ def _delete_member_account_data(user):
 def members():
     """View all members with payment status and role filters"""
     status_filter = request.args.get('status', 'all')  # all, valid, expired, none
-    role_filter = request.args.get('role', 'all')  # all, admin, quizmaster, member
+    role_filter = request.args.get('role', 'all')  # all, admin, member
     search = request.args.get('search', '')
     course_filter = request.args.get('course', '')
     year_filter = request.args.get('year', '')
@@ -1441,8 +1438,6 @@ def members():
     # Apply role filter
     if role_filter == 'admin':
         query = query.filter(User.role == 'admin')
-    elif role_filter == 'quizmaster':
-        query = query.filter(User.role == 'quizmaster')
     elif role_filter == 'member':
         query = query.filter(User.role == 'student')
     
@@ -1493,7 +1488,6 @@ def members():
     
     # Role statistics
     admin_count = sum(1 for m in all_members if m.user.role == 'admin')
-    quizmaster_count = sum(1 for m in all_members if m.user.role == 'quizmaster')
     member_count = sum(1 for m in all_members if m.user.role == 'student')
     super_admin_count = sum(1 for m in all_members if m.user.is_super_admin)
     
@@ -1519,7 +1513,6 @@ def members():
                          expired_count=expired_count,
                          none_count=none_count,
                          admin_count=admin_count,
-                         quizmaster_count=quizmaster_count,
                          member_count=member_count,
                          super_admin_count=super_admin_count,
                          page=page,
@@ -1551,8 +1544,6 @@ def export_members():
         # Apply role filter
         if role_filter == 'admin':
             query = query.filter(User.role == 'admin')
-        elif role_filter == 'quizmaster':
-            query = query.filter(User.role == 'quizmaster')
         elif role_filter == 'member':
             query = query.filter(User.role == 'student')
         
@@ -1809,39 +1800,6 @@ def promote_member(member_id):
         current_app.logger.error(f"Failed to send admin promotion email for {user.email}: {exc}")
     
     flash(f'{member.full_name} has been promoted to admin!', 'success')
-    return redirect(url_for('admin.members'))
-
-
-@admin_bp.route('/members/<int:member_id>/promote-quizmaster', methods=['POST'])
-@login_required
-@admin_required
-def promote_member_quizmaster(member_id):
-    member = Member.query.get_or_404(member_id)
-    user = member.user
-    if user.role == 'admin':
-        flash('Admin role already has higher privileges.', 'warning')
-        return redirect(url_for('admin.members'))
-    if user.role == 'quizmaster':
-        flash(f'{member.full_name} is already a quizmaster.', 'info')
-        return redirect(url_for('admin.members'))
-    user.role = 'quizmaster'
-    db.session.commit()
-    flash(f'{member.full_name} promoted to quizmaster.', 'success')
-    return redirect(url_for('admin.members'))
-
-
-@admin_bp.route('/members/<int:member_id>/revoke-quizmaster', methods=['POST'])
-@login_required
-@admin_required
-def revoke_member_quizmaster(member_id):
-    member = Member.query.get_or_404(member_id)
-    user = member.user
-    if user.role != 'quizmaster':
-        flash(f'{member.full_name} is not a quizmaster.', 'warning')
-        return redirect(url_for('admin.members'))
-    user.role = 'student'
-    db.session.commit()
-    flash(f'Quizmaster role revoked for {member.full_name}.', 'success')
     return redirect(url_for('admin.members'))
 
 
@@ -5041,163 +4999,3 @@ def teams_delete(team_id):
     return redirect(url_for('admin.teams_index'))
 
 
-# Quiz management
-@admin_bp.route('/quizzes')
-@login_required
-@admin_required
-def quizzes_index():
-    status = request.args.get('status', 'all')
-    query = Quiz.query
-    if status != 'all':
-        query = query.filter_by(status=status)
-    quizzes = query.order_by(Quiz.created_at.desc()).all()
-    return render_template('admin/quizzes/index.html', quizzes=quizzes, status=status, fields=QUIZ_FIELDS_OF_STUDY)
-
-
-@admin_bp.route('/quizzes/settings', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def quizzes_settings():
-    if request.method == 'POST':
-        provider = (request.form.get('quiz_ai_provider') or 'deepseek').strip().lower()
-        deepseek_api_key = (request.form.get('deepseek_api_key') or '').strip()
-        gemini_api_key = (request.form.get('gemini_api_key') or '').strip()
-        clear_deepseek_api_key = bool(request.form.get('clear_deepseek_api_key'))
-        clear_gemini_api_key = bool(request.form.get('clear_gemini_api_key'))
-        SystemSettings.set_setting('quiz_ai_provider', provider, 'Quiz AI provider', current_user.id)
-
-        try:
-            if deepseek_api_key:
-                SystemSettings.set_secret_setting('deepseek_api_key', deepseek_api_key, 'DeepSeek API key (encrypted)', current_user.id)
-            elif clear_deepseek_api_key:
-                SystemSettings.set_setting('deepseek_api_key', '', 'DeepSeek API key cleared', current_user.id)
-
-            if gemini_api_key:
-                SystemSettings.set_secret_setting('gemini_api_key', gemini_api_key, 'Gemini API key (encrypted)', current_user.id)
-            elif clear_gemini_api_key:
-                SystemSettings.set_setting('gemini_api_key', '', 'Gemini API key cleared', current_user.id)
-        except Exception:
-            db.session.rollback()
-            flash('Could not update API keys. Ensure encryption dependency/config is available.', 'error')
-            return redirect(url_for('admin.quizzes_settings'))
-
-        db.session.commit()
-        flash('Quiz AI settings updated.', 'success')
-        return redirect(url_for('admin.quizzes_settings'))
-
-    deepseek_exists = bool((SystemSettings.get_setting('deepseek_api_key', '') or '').strip())
-    gemini_exists = bool((SystemSettings.get_setting('gemini_api_key', '') or '').strip())
-
-    return render_template(
-        'admin/quizzes/settings.html',
-        provider=SystemSettings.get_setting('quiz_ai_provider', 'deepseek'),
-        deepseek_exists=deepseek_exists,
-        gemini_exists=gemini_exists,
-    )
-
-
-@admin_bp.route('/quizzes/<int:quiz_id>')
-@login_required
-@admin_required
-def quizzes_view(quiz_id):
-    quiz = Quiz.query.get_or_404(quiz_id)
-    questions = quiz.questions.order_by(QuizQuestion.order_index.asc()).all()
-    attempts_count = quiz.attempts.count()
-    leaderboard = quiz.leaderboard_rows.order_by(QuizLeaderboard.rank.asc()).limit(20).all()
-    return render_template(
-        'admin/quizzes/detail.html',
-        quiz=quiz,
-        questions=questions,
-        attempts_count=attempts_count,
-        leaderboard=leaderboard,
-    )
-
-
-@admin_bp.route('/quizzes/<int:quiz_id>/approve', methods=['POST'])
-@login_required
-@admin_required
-def quizzes_approve(quiz_id):
-    quiz = Quiz.query.get_or_404(quiz_id)
-    if quiz.status not in ['pending_approval', 'ready', 'approved']:
-        flash('Quiz cannot be approved from current status.', 'error')
-        return redirect(url_for('admin.quizzes_view', quiz_id=quiz.id))
-    quiz.status = 'approved'
-    quiz.approved_at = datetime.utcnow()
-    quiz.approved_by_user_id = current_user.id
-    db.session.commit()
-    flash('Quiz approved.', 'success')
-    return redirect(url_for('admin.quizzes_view', quiz_id=quiz.id))
-
-
-@admin_bp.route('/quizzes/<int:quiz_id>/publish', methods=['POST'])
-@login_required
-@admin_required
-def quizzes_publish(quiz_id):
-    quiz = Quiz.query.get_or_404(quiz_id)
-    if quiz.status not in ['approved', 'pending_approval', 'ready']:
-        flash('Quiz cannot be published from current status.', 'error')
-        return redirect(url_for('admin.quizzes_view', quiz_id=quiz.id))
-
-    start_raw = (request.form.get('scheduled_start_at') or '').strip()
-    duration = request.form.get('duration_minutes', type=int)
-    if duration and duration > 0:
-        quiz.duration_minutes = duration
-    if start_raw:
-        try:
-            quiz.scheduled_start_at = datetime.strptime(start_raw, '%Y-%m-%dT%H:%M')
-        except ValueError:
-            flash('Invalid start datetime format.', 'error')
-            return redirect(url_for('admin.quizzes_view', quiz_id=quiz.id))
-    else:
-        quiz.scheduled_start_at = None
-    quiz.status = 'published'
-    quiz.published_at = datetime.utcnow()
-    db.session.commit()
-    flash('Quiz published successfully.', 'success')
-    return redirect(url_for('admin.quizzes_view', quiz_id=quiz.id))
-
-
-@admin_bp.route('/quizzes/<int:quiz_id>/unpublish', methods=['POST'])
-@login_required
-@admin_required
-def quizzes_unpublish(quiz_id):
-    quiz = Quiz.query.get_or_404(quiz_id)
-    if quiz.status != 'published':
-        flash('Quiz is not published.', 'warning')
-        return redirect(url_for('admin.quizzes_view', quiz_id=quiz.id))
-    quiz.status = 'approved'
-    db.session.commit()
-    flash('Quiz unpublished and moved back to approved.', 'success')
-    return redirect(url_for('admin.quizzes_view', quiz_id=quiz.id))
-
-
-@admin_bp.route('/quizzes/<int:quiz_id>/delete', methods=['POST'])
-@login_required
-@admin_required
-def quizzes_delete(quiz_id):
-    quiz = Quiz.query.get_or_404(quiz_id)
-    delete_quiz_and_related(quiz)
-    db.session.commit()
-    flash('Quiz deleted successfully.', 'success')
-    return redirect(url_for('admin.quizzes_index'))
-
-
-@admin_bp.route('/quizzes/analytics')
-@login_required
-@admin_required
-def quizzes_analytics():
-    quizzes = Quiz.query.order_by(Quiz.created_at.desc()).limit(40).all()
-    summary = []
-    for q in quizzes:
-        attempts = q.attempts.all()
-        total_attempts = len(attempts)
-        avg_score = round(sum((a.confidence_adjusted_score or 0) for a in attempts) / total_attempts, 2) if total_attempts else 0
-        high_risk = sum(1 for a in attempts if (a.violation_count or 0) >= 2)
-        summary.append({
-            'quiz': q,
-            'attempts': total_attempts,
-            'avg_score': avg_score,
-            'high_risk': high_risk,
-            'author': q.created_by,
-        })
-    return render_template('admin/quizzes/analytics.html', summary=summary)

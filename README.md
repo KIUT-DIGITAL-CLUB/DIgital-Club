@@ -95,7 +95,7 @@ If you don’t have Python installed:
 
 You also need:
 - **Git** (to clone the repository)
-- Optionally: **uv** or **pip** for dependency management (this project already includes `pyproject.toml` and `uv.lock`).
+- **pip** (bundled with Python) for installing dependencies from `requirements.txt`
 
 ---
 
@@ -142,81 +142,71 @@ Your prompt should now show `(.venv)` indicating the virtual environment is acti
 
 ### 4. Install Dependencies
 
-With the virtual environment activated, install dependencies defined in `pyproject.toml`.
-
-#### Option A – Using `pip`
+With the virtual environment activated:
 
 ```bash
-pip install uv
-uv pip sync
+pip install -r requirements.txt
 ```
 
-This uses `uv` to sync dependencies from `uv.lock`.  
-If you prefer plain `pip` only:
-
-```bash
-pip install -e .
-```
-
-#### Option B – Using `uv` Directly
-
-If you already have `uv` installed:
-
-```bash
-uv sync
-```
+Versions in `requirements.txt` are pinned, and `pyproject.toml` lists the same
+pins. That is deliberate: unpinned ranges once let a deploy install a newer
+SQLAlchemy that changed the default Postgres driver, so the server broke while
+every laptop kept working. To upgrade something, change the pin in **both**
+files, test, then deploy.
 
 ---
 
 ## Configuration
 
-The app reads configuration mainly from:
-- Environment variables (via `python-dotenv`)
-- The Flask `app.config` in `app/__init__.py`
-- Optional `config.py` (for email/SMS, based on `config_example.py`)
+All configuration comes from environment variables, read in the app factory in
+`app/__init__.py`. Locally they are loaded from a `.env` file by
+`python-dotenv`; in production they are set on the host. `.env` is gitignored
+and is never deployed.
 
 ### 1. Basic `.env` Setup
 
-Create a `.env` file in the **project root**:
+Copy the example file and fill it in. Every variable is documented there.
 
 ```bash
-cp config_example.1env .env  # (Linux/macOS)
+cp .env.example .env            # Linux/macOS
 ```
-
-On **Windows** (PowerShell), just copy the file using Explorer or:
 
 ```powershell
-Copy-Item config_example.1env .env
+Copy-Item .env.example .env     # Windows PowerShell
 ```
 
-Then, create a `.env` file (using any editor) with at least:
+The two that matter most:
 
-```env
-SECRET_KEY=your-very-secret-key
-DATABASE_URL=sqlite:///digital_club_01.db
-FLASK_ENV=development
-```
+- `SECRET_KEY` – signs sessions **and** derives the key that encrypts secrets
+  stored in the database (`app/secret_crypto.py`). Changing it logs everyone
+  out and makes previously encrypted settings unreadable, so generate it once
+  and keep it.
+- `DATABASE_URL` – connection string.
+  - local SQLite: `sqlite:///digital_club_01.db`
+  - Postgres: `postgresql://user:password@host:5432/dbname`
 
-- `SECRET_KEY`: used by Flask for sessions and security (keep it secret in real deployments).
-- `DATABASE_URL`: database connection string.
-  - For local SQLite (default): `sqlite:///digital_club_01.db`
-  - For PostgreSQL: something like `postgresql+psycopg2://digital_club_user:digital_club_password@db:5432/digital_club_db`
-
-> In `app/__init__.py`, if `DATABASE_URL` is not set, it falls back to `sqlite:///digital_club_01.db` in the project root.
+> If `DATABASE_URL` is empty the app falls back to local SQLite and prints a
+> warning at startup. On a hosted platform that fallback means an empty
+> database that is wiped on every deploy, so always set it in production.
 ### 2. Email & SMS (Optional)
 
-For email/SMS notifications, configure values in `.env` (copied from `config_example.1env`):
+Email and SMS are optional. Set them in `.env`:
 
 ```env
-BEEM_API_KEY=19example62d4ee1b0726e
-BEEM_SECRET_KEY=example_MGMwNGJlZWM5NNlMDA1YmNiYjk0U4OGZlY2I0OY2MDzY4NWNlNTMzdDZlYjE5NTE1ZWkYTk2MTVlOTQ4YzJhNg==
-QUIZ_REMINDER_RUN_ON_REQUEST=1
-QUIZ_REMINDER_INTERVAL_SECONDS=30
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+FROM_EMAIL=
+
+BEEM_API_KEY=
+BEEM_SECRET_KEY=
 ```
 
-These are used by the `NotificationService` in `app/utils.py` and `app/sms.py` to send emails and SMS (e.g., confirmations, alerts).
-Also used to attach dockerized postgresql in `app/__init__.py`
-> For learning purposes you can skip real credentials and keep email/SMS features disabled; the rest of the app will still work.
+These are read by `NotificationService` in `app/utils.py` and by `app/sms.py`.
+Left empty, sending is skipped with a logged warning and the rest of the app
+works normally. Never hardcode credentials in source: they end up in git
+history, and this repository is public.
 
 ---
 > For learning purposes you can skip real credentials and keep email/SMS features disabled; the rest of the app will still work.
@@ -241,7 +231,7 @@ What this does:
 - Imports `create_app()` from `app/__init__.py`
 - Initializes the database and ensures an **admin** user exists:
   - Email: `admin@digitalclub.kiut.ac.tz`
-  - Password: `admin123`  
+  - Password: `admin123`
     (for **development only**, do not use these in production)
 - Starts Flask on `http://0.0.0.0:5051` with `debug=True`
 
@@ -269,17 +259,28 @@ flask run --port 5051
 
 ## Database Migrations (Flask-Migrate)
 
-This project includes a `migrations/` folder and uses **Flask-Migrate**:
-
-Common commands (from the project root, with venv active):
+Schema changes go through Alembic only. Nothing creates or alters tables at
+runtime.
 
 ```bash
-flask db init        # only once, already done in this repo
-flask db migrate -m "Your message"
-flask db upgrade
+flask db upgrade                      # apply migrations (also run on deploy)
+flask db migrate -m "what changed"    # after editing app/models.py
+flask db upgrade                      # apply what you just generated
 ```
 
-This lets you evolve the database schema safely as you change the models in `app/models.py`.
+`flask db upgrade` builds the whole schema from an empty database, so a new
+environment needs nothing else.
+
+The history was squashed into a single baseline
+(`migrations/versions/bacaa08da2ca_initial_schema.py`). The previous 18
+revisions could not build a database from scratch: the first one altered the
+`user` table, assuming it already existed because the tables had originally
+been created with `db.create_all()`. If you have a database created before the
+squash, point it at the new history once:
+
+```bash
+flask db stamp bacaa08da2ca
+```
 
 ---
 
@@ -314,16 +315,16 @@ Digital Club/
 │     ├─ uploads/          # Uploaded images (profiles, gallery, blogs, IDs)
 │     └─ DigitalClub_LOGO* # Logos and assets
 ├─ instance/
-│  └─ digital_club_01.db   # Default SQLite DB (if used)
-├─ migrations/             # Alembic migration scripts
-├─ scripts/                # Data migration and maintenance scripts
+│  └─ digital_club_01.db   # Default SQLite DB (local development only)
+├─ migrations/             # Alembic migrations (single baseline)
 ├─ tests/                  # Automated tests
-├─ main.py                 # Application entrypoint
-├─ config_example.py       # Example email/SMS configuration
-├─ pyproject.toml          # Project metadata & dependencies
-├─ Dockerfile              # Container image definition
-├─ docker-compose.yml      # Multi-service (e.g., app + DB) setup
+├─ main.py                 # Application entrypoint (gunicorn loads main:app)
+├─ .env.example            # Documented environment variables
+├─ requirements.txt        # Pinned dependencies
+├─ pyproject.toml          # Project metadata (same pins)
+├─ Procfile                # Start command for platforms that read one
 ├─ gunicorn_conf.py        # Gunicorn configuration
+├─ DEPLOY.md               # Deployment guide
 ├─ LICENSE                 # MIT License
 └─ README.md               # This file
 ```
@@ -409,42 +410,22 @@ The `tests/` folder (e.g., `tests/test_rsvp.py`) contains example tests to learn
 
 ---
 
-## Scripts & Data Migration
+## Deployment
 
-The `scripts/` folder includes maintenance and migration utilities, for example:
-
-- `scripts/migration/migrate_digital_ids.py`
-- `scripts/migration/migrate_rewards_system.py`
-- `scripts/migration/migrate_rsvp.py`
-- `scripts/migration/migrate_super_admin.py`
-
-These are great resources to learn:
-- How to write one-off data migration scripts
-- How to interact with the models outside of normal request/response flow
-
-You can run them with:
+There is no Docker, no Redis and no background worker. The whole system is one
+Python web process plus a Postgres database:
 
 ```bash
-python scripts/migration/migrate_rsvp.py
+pip install -r requirements.txt
+flask db upgrade                            # on every deploy
+gunicorn -c gunicorn_conf.py main:app       # serve
 ```
 
-> Tip: Always back up your database before running migration scripts in a real deployment.
+`gunicorn_conf.py` binds `0.0.0.0:$PORT` and sizes its worker pool from the
+container's CPU quota, so it works on a managed platform without tuning.
 
----
-
-## Deployment Notes (Educational Overview)
-
-This repo includes:
-- `Dockerfile` – how to build a Docker image for the app
-- `docker-compose.yml` – how to run the app together with services like PostgreSQL
-- `gunicorn_conf.py` – configuration for Gunicorn (a production WSGI server)
-
-Typical high-level steps (conceptual):
-1. Build the image: `docker build -t digital-club .`
-2. Run with Docker Compose: `docker compose up`
-3. Serve via Gunicorn and a reverse proxy (like Nginx)
-
-As a student, you can explore these files to understand **how a Flask app moves from your laptop to a server**.
+See **[DEPLOY.md](DEPLOY.md)** for the full step-by-step guide, the environment
+variables to set, and how to keep uploaded files across deploys.
 
 ---
 
@@ -475,24 +456,24 @@ This project is an **open learning playground**. Here’s how you can contribute
 
 ## FAQ
 
-- **Q: I get an error about the database. What should I do?**  
+- **Q: I get an error about the database. What should I do?**
   - Ensure your virtual environment is active.
   - Check that `DATABASE_URL` is correct in `.env`.
   - Delete `instance/digital_club_01.db` (for a clean slate) and run `python main.py` again.
 
-- **Q: Can I use a different port instead of 5051?**  
+- **Q: Can I use a different port instead of 5051?**
   - Yes. Set the `PORT` environment variable before running:
     - macOS/Linux: `export PORT=5000`
     - Windows PowerShell: `$env:PORT = 5000`
 
-- **Q: Is it safe to use the default admin credentials?**  
+- **Q: Is it safe to use the default admin credentials?**
   - **No, not in production.** They are for **local development and learning only**. Always change them in a real deployment.
 
 ---
 
 ## Acknowledgements
 
-<!-- - **Special thanks to Yunus (`snavid` on GitHub)** – for envisioning and building Digital Club so that university students have a real, modern codebase to learn from.  
+<!-- - **Special thanks to Yunus (`snavid` on GitHub)** – for envisioning and building Digital Club so that university students have a real, modern codebase to learn from.
   Your work turns a dream of a connected, empowered developer community into reality. -->
 
 - Thanks to the open-source ecosystem around **Flask**, **SQLAlchemy**, and many other libraries that make this project possible.
@@ -501,5 +482,5 @@ This project is an **open learning playground**. Here’s how you can contribute
 
 ## License
 
-This project is licensed under the **MIT License**.  
+This project is licensed under the **MIT License**.
 See the `LICENSE` file for full details.

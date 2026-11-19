@@ -207,29 +207,6 @@
                 </div>
             </div>
 
-            <!-- Quizzes -->
-            <div class="admin-nav-dropdown">
-                <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="quizzes">
-                    <i class="fas fa-file-signature"></i>
-                    <span>Quizzes</span>
-                    <i class="fas fa-chevron-down admin-dropdown-icon"></i>
-                </a>
-                <div class="admin-nav-dropdown-menu" id="dropdown-quizzes">
-                    <a href="{{ url_for('admin.quizzes_index') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint in ['admin.quizzes_index', 'admin.quizzes_view'] %}active{% endif %}">
-                        <i class="fas fa-list"></i>
-                        <span>Manage Quizzes</span>
-                    </a>
-                    <a href="{{ url_for('admin.quizzes_analytics') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.quizzes_analytics' %}active{% endif %}">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Analytics</span>
-                    </a>
-                    <a href="{{ url_for('admin.quizzes_settings') }}" class="admin-nav-item admin-nav-subitem {% if request.endpoint == 'admin.quizzes_settings' %}active{% endif %}">
-                        <i class="fas fa-robot"></i>
-                        <span>AI Settings</span>
-                    </a>
-                </div>
-            </div>
-            
             <!-- Projects & Technology -->
             <div class="admin-nav-dropdown">
                 <a href="#" class="admin-nav-item admin-nav-dropdown-toggle" data-dropdown="projects">

@@ -115,17 +115,6 @@
             </div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="admin-stat-card">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-robot text-info me-2"></i>
-                <div>
-                    <h5>{{ quizmaster_count }}</h5>
-                    <p>Quizmasters</p>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Filters -->
@@ -150,7 +139,6 @@
                 <select name="role" class="form-control">
                     <option value="all" {% if current_role == 'all' %}selected{% endif %}>All Roles</option>
                     <option value="admin" {% if current_role == 'admin' %}selected{% endif %}>Admins</option>
-                    <option value="quizmaster" {% if current_role == 'quizmaster' %}selected{% endif %}>Quizmasters</option>
                     <option value="member" {% if current_role == 'member' %}selected{% endif %}>Regular Members</option>
                 </select>
             </div>
@@ -267,10 +255,6 @@
                         <span class="admin-badge admin-badge-primary">
                             <i class="fas fa-user-shield"></i> Admin
                         </span>
-                        {% elif member.user.role == 'quizmaster' %}
-                        <span class="admin-badge admin-badge-info">
-                            <i class="fas fa-robot"></i> Quizmaster
-                        </span>
                         {% else %}
                         <span class="admin-badge admin-badge-secondary">
                             <i class="fas fa-user"></i> Member
@@ -334,23 +318,6 @@
                                     title="Cannot demote super admin">
                                 <i class="fas fa-crown"></i> Super Admin
                             </button>
-                            {% endif %}
-                            {% if member.user.role == 'student' %}
-                            <form method="POST" action="{{ url_for('admin.promote_member_quizmaster', member_id=member.id) }}" class="d-inline">
-                                <button type="submit" class="admin-btn admin-btn-sm admin-btn-info js-confirm-submit"
-                                        data-confirm="{{ ('Promote ' ~ member.full_name ~ ' to quizmaster?')|e }}"
-                                        title="Promote to quizmaster">
-                                    <i class="fas fa-robot"></i>
-                                </button>
-                            </form>
-                            {% elif member.user.role == 'quizmaster' %}
-                            <form method="POST" action="{{ url_for('admin.revoke_member_quizmaster', member_id=member.id) }}" class="d-inline">
-                                <button type="submit" class="admin-btn admin-btn-sm admin-btn-secondary js-confirm-submit"
-                                        data-confirm="{{ ('Revoke quizmaster role for ' ~ member.full_name ~ '?')|e }}"
-                                        title="Revoke quizmaster role">
-                                    <i class="fas fa-user-minus"></i>
-                                </button>
-                            </form>
                             {% endif %}
                             <form id="toggle-active-form-{{ member.id }}" method="POST" action="{{ url_for('admin.toggle_member_active', member_id=member.id) }}" class="d-inline">
                                 <input type="hidden" name="admin_password" value="">
