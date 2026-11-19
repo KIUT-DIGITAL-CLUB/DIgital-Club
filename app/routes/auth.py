@@ -211,8 +211,6 @@ def login():
                 return redirect(next_page)
             if user.role == 'admin':
                 return redirect(url_for('admin.dashboard'))
-            if user.role == 'quizmaster':
-                return redirect(url_for('quizmaster.dashboard'))
             member = user.member
             if not member or not (member.phone or '').strip() or not is_allowed_course(member.course):
                 flash('Please complete your profile details (valid course and phone number) to continue.', 'warning')

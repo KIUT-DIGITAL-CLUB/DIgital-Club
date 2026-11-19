@@ -1,0 +1,44 @@
+# Pinned on purpose.
+#
+# This project was previously installed from unpinned ranges, so every rebuild
+# picked up whatever was newest on PyPI. That is how a deploy ended up on
+# SQLAlchemy 2.1 -- which changed the default driver for "postgresql://" URLs
+# from psycopg2 to psycopg v3 -- and crashed with ModuleNotFoundError while
+# local environments still worked on 2.0. Pin, test, then bump deliberately.
+#
+# Keep these versions in sync with pyproject.toml.
+
+# Web framework
+Flask==3.1.2
+Werkzeug==3.1.3
+Jinja2==3.1.6
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+
+# Database
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.44
+Flask-Migrate==4.1.0
+alembic==1.16.5
+# Postgres drivers: psycopg v3 is what SQLAlchemy 2.1+ uses for a bare
+# "postgresql://" URL, psycopg2 is what 2.0 uses and what explicit
+# "postgresql+psycopg2://" URLs need. Both are small; keep both.
+psycopg[binary]==3.3.9
+psycopg2-binary==2.9.11
+
+# Media, IDs and PDFs
+pillow==11.3.0
+qrcode[pil]==8.2
+reportlab==4.4.5
+# cairosvg renders the SVG logo on digital ID cards. It needs the system
+# libcairo library; app/id_generator.py already falls back to Pillow if the
+# import fails, so a host without libcairo degrades instead of breaking.
+cairosvg==2.8.2
+
+# Utilities
+python-dotenv==1.1.1
+requests==2.32.5
+cryptography==48.0.0
+
+# Production WSGI server
+gunicorn==27.0.1

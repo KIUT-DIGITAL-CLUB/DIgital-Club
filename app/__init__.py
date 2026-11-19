@@ -17,347 +17,6 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 
-def _migrate_password_hash_column():
-    """Migrate password_hash column from varchar(128) to varchar(256) if needed"""
-    try:
-        from sqlalchemy import text
-        
-        # Check if using PostgreSQL
-        db_uri = db.engine.url
-        if 'postgresql' in str(db_uri):
-            # PostgreSQL: Use ALTER TABLE
-            with db.engine.connect() as conn:
-                # Check current column type
-                result = conn.execute(text("""
-                    SELECT character_maximum_length 
-                    FROM information_schema.columns 
-                    WHERE table_name = 'user' 
-                    AND column_name = 'password_hash'
-                """))
-                row = result.fetchone()
-                
-                if row and row[0] == 128:
-                    print("Migrating password_hash column from varchar(128) to varchar(256)...")
-                    conn.execute(text("ALTER TABLE \"user\" ALTER COLUMN password_hash TYPE VARCHAR(256)"))
-                    conn.commit()
-                    print("✓ Successfully migrated password_hash column to VARCHAR(256)")
-                elif row and row[0] == 256:
-                    pass  # Already correct, no action needed
-        # SQLite doesn't need migration as it doesn't enforce length constraints
-    except Exception as e:
-        # Silently fail - migration is optional and might fail if column doesn't exist yet
-        pass
-
-
-def _migrate_user_active_account_column():
-    """Compatibility migration: add user.is_active_account if missing."""
-    try:
-        from sqlalchemy import inspect, text
-
-        inspector = inspect(db.engine)
-        if 'user' not in inspector.get_table_names():
-            return
-
-        cols = {c['name'] for c in inspector.get_columns('user')}
-        if 'is_active_account' in cols:
-            return
-
-        db_uri = str(db.engine.url)
-        with db.engine.connect() as conn:
-            if 'postgresql' in db_uri:
-                conn.execute(
-                    text('ALTER TABLE "user" ADD COLUMN is_active_account BOOLEAN NOT NULL DEFAULT TRUE')
-                )
-            else:
-                # SQLite and others
-                conn.execute(
-                    text('ALTER TABLE "user" ADD COLUMN is_active_account BOOLEAN NOT NULL DEFAULT 1')
-                )
-            conn.commit()
-    except Exception:
-        # Keep startup resilient; proper Alembic migration still exists.
-        pass
-
-
-def _migrate_event_target_audience_column():
-    """Compatibility migration: add event.target_audience if missing."""
-    try:
-        from sqlalchemy import inspect, text
-
-        inspector = inspect(db.engine)
-        if 'event' not in inspector.get_table_names():
-            return
-
-        cols = {c['name'] for c in inspector.get_columns('event')}
-        if 'target_audience' in cols:
-            return
-
-        db_uri = str(db.engine.url)
-        with db.engine.connect() as conn:
-            if 'postgresql' in db_uri:
-                conn.execute(
-                    text("ALTER TABLE event ADD COLUMN target_audience VARCHAR(20) NOT NULL DEFAULT 'everyone'")
-                )
-            else:
-                conn.execute(
-                    text("ALTER TABLE event ADD COLUMN target_audience VARCHAR(20) NOT NULL DEFAULT 'everyone'")
-                )
-            conn.commit()
-    except Exception:
-        pass
-
-
-def _migrate_rsvp_attendee_fields():
-    """Compatibility migration: add RSVP attendee fields if missing."""
-    try:
-        from sqlalchemy import inspect, text
-
-        inspector = inspect(db.engine)
-        if 'rsvp' not in inspector.get_table_names():
-            return
-        cols = {c['name'] for c in inspector.get_columns('rsvp')}
-        with db.engine.connect() as conn:
-            if 'attendee_type' not in cols:
-                conn.execute(text("ALTER TABLE rsvp ADD COLUMN attendee_type VARCHAR(20)"))
-            if 'study_field' not in cols:
-                conn.execute(text("ALTER TABLE rsvp ADD COLUMN study_field VARCHAR(100)"))
-            if 'study_year' not in cols:
-                conn.execute(text("ALTER TABLE rsvp ADD COLUMN study_year VARCHAR(20)"))
-            if 'non_student_role' not in cols:
-                conn.execute(text("ALTER TABLE rsvp ADD COLUMN non_student_role VARCHAR(30)"))
-            conn.commit()
-    except Exception:
-        pass
-
-
-def _migrate_competition_enrollment_notice_fields():
-    """Compatibility migration: add competition enrollment notice fields if missing."""
-    try:
-        from sqlalchemy import inspect, text
-
-        inspector = inspect(db.engine)
-        if 'competition_enrollment' not in inspector.get_table_names():
-            return
-        cols = {c['name'] for c in inspector.get_columns('competition_enrollment')}
-        with db.engine.connect() as conn:
-            if 'admin_notice' not in cols:
-                conn.execute(text("ALTER TABLE competition_enrollment ADD COLUMN admin_notice TEXT"))
-            if 'admin_notice_by' not in cols:
-                conn.execute(text("ALTER TABLE competition_enrollment ADD COLUMN admin_notice_by INTEGER"))
-            if 'admin_notice_at' not in cols:
-                conn.execute(text("ALTER TABLE competition_enrollment ADD COLUMN admin_notice_at DATETIME"))
-            conn.commit()
-    except Exception:
-        pass
-
-
-def _migrate_competition_criteria_visibility():
-    """Compatibility migration: add competition criteria visibility flag if missing."""
-    try:
-        from sqlalchemy import inspect, text
-
-        inspector = inspect(db.engine)
-        if 'competition_criteria' not in inspector.get_table_names():
-            return
-        cols = {c['name'] for c in inspector.get_columns('competition_criteria')}
-        if 'is_visible_to_members' in cols:
-            return
-        with db.engine.connect() as conn:
-            conn.execute(
-                text("ALTER TABLE competition_criteria ADD COLUMN is_visible_to_members BOOLEAN NOT NULL DEFAULT 1")
-            )
-            conn.commit()
-    except Exception:
-        pass
-
-
-def _migrate_team_member_workflow_and_competition_team_tables():
-    """Compatibility migration for member-owned teams + team competitions."""
-    try:
-        from sqlalchemy import inspect, text
-        from app.models import (
-            CompetitionTeamEnrollment,
-            CompetitionTeamEnrollmentMember,
-            CompetitionTeamSubmission,
-            CompetitionTeamScore,
-            TeamCompetitionPoint,
-        )
-
-        inspector = inspect(db.engine)
-        table_names = set(inspector.get_table_names())
-
-        if 'team' in table_names:
-            cols = {c['name'] for c in inspector.get_columns('team')}
-            with db.engine.connect() as conn:
-                if 'created_by_member_id' not in cols:
-                    conn.execute(text("ALTER TABLE team ADD COLUMN created_by_member_id INTEGER"))
-                if 'total_points' not in cols:
-                    conn.execute(text("ALTER TABLE team ADD COLUMN total_points INTEGER NOT NULL DEFAULT 0"))
-                if 'is_open' not in cols:
-                    conn.execute(text("ALTER TABLE team ADD COLUMN is_open BOOLEAN NOT NULL DEFAULT 1"))
-                if 'is_suspended' not in cols:
-                    conn.execute(text("ALTER TABLE team ADD COLUMN is_suspended BOOLEAN NOT NULL DEFAULT 0"))
-                if 'suspension_reason' not in cols:
-                    conn.execute(text("ALTER TABLE team ADD COLUMN suspension_reason TEXT"))
-                if 'suspended_at' not in cols:
-                    conn.execute(text("ALTER TABLE team ADD COLUMN suspended_at DATETIME"))
-                if 'suspended_by_user_id' not in cols:
-                    conn.execute(text("ALTER TABLE team ADD COLUMN suspended_by_user_id INTEGER"))
-                if 'admin_notice' not in cols:
-                    conn.execute(text("ALTER TABLE team ADD COLUMN admin_notice TEXT"))
-                if 'admin_notice_at' not in cols:
-                    conn.execute(text("ALTER TABLE team ADD COLUMN admin_notice_at DATETIME"))
-                conn.commit()
-
-        if 'team_member' in table_names:
-            cols = {c['name'] for c in inspector.get_columns('team_member')}
-            with db.engine.connect() as conn:
-                if 'status' not in cols:
-                    conn.execute(text("ALTER TABLE team_member ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'approved'"))
-                if 'requested_at' not in cols:
-                    conn.execute(text("ALTER TABLE team_member ADD COLUMN requested_at DATETIME"))
-                if 'approved_at' not in cols:
-                    conn.execute(text("ALTER TABLE team_member ADD COLUMN approved_at DATETIME"))
-                if 'approved_by_member_id' not in cols:
-                    conn.execute(text("ALTER TABLE team_member ADD COLUMN approved_by_member_id INTEGER"))
-                conn.commit()
-
-        # Create new team-competition tables if migration wasn't applied.
-        CompetitionTeamEnrollment.__table__.create(bind=db.engine, checkfirst=True)
-        CompetitionTeamEnrollmentMember.__table__.create(bind=db.engine, checkfirst=True)
-        CompetitionTeamSubmission.__table__.create(bind=db.engine, checkfirst=True)
-        CompetitionTeamScore.__table__.create(bind=db.engine, checkfirst=True)
-        TeamCompetitionPoint.__table__.create(bind=db.engine, checkfirst=True)
-
-        # Backfill new team-enrollment notice columns for older databases.
-        inspector = inspect(db.engine)
-        if 'competition_team_enrollment' in inspector.get_table_names():
-            cols = {c['name'] for c in inspector.get_columns('competition_team_enrollment')}
-            with db.engine.connect() as conn:
-                if 'admin_notice' not in cols:
-                    conn.execute(text("ALTER TABLE competition_team_enrollment ADD COLUMN admin_notice TEXT"))
-                if 'admin_notice_by' not in cols:
-                    conn.execute(text("ALTER TABLE competition_team_enrollment ADD COLUMN admin_notice_by INTEGER"))
-                if 'admin_notice_at' not in cols:
-                    conn.execute(text("ALTER TABLE competition_team_enrollment ADD COLUMN admin_notice_at DATETIME"))
-                conn.commit()
-    except Exception:
-        pass
-
-
-def _migrate_quiz_reminder_tables():
-    """Compatibility migration for warmup reminder preference/log tables."""
-    try:
-        from app.models import QuizReminderPreference, QuizReminderNotification
-        QuizReminderPreference.__table__.create(bind=db.engine, checkfirst=True)
-        QuizReminderNotification.__table__.create(bind=db.engine, checkfirst=True)
-    except Exception:
-        pass
-
-
-def _migrate_member_notification_tables():
-    """Compatibility migration for admin/member messaging tables."""
-    try:
-        from app.models import NotificationBatch, MemberNotification
-        NotificationBatch.__table__.create(bind=db.engine, checkfirst=True)
-        MemberNotification.__table__.create(bind=db.engine, checkfirst=True)
-    except Exception:
-        pass
-
-
-def _migrate_election_tables():
-    """Compatibility migration for leadership election tables."""
-    from sqlalchemy import inspect, text
-    try:
-        from app.models import (
-            LeadershipPositionTemplate,
-            Election,
-            ElectionPosition,
-            ElectionCandidate,
-            ElectionVote,
-        )
-        from app.election_utils import DEFAULT_POSITIONS
-
-        LeadershipPositionTemplate.__table__.create(bind=db.engine, checkfirst=True)
-        Election.__table__.create(bind=db.engine, checkfirst=True)
-        ElectionPosition.__table__.create(bind=db.engine, checkfirst=True)
-        ElectionCandidate.__table__.create(bind=db.engine, checkfirst=True)
-        ElectionVote.__table__.create(bind=db.engine, checkfirst=True)
-
-        # Add newer columns to existing tables where missing.
-        inspector = inspect(db.engine)
-
-        def _cols(table):
-            try:
-                return {c['name'] for c in inspector.get_columns(table)}
-            except Exception:
-                return set()
-
-        tpl_cols = _cols('leadership_position_template')
-        add_tpl = []
-        if 'subtitle' not in tpl_cols:
-            add_tpl.append("ALTER TABLE leadership_position_template ADD COLUMN subtitle VARCHAR(200)")
-        if 'roles' not in tpl_cols:
-            add_tpl.append("ALTER TABLE leadership_position_template ADD COLUMN roles TEXT")
-        if 'default_seats' not in tpl_cols:
-            add_tpl.append("ALTER TABLE leadership_position_template ADD COLUMN default_seats INTEGER DEFAULT 1")
-
-        pos_cols = _cols('election_position')
-        add_pos = []
-        if 'subtitle' not in pos_cols:
-            add_pos.append("ALTER TABLE election_position ADD COLUMN subtitle VARCHAR(200)")
-        if 'roles' not in pos_cols:
-            add_pos.append("ALTER TABLE election_position ADD COLUMN roles TEXT")
-
-        with db.engine.begin() as conn:
-            for stmt in add_tpl + add_pos:
-                conn.execute(text(stmt))
-
-        # Seed / refresh canonical positions from the roles document.
-        _seed_default_election_positions(LeadershipPositionTemplate, DEFAULT_POSITIONS)
-    except Exception:
-        db.session.rollback()
-
-
-def _seed_default_election_positions(LeadershipPositionTemplate, DEFAULT_POSITIONS):
-    """Replace the legacy default templates with the canonical KIUT positions."""
-    legacy_titles = {
-        'President', 'Vice President', 'Secretary General',
-        'Technical Lead', 'Events Coordinator',
-    }
-    canonical_titles = {p[0] for p in DEFAULT_POSITIONS}
-
-    # Remove legacy defaults that are not referenced by any election.
-    for tpl in LeadershipPositionTemplate.query.filter(
-        LeadershipPositionTemplate.title.in_(legacy_titles)
-    ).all():
-        if tpl.title not in canonical_titles and len(tpl.election_positions) == 0:
-            db.session.delete(tpl)
-    db.session.commit()
-
-    # Insert / update the canonical positions.
-    for order, (title, subtitle, seats, roles) in enumerate(DEFAULT_POSITIONS, start=1):
-        tpl = LeadershipPositionTemplate.query.filter_by(title=title).first()
-        roles_text = '\n'.join(roles)
-        if tpl is None:
-            db.session.add(LeadershipPositionTemplate(
-                title=title,
-                subtitle=subtitle,
-                roles=roles_text,
-                default_seats=seats,
-                display_order=order,
-                is_active=True,
-            ))
-        else:
-            # Backfill new fields if empty, keep admin edits otherwise.
-            if not tpl.subtitle:
-                tpl.subtitle = subtitle
-            if not tpl.roles:
-                tpl.roles = roles_text
-            if not tpl.default_seats:
-                tpl.default_seats = seats
-    db.session.commit()
-
 def create_app():
     app = Flask(__name__)
     
@@ -389,10 +48,8 @@ def create_app():
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
     app.config['TURNSTILE_SITE_KEY'] = os.environ.get('TURNSTILE_SITE_KEY', '')
     app.config['TURNSTILE_SECRET_KEY'] = os.environ.get('TURNSTILE_SECRET_KEY', '')
-    app.config['REDIS_URL'] = os.environ.get('REDIS_URL', '')
     app.config['APP_TIMEZONE'] = os.environ.get('APP_TIMEZONE', 'Africa/Nairobi')
     app.config['APP_UTC_OFFSET_HOURS'] = os.environ.get('APP_UTC_OFFSET_HOURS', '3')
-    app.config['QUIZ_REMINDER_RUN_ON_REQUEST'] = os.environ.get('QUIZ_REMINDER_RUN_ON_REQUEST', '1') == '1'
     # Session / remember-me settings
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=int(os.environ.get('SESSION_LIFETIME_DAYS', '30')))
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=int(os.environ.get('REMEMBER_LIFETIME_DAYS', '30')))
@@ -414,19 +71,7 @@ def create_app():
     login_manager.init_app(app)
     migrate.init_app(app, db)
     
-    # Do not auto-create tables here; schema changes must go through Alembic migrations.
-    with app.app_context():
-        # Keep this compatibility migration for existing databases.
-        _migrate_password_hash_column()
-        _migrate_user_active_account_column()
-        _migrate_event_target_audience_column()
-        _migrate_rsvp_attendee_fields()
-        _migrate_competition_enrollment_notice_fields()
-        _migrate_competition_criteria_visibility()
-        _migrate_team_member_workflow_and_competition_team_tables()
-        _migrate_quiz_reminder_tables()
-        _migrate_member_notification_tables()
-        _migrate_election_tables()
+    # Schema changes go through Alembic only: `flask db upgrade` on deploy.
     
     # Configure login manager
     login_manager.login_view = 'auth.login'
@@ -440,7 +85,6 @@ def create_app():
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'digital_ids'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'competitions'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'elections', 'passports'), exist_ok=True)
-    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'quiz_resources'), exist_ok=True)
 
     @app.route('/healthz')
     def healthz():
@@ -539,18 +183,6 @@ def create_app():
         except Exception:
             db.session.rollback()
 
-    @app.before_request
-    def process_quiz_reminders():
-        if not app.config.get('QUIZ_REMINDER_RUN_ON_REQUEST', False):
-            return
-        if request.endpoint == 'static' or request.path.startswith('/static/'):
-            return
-        try:
-            from app.quiz_reminders import process_quiz_reminders_once
-            process_quiz_reminders_once()
-        except Exception:
-            db.session.rollback()
-    
     # User loader for Flask-Login
     from app.models import User
     
@@ -563,7 +195,6 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.admin import admin_bp
     from app.routes.member import member_bp
-    from app.routes.quizmaster import quizmaster_bp
     from app.routes.verification import verification_bp
     from app.routes import election_admin  # noqa: F401
     from app.routes import election_member  # noqa: F401
@@ -572,7 +203,6 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(member_bp, url_prefix='/member')
-    app.register_blueprint(quizmaster_bp, url_prefix='/quizmaster')
     app.register_blueprint(verification_bp)
 
     @app.errorhandler(404)
