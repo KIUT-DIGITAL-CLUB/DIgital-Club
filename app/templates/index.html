@@ -1432,14 +1432,24 @@
         </div>
         
         <!-- Call to Action -->
-        <div class="hero-buttons">
-            <a href="{{ url_for('auth.register') }}" class="btn-primary">
-                <i class="fas fa-rocket"></i> Join the Club
-            </a>
-            <a href="{{ url_for('main.about') }}" class="btn-secondary">
-                <i class="fas fa-info-circle"></i> Explore More
-            </a>
-        </div>
+        {% if current_user.is_authenticated %}
+            <div class="hero-buttons">
+                <a href="{{ url_for('main.dashboard') }}" class="btn-primary">
+                    <i class="fas fa-rocket"></i> Join the Club
+                </a>
+                <a href="{{ url_for('main.about') }}" class="btn-secondary">
+                    <i class="fas fa-info-circle"></i> Explore More
+                </a>
+            </div>
+        {% else %}
+            <div class="hero-buttons">
+                <a href="{{ url_for('auth.register') }}" class="btn-primary">
+                    <i class="fas fa-rocket"></i> Join the Club
+                </a>
+                <a href="{{ url_for('main.about') }}" class="btn-secondary">
+                    <i class="fas fa-info-circle"></i> Explore More
+                </a>
+            </div>
     </div>
     
     <!-- Scroll Indicator -->
